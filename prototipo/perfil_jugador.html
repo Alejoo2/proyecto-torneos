@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Perfil del Jugador — Wireframe Low-Fidelity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-950 min-h-[100dvh] flex items-center justify-center">
+
+    <!-- ============================================================ -->
+    <!-- APP SHELL: El "Móvil"                                          -->
+    <!-- ============================================================ -->
+    <div class="w-full max-w-lg min-h-[100dvh] bg-white md:min-h-[90vh] md:my-[5vh] md:rounded-[2rem] md:border-[10px] md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col relative">
+
+        <!-- ============================================================ -->
+        <!-- ESTADO DE CARGA INICIAL (Skeleton)                             -->
+        <!-- ============================================================ -->
+        <div id="app-loading" class="absolute inset-0 z-[60] bg-white flex flex-col items-center justify-center transition-opacity duration-500">
+            <div class="w-24 h-24 bg-gray-200 rounded-full mb-4 animate-pulse"></div>
+            <div class="h-5 bg-gray-200 rounded w-48 mb-2 animate-pulse"></div>
+            <div class="h-3 bg-gray-200 rounded w-32 mb-8 animate-pulse"></div>
+            <div class="bg-gray-100 rounded-2xl p-1.5 flex w-3/4 mb-6">
+                <div class="flex-1 h-10 bg-gray-300 rounded-xl animate-pulse"></div>
+                <div class="flex-1 h-10 bg-gray-200 rounded-xl animate-pulse"></div>
+                <div class="flex-1 h-10 bg-gray-200 rounded-xl animate-pulse"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 w-full px-6">
+                <div class="h-24 bg-gray-200 rounded-2xl animate-pulse"></div>
+                <div class="h-24 bg-gray-200 rounded-2xl animate-pulse"></div>
+                <div class="h-24 bg-gray-200 rounded-2xl animate-pulse"></div>
+                <div class="h-24 bg-gray-200 rounded-2xl animate-pulse"></div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- HEADER: Sticky con botón de retroceso y título                 -->
+        <!-- ============================================================ -->
+        <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
+            <div class="flex items-center justify-between px-4 py-3">
+                <div class="flex items-center gap-3">
+                    <a href="hub_mapa_principal.html" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px]" aria-label="Volver al inicio">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </a>
+                    <div class="h-4 bg-gray-800 rounded w-32"></div>
+                </div>
+                <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px]" aria-label="Configuración" onclick="showSettings()">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- ============================================================ -->
+        <!-- CONTENIDO PRINCIPAL                                            -->
+        <!-- ============================================================ -->
+        <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden pb-24 opacity-0 transition-opacity duration-500">
+
+            <!-- ============================================================ -->
+            <!-- PERFIL HEADER: Avatar + Nombre + Equipo                        -->
+            <!-- ============================================================ -->
+            <div class="px-6 pt-6 pb-4 flex flex-col items-center">
+                <!-- Avatar grande con estado online -->
+                <div class="relative mb-4">
+                    <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center border-4 border-gray-100">
+                        <div class="w-12 h-12 bg-gray-300 rounded-full"></div>
+                    </div>
+                    <!-- Indicador online -->
+                    <div class="absolute bottom-1 right-1 w-6 h-6 bg-gray-400 rounded-full border-3 border-white"></div>
+                </div>
+                <!-- Nombre del jugador -->
+                <div class="h-5 bg-gray-800 rounded w-48 mb-2"></div>
+                <!-- Username / Posición -->
+                <div class="h-3 bg-gray-300 rounded w-32 mb-4"></div>
+                <!-- Badge de equipo actual -->
+                <a href="detalle_equipo_card_maestra.html" class="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer">
+                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
+                    <div class="h-3 bg-gray-600 rounded w-24"></div>
+                </a>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- SISTEMA DE PESTAÑAS (Tabs)                                     -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-6">
+                <div class="bg-gray-100 rounded-2xl p-1.5 flex">
+                    <!-- Tab 1: Stats (Activo) -->
+                    <button id="tab-btn-stats" class="flex-1 bg-gray-800 text-white py-3 rounded-xl text-sm font-medium transition-all min-h-[44px]" onclick="switchTab('stats')">
+                        <div class="h-3 bg-gray-400 rounded w-20 mx-auto"></div>
+                    </button>
+                    <!-- Tab 2: Perfil -->
+                    <button id="tab-btn-profile" class="flex-1 text-gray-500 py-3 rounded-xl text-sm font-medium hover:text-gray-700 transition-all min-h-[44px]" onclick="switchTab('profile')">
+                        <div class="h-3 bg-gray-300 rounded w-16 mx-auto"></div>
+                    </button>
+                    <!-- Tab 3: Horario -->
+                    <button id="tab-btn-schedule" class="flex-1 text-gray-500 py-3 rounded-xl text-sm font-medium hover:text-gray-700 transition-all min-h-[44px]" onclick="switchTab('schedule')">
+                        <div class="h-3 bg-gray-300 rounded w-20 mx-auto"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- TAB 1: ESTADÍSTICAS Y SANCIONES (Visible por defecto)          -->
+            <!-- ============================================================ -->
+            <div id="tab-stats" class="px-6 space-y-6">
+
+                <!-- Stats Grid Principal -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-gray-100 rounded-2xl p-5 text-center hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer" onclick="showStatDetail('partidos')">
+                        <div class="h-3 bg-gray-300 rounded w-12 mx-auto mb-2"></div>
+                        <div class="h-8 bg-gray-800 rounded w-16 mx-auto mb-1"></div>
+                        <div class="h-2 bg-gray-300 rounded w-20 mx-auto"></div>
+                    </div>
+                    <div class="bg-gray-100 rounded-2xl p-5 text-center hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer" onclick="showStatDetail('goles')">
+                        <div class="h-3 bg-gray-300 rounded w-12 mx-auto mb-2"></div>
+                        <div class="h-8 bg-gray-800 rounded w-16 mx-auto mb-1"></div>
+                        <div class="h-2 bg-gray-300 rounded w-20 mx-auto"></div>
+                    </div>
+                    <div class="bg-gray-100 rounded-2xl p-5 text-center hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer" onclick="showStatDetail('asistencias')">
+                        <div class="h-3 bg-gray-300 rounded w-12 mx-auto mb-2"></div>
+                        <div class="h-8 bg-gray-800 rounded w-16 mx-auto mb-1"></div>
+                        <div class="h-2 bg-gray-300 rounded w-20 mx-auto"></div>
+                    </div>
+                    <div class="bg-gray-100 rounded-2xl p-5 text-center hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer" onclick="showStatDetail('rating')">
+                        <div class="h-3 bg-gray-300 rounded w-12 mx-auto mb-2"></div>
+                        <div class="h-8 bg-gray-800 rounded w-16 mx-auto mb-1"></div>
+                        <div class="h-2 bg-gray-300 rounded w-20 mx-auto"></div>
+                    </div>
+                </div>
+
+                <!-- Gráfico de Rendimiento (Placeholder) -->
+                <div>
+                    <div class="h-4 bg-gray-800 rounded w-32 mb-4"></div>
+                    <div class="bg-gray-100 rounded-2xl p-6 h-48 flex items-end justify-around gap-2">
+                        <div class="w-8 bg-gray-300 rounded-t-lg hover:bg-gray-400 transition-colors cursor-pointer" style="height: 60%" onclick="showBarDetail('Sem 1', '60%')"></div>
+                        <div class="w-8 bg-gray-400 rounded-t-lg hover:bg-gray-500 transition-colors cursor-pointer" style="height: 80%" onclick="showBarDetail('Sem 2', '80%')"></div>
+                        <div class="w-8 bg-gray-300 rounded-t-lg hover:bg-gray-400 transition-colors cursor-pointer" style="height: 45%" onclick="showBarDetail('Sem 3', '45%')"></div>
+                        <div class="w-8 bg-gray-500 rounded-t-lg hover:bg-gray-600 transition-colors cursor-pointer" style="height: 90%" onclick="showBarDetail('Sem 4', '90%')"></div>
+                        <div class="w-8 bg-gray-300 rounded-t-lg hover:bg-gray-400 transition-colors cursor-pointer" style="height: 70%" onclick="showBarDetail('Sem 5', '70%')"></div>
+                        <div class="w-8 bg-gray-300 rounded-t-lg hover:bg-gray-400 transition-colors cursor-pointer" style="height: 55%" onclick="showBarDetail('Sem 6', '55%')"></div>
+                        <div class="w-8 bg-gray-400 rounded-t-lg hover:bg-gray-500 transition-colors cursor-pointer" style="height: 75%" onclick="showBarDetail('Sem 7', '75%')"></div>
+                    </div>
+                </div>
+
+                <!-- Sección: Sanciones -->
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="h-4 bg-gray-800 rounded w-24"></div>
+                        <div class="h-3 bg-gray-400 rounded w-16"></div>
+                    </div>
+
+                    <!-- Tarjetas acumuladas -->
+                    <div class="bg-gray-100 rounded-2xl p-5 mb-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="h-3 bg-gray-600 rounded w-32"></div>
+                            <div class="h-3 bg-gray-400 rounded w-12"></div>
+                        </div>
+                        <div class="flex gap-3">
+                            <div class="w-10 h-14 bg-gray-300 rounded-lg"></div>
+                            <div class="w-10 h-14 bg-gray-300 rounded-lg"></div>
+                            <div class="w-10 h-14 bg-gray-200 rounded-lg border-2 border-dashed border-gray-300"></div>
+                            <div class="w-10 h-14 bg-gray-200 rounded-lg border-2 border-dashed border-gray-300"></div>
+                            <div class="w-10 h-14 bg-gray-200 rounded-lg border-2 border-dashed border-gray-300"></div>
+                        </div>
+                    </div>
+
+                    <!-- Suspensiones activas -->
+                    <div class="bg-gray-100 rounded-2xl p-5">
+                        <div class="h-3 bg-gray-600 rounded w-40 mb-3"></div>
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                                <div class="w-5 h-5 bg-gray-400 rounded"></div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="h-3 bg-gray-800 rounded w-48 mb-1"></div>
+                                <div class="h-2 bg-gray-300 rounded w-32"></div>
+                            </div>
+                            <div class="bg-gray-800 text-white px-3 py-1 rounded-full">
+                                <div class="h-2 bg-gray-400 rounded w-12"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Historial de Partidos Recientes -->
+                <div>
+                    <div class="h-4 bg-gray-800 rounded w-40 mb-4"></div>
+                    <div class="space-y-3">
+                        <a href="detalle_partido_vs.html" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer block">
+                            <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
+                                <div class="w-6 h-6 bg-gray-300 rounded"></div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="h-3 bg-gray-800 rounded w-40 mb-1"></div>
+                                <div class="h-2 bg-gray-300 rounded w-24"></div>
+                            </div>
+                            <div class="h-5 bg-gray-800 rounded w-16"></div>
+                        </a>
+                        <a href="detalle_partido_vs.html" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer block">
+                            <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
+                                <div class="w-6 h-6 bg-gray-300 rounded"></div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="h-3 bg-gray-800 rounded w-36 mb-1"></div>
+                                <div class="h-2 bg-gray-300 rounded w-24"></div>
+                            </div>
+                            <div class="h-5 bg-gray-800 rounded w-16"></div>
+                        </a>
+                        <a href="detalle_partido_vs.html" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer block">
+                            <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
+                                <div class="w-6 h-6 bg-gray-300 rounded"></div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="h-3 bg-gray-800 rounded w-44 mb-1"></div>
+                                <div class="h-2 bg-gray-300 rounded w-24"></div>
+                            </div>
+                            <div class="h-5 bg-gray-800 rounded w-16"></div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- TAB 2: EDICIÓN DE PERFIL (Oculto por defecto)                  -->
+            <!-- ============================================================ -->
+            <div id="tab-profile" class="px-6 space-y-6 hidden">
+                <!-- Avatar editable -->
+                <div class="flex flex-col items-center">
+                    <div class="relative group cursor-pointer" onclick="changeAvatar()">
+                        <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center border-4 border-gray-100 group-hover:bg-gray-300 transition-colors">
+                            <div class="w-12 h-12 bg-gray-300 rounded-full group-hover:bg-gray-400 transition-colors"></div>
+                        </div>
+                        <button class="absolute bottom-0 right-0 w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-700 active:bg-gray-900 transition-colors">
+                            <div class="w-4 h-4 bg-gray-400 rounded"></div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Formulario -->
+                <form id="profile-form" class="space-y-4" onsubmit="handleProfileSave(event)">
+                    <!-- Nombre completo -->
+                    <div class="space-y-2">
+                        <div class="h-3 bg-gray-400 rounded w-28"></div>
+                        <div class="w-full h-14 bg-gray-100 rounded-xl border-2 border-gray-200 flex items-center px-4 focus-within:border-gray-400 transition-colors">
+                            <input type="text" value="Juan Pérez" class="w-full bg-transparent outline-none text-gray-800 placeholder-gray-400">
+                        </div>
+                    </div>
+
+                    <!-- Nombre de usuario -->
+                    <div class="space-y-2">
+                        <div class="h-3 bg-gray-400 rounded w-32"></div>
+                        <div class="w-full h-14 bg-gray-100 rounded-xl border-2 border-gray-200 flex items-center px-4 focus-within:border-gray-400 transition-colors">
+                            <input type="text" value="@juanp" class="w-full bg-transparent outline-none text-gray-800 placeholder-gray-400">
+                        </div>
+                    </div>
+
+                    <!-- Posición -->
+                    <div class="space-y-2">
+                        <div class="h-3 bg-gray-400 rounded w-20"></div>
+                        <div class="w-full h-14 bg-gray-100 rounded-xl border-2 border-gray-200 flex items-center px-4 focus-within:border-gray-400 transition-colors">
+                            <select class="w-full bg-transparent outline-none text-gray-800 appearance-none cursor-pointer">
+                                <option>Delantero</option>
+                                <option>Mediocampista</option>
+                                <option>Defensa</option>
+                                <option>Portero</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Número de camiseta -->
+                    <div class="space-y-2">
+                        <div class="h-3 bg-gray-400 rounded w-36"></div>
+                        <div class="w-full h-14 bg-gray-100 rounded-xl border-2 border-gray-200 flex items-center px-4 focus-within:border-gray-400 transition-colors">
+                            <input type="number" value="10" min="1" max="99" class="w-full bg-transparent outline-none text-gray-800 placeholder-gray-400">
+                        </div>
+                    </div>
+
+                    <!-- Biografía -->
+                    <div class="space-y-2">
+                        <div class="h-3 bg-gray-400 rounded w-20"></div>
+                        <div class="w-full h-32 bg-gray-100 rounded-xl border-2 border-gray-200 p-4 focus-within:border-gray-400 transition-colors">
+                            <textarea class="w-full h-full bg-transparent outline-none resize-none text-gray-800 placeholder-gray-400">Jugador apasionado del fútbol sala. Siempre listo para el próximo torneo.</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Botón Guardar -->
+                    <button type="submit" id="profile-submit" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px] relative overflow-hidden mt-6">
+                        <div class="h-4 bg-gray-400 rounded w-24 mx-auto"></div>
+                        <span class="absolute inset-0 bg-white/20 scale-0 rounded-2xl transition-transform duration-300" id="profile-ripple"></span>
+                    </button>
+                </form>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- TAB 3: DISPONIBILIDAD DE HORARIOS (Oculto por defecto)         -->
+            <!-- ============================================================ -->
+            <div id="tab-schedule" class="px-6 hidden">
+                <!-- Header con título y botón guardar -->
+                <div class="flex items-center justify-between mb-4">
+                    <div class="h-4 bg-gray-800 rounded w-40"></div>
+                    <button id="save-schedule-btn" class="bg-gray-800 text-white px-4 py-2 rounded-xl hover:bg-gray-700 active:bg-gray-900 transition-colors min-h-[44px]" onclick="saveSchedule()">
+                        <div class="h-3 bg-gray-400 rounded w-16"></div>
+                    </button>
+                </div>
+
+                <!-- Instrucciones -->
+                <div class="h-3 bg-gray-300 rounded w-full mb-2"></div>
+                <div class="h-3 bg-gray-300 rounded w-2/3 mb-6"></div>
+
+                <!-- Contador de slots seleccionados -->
+                <div class="bg-gray-100 rounded-2xl p-4 mb-4 flex items-center justify-between">
+                    <div class="h-3 bg-gray-600 rounded w-32"></div>
+                    <div class="bg-gray-800 text-white px-3 py-1 rounded-full text-sm font-medium">
+                        <span id="slot-counter">0</span> slots
+                    </div>
+                </div>
+
+                <!-- Grid de disponibilidad -->
+                <div class="bg-gray-100 rounded-2xl p-4 overflow-x-auto">
+                    <!-- Header de días -->
+                    <div class="grid grid-cols-8 gap-1 mb-2 min-w-[500px]">
+                        <div class="h-8"></div>
+                        <div class="h-8 bg-gray-200 rounded-lg flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-6"></div></div>
+                        <div class="h-8 bg-gray-200 rounded-lg flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-8"></div></div>
+                        <div class="h-8 bg-gray-200 rounded-lg flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-8"></div></div>
+                        <div class="h-8 bg-gray-200 rounded-lg flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-10"></div></div>
+                        <div class="h-8 bg-gray-200 rounded-lg flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-6"></div></div>
+                        <div class="h-8 bg-gray-200 rounded-lg flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-8"></div></div>
+                        <div class="h-8 bg-gray-200 rounded-lg flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-8"></div></div>
+                    </div>
+
+                    <!-- Filas de horarios generadas por JS -->
+                    <div id="schedule-grid"></div>
+                </div>
+
+                <!-- Leyenda -->
+                <div class="flex items-center justify-center gap-6 mt-4">
+                    <div class="flex items-center gap-2">
+                        <div class="w-4 h-4 bg-gray-300 rounded"></div>
+                        <div class="h-2 bg-gray-400 rounded w-16"></div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-4 h-4 bg-white border-2 border-gray-200 rounded"></div>
+                        <div class="h-2 bg-gray-400 rounded w-20"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- NOTIFICACIÓN CONTEXTUAL INFERIOR                               -->
+            <!-- ============================================================ -->
+            <div class="px-6 mt-6 mb-8">
+                <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                        <div class="w-5 h-5 bg-gray-400 rounded"></div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="h-3 bg-gray-600 rounded w-48 mb-1"></div>
+                        <div class="h-2 bg-gray-300 rounded w-32"></div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- ============================================================ -->
+        <!-- NAVBAR INFERIOR                                                -->
+        <!-- ============================================================ -->
+        <nav class="absolute bottom-0 w-full z-50 bg-white border-t border-gray-200" style="padding-bottom: env(safe-area-inset-bottom);">
+            <div class="grid grid-cols-4 h-16">
+                <a href="hub_mapa_principal.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Inicio">
+                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
+                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                </a>
+                <a href="detalle_equipo_card_maestra.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Equipo">
+                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
+                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                </a>
+                <a href="detalle_torneo.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Torneos">
+                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
+                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                </a>
+                <button class="flex flex-col items-center justify-center gap-1 text-gray-800 min-h-[44px]" aria-label="Perfil">
+                    <div class="w-6 h-6 bg-gray-800 rounded-full"></div>
+                    <div class="h-2 bg-gray-800 rounded w-10"></div>
+                </button>
+            </div>
+        </nav>
+
+        <!-- ============================================================ -->
+        <!-- TOAST DE NOTIFICACIÓN                                          -->
+        <!-- ============================================================ -->
+        <div id="toast" class="absolute top-20 left-4 right-4 z-[70] pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
+            <div class="bg-gray-800 text-white px-4 py-3 rounded-2xl shadow-lg flex items-center gap-3">
+                <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center shrink-0">
+                    <div class="w-4 h-4 bg-gray-400 rounded"></div>
+                </div>
+                <div class="flex-1">
+                    <div class="h-3 bg-gray-400 rounded w-3/4 mb-1" id="toast-title"></div>
+                    <div class="h-2 bg-gray-500 rounded w-1/2" id="toast-subtitle"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- OVERLAY DE CARGA PARA GUARDAR                                  -->
+        <!-- ============================================================ -->
+        <div id="save-loading" class="absolute inset-0 z-[60] bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center gap-4 hidden">
+            <div class="w-16 h-16 bg-gray-200 rounded-2xl animate-pulse"></div>
+            <div class="h-4 bg-gray-300 rounded w-40 animate-pulse"></div>
+        </div>
+
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SCRIPT: Lógica de Interacción                                  -->
+    <!-- ============================================================ -->
+    <script>
+        // ============================================================
+        // ESTADO GLOBAL
+        // ============================================================
+        let currentTab = 'stats';
+        let selectedSlots = 0;
+        const scheduleState = {};
+
+        // ============================================================
+        // CARGA INICIAL
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            // Generar grid de horarios
+            generateScheduleGrid();
+            
+            // Mostrar skeleton por 1s
+            setTimeout(() => {
+                const appLoading = document.getElementById('app-loading');
+                const mainContent = document.getElementById('main-content');
+                
+                appLoading.style.opacity = '0';
+                mainContent.style.opacity = '1';
+                
+                setTimeout(() => {
+                    appLoading.style.display = 'none';
+                }, 500);
+            }, 1000);
+        });
+
+        // ============================================================
+        // NAVEGACIÓN DE TABS
+        // ============================================================
+        function switchTab(tab) {
+            if (tab === currentTab) return;
+            currentTab = tab;
+            
+            // Resetear tabs
+            const tabs = ['stats', 'profile', 'schedule'];
+            tabs.forEach(t => {
+                const btn = document.getElementById(`tab-btn-${t}`);
+                const content = document.getElementById(`tab-${t}`);
+                
+                if (t === tab) {
+                    btn.classList.remove('text-gray-500');
+                    btn.classList.add('bg-gray-800', 'text-white');
+                    btn.querySelector('div').classList.remove('bg-gray-300');
+                    btn.querySelector('div').classList.add('bg-gray-400');
+                    content.classList.remove('hidden');
+                    // Animación de entrada
+                    content.style.opacity = '0';
+                    content.style.transform = 'translateY(10px)';
+                    setTimeout(() => {
+                        content.style.opacity = '1';
+                        content.style.transform = 'translateY(0)';
+                    }, 50);
+                } else {
+                    btn.classList.remove('bg-gray-800', 'text-white');
+                    btn.classList.add('text-gray-500');
+                    btn.querySelector('div').classList.remove('bg-gray-400');
+                    btn.querySelector('div').classList.add('bg-gray-300');
+                    content.classList.add('hidden');
+                }
+            });
+            
+            if (navigator.vibrate) navigator.vibrate(30);
+        }
+
+        // ============================================================
+        // GENERAR GRID DE HORARIOS
+        // ============================================================
+        function generateScheduleGrid() {
+            const grid = document.getElementById('schedule-grid');
+            const hours = ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'];
+            
+            hours.forEach((hour, idx) => {
+                const row = document.createElement('div');
+                row.className = 'grid grid-cols-8 gap-1 mb-1 min-w-[500px]';
+                
+                // Celda de hora
+                const hourCell = document.createElement('div');
+                hourCell.className = 'h-10 bg-gray-200 rounded-lg flex items-center justify-center';
+                hourCell.innerHTML = `<div class="h-2 bg-gray-400 rounded w-10"></div>`;
+                row.appendChild(hourCell);
+                
+                // 7 días
+                for (let day = 0; day < 7; day++) {
+                    const cell = document.createElement('div');
+                    const key = `${idx}-${day}`;
+                    const isAvailable = Math.random() > 0.5;
+                    scheduleState[key] = isAvailable;
+                    
+                    cell.className = `h-10 rounded-lg cursor-pointer transition-all duration-200 min-w-[44px] min-h-[44px] ${
+                        isAvailable 
+                            ? 'bg-gray-300 hover:bg-gray-400 active:bg-gray-500' 
+                            : 'bg-white border-2 border-gray-200 hover:bg-gray-50 active:bg-gray-100'
+                    }`;
+                    cell.dataset.key = key;
+                    cell.onclick = () => toggleSlot(cell, key);
+                    row.appendChild(cell);
+                }
+                
+                grid.appendChild(row);
+            });
+            
+            updateSlotCounter();
+        }
+
+        // ============================================================
+        // TOGGLE SLOT DE HORARIO (Optimistic UI)
+        // ============================================================
+        function toggleSlot(cell, key) {
+            const isAvailable = !scheduleState[key];
+            scheduleState[key] = isAvailable;
+            
+            // Feedback táctil inmediato
+            if (navigator.vibrate) navigator.vibrate(20);
+            
+            // Cambio visual instantáneo
+            if (isAvailable) {
+                cell.classList.remove('bg-white', 'border-2', 'border-gray-200');
+                cell.classList.add('bg-gray-300');
+            } else {
+                cell.classList.remove('bg-gray-300');
+                cell.classList.add('bg-white', 'border-2', 'border-gray-200');
+            }
+            
+            updateSlotCounter();
+        }
+
+        // ============================================================
+        // CONTADOR DE SLOTS
+        // ============================================================
+        function updateSlotCounter() {
+            selectedSlots = Object.values(scheduleState).filter(v => v).length;
+            document.getElementById('slot-counter').textContent = selectedSlots;
+        }
+
+        // ============================================================
+        // GUARDAR HORARIO
+        // ============================================================
+        function saveSchedule() {
+            const btn = document.getElementById('save-schedule-btn');
+            const overlay = document.getElementById('save-loading');
+            
+            // Mostrar carga
+            overlay.classList.remove('hidden');
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                showToast('Horario guardado', `${selectedSlots} slots de disponibilidad actualizados`);
+            }, 1500);
+        }
+
+        // ============================================================
+        // GUARDAR PERFIL
+        // ============================================================
+        function handleProfileSave(e) {
+            e.preventDefault();
+            const overlay = document.getElementById('save-loading');
+            
+            // Ripple effect
+            const ripple = document.getElementById('profile-ripple');
+            ripple.style.transform = 'scale(1)';
+            setTimeout(() => ripple.style.transform = 'scale(0)', 300);
+            
+            overlay.classList.remove('hidden');
+            
+            setTimeout(() => {
+                overlay.classList.add('hidden');
+                showToast('Perfil actualizado', 'Tus cambios se han guardado correctamente');
+            }, 1500);
+        }
+
+        // ============================================================
+        // DETALLES DE STATS
+        // ============================================================
+        function showStatDetail(stat) {
+            const labels = {
+                'partidos': '24 partidos jugados',
+                'goles': '18 goles anotados',
+                'asistencias': '12 asistencias',
+                'rating': '4.2 de 5.0 estrellas'
+            };
+            showToast('Estadística', labels[stat]);
+        }
+
+        function showBarDetail(week, value) {
+            showToast(`Semana ${week}`, `Rendimiento: ${value}`);
+        }
+
+        // ============================================================
+        // CAMBIAR AVATAR
+        // ============================================================
+        function changeAvatar() {
+            showToast('Galería', 'Abriendo selector de avatar...');
+        }
+
+        // ============================================================
+        // CONFIGURACIÓN
+        // ============================================================
+        function showSettings() {
+            showToast('Configuración', 'Panel de ajustes en desarrollo');
+        }
+
+        // ============================================================
+        // SISTEMA DE TOAST
+        // ============================================================
+        let toastTimeout;
+        function showToast(title, subtitle) {
+            const toast = document.getElementById('toast');
+            const toastTitle = document.getElementById('toast-title');
+            const toastSubtitle = document.getElementById('toast-subtitle');
+            
+            clearTimeout(toastTimeout);
+            
+            toastTitle.style.width = Math.min(title.length * 8, 200) + 'px';
+            toastSubtitle.style.width = Math.min(subtitle.length * 6, 150) + 'px';
+            
+            toast.style.opacity = '0.95';
+            toast.style.transform = 'translateY(0)';
+            
+            toastTimeout = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-8px)';
+            }, 3000);
+        }
+
+        // ============================================================
+        // INPUT FOCUS STATES
+        // ============================================================
+        document.querySelectorAll('input, textarea, select').forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.classList.add('border-gray-400');
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.classList.remove('border-gray-400');
+            });
+        });
+    </script>
+
+</body>
+</html>

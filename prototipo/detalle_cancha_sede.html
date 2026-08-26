@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Detalle de Cancha (Sede) — Wireframe Low-Fidelity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .skeleton-pulse {
+            animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes skeleton-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="bg-gray-950 min-h-[100dvh] flex items-center justify-center">
+
+    <!-- APP SHELL -->
+    <div class="w-full max-w-lg min-h-[100dvh] bg-white md:min-h-[90vh] md:my-[5vh] md:rounded-[2rem] md:border-[10px] md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col relative">
+
+        <!-- ESTADO DE CARGA INICIAL (Skeleton) -->
+        <div id="app-loading" class="absolute inset-0 z-[60] bg-white flex flex-col transition-opacity duration-500">
+            <div class="w-full h-32 bg-gray-200 animate-pulse"></div>
+            <div class="px-6 py-6 space-y-4">
+                <div class="h-6 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                <div class="h-3 bg-gray-200 rounded w-full animate-pulse"></div>
+                <div class="h-3 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+                <div class="flex gap-2 mt-4">
+                    <div class="h-8 bg-gray-200 rounded-full w-20 animate-pulse"></div>
+                    <div class="h-8 bg-gray-200 rounded-full w-24 animate-pulse"></div>
+                </div>
+                <div class="grid grid-cols-3 gap-4 mt-6">
+                    <div class="h-20 bg-gray-200 rounded-2xl animate-pulse"></div>
+                    <div class="h-20 bg-gray-200 rounded-2xl animate-pulse"></div>
+                    <div class="h-20 bg-gray-200 rounded-2xl animate-pulse"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- HEADER: Sticky con botón de retroceso -->
+        <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
+            <div class="flex items-center justify-between px-4 py-3">
+                <div class="flex items-center gap-3">
+                    <a href="hub_mapa_principal.html" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px]" aria-label="Volver al mapa">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </a>
+                    <span class="text-sm font-semibold text-gray-800">Detalle de Cancha</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTENIDO PRINCIPAL -->
+        <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden pb-24 opacity-0 transition-opacity duration-500">
+
+            <!-- HERO: Placeholder visual (sin fotos reales) -->
+            <div class="relative w-full h-32 bg-gray-100 flex items-center justify-center border-b border-gray-200">
+                <div class="text-center">
+                    <svg class="w-12 h-12 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-1 8h1m-1-4h1m-1 4h1"/>
+                    </svg>
+                    <p class="text-xs text-gray-400">Ilustración de cancha</p>
+                </div>
+                <!-- Badge de estado -->
+                <div class="absolute top-4 right-4 bg-green-600 text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5">
+                    <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
+                    Habilitada
+                </div>
+            </div>
+
+            <!-- INFO PRINCIPAL DE LA CANCHA -->
+            <div class="px-6 py-6">
+                <!-- Nombre -->
+                <h1 class="text-xl font-bold text-gray-900 mb-1">Cancha El Campín</h1>
+                <!-- Dirección -->
+                <p class="text-sm text-gray-500 mb-4">Calle 45 #12-34, Barrio Centro</p>
+
+                <!-- Estado de la cancha -->
+                <div class="flex items-center gap-2 mb-6">
+                    <span class="bg-green-100 text-green-700 px-3 py-1.5 rounded-full text-xs font-medium">Habilitada</span>
+                    <span class="bg-gray-100 text-gray-600 px-3 py-1.5 rounded-full text-xs font-medium">8 franjas disponibles hoy</span>
+                </div>
+
+                <!-- Stats rápidas (CORREGIDAS: sin rating, sin "canchas") -->
+                <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="bg-gray-50 rounded-2xl p-4 text-center border border-gray-100">
+                        <p class="text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Torneos</p>
+                        <p class="text-lg font-bold text-gray-800">3</p>
+                        <p class="text-[10px] text-gray-400">activos</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-2xl p-4 text-center border border-gray-100">
+                        <p class="text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Equipos</p>
+                        <p class="text-lg font-bold text-gray-800">24</p>
+                        <p class="text-[10px] text-gray-400">inscritos</p>
+                    </div>
+                    <div class="bg-gray-50 rounded-2xl p-4 text-center border border-gray-100">
+                        <p class="text-[10px] text-gray-500 mb-1 uppercase tracking-wide">Franjas hoy</p>
+                        <p class="text-lg font-bold text-gray-800">8/12</p>
+                        <p class="text-[10px] text-gray-400">disponibles</p>
+                    </div>
+                </div>
+
+                <!-- Descripción -->
+                <div class="mb-8">
+                    <h2 class="text-sm font-semibold text-gray-800 mb-2">Descripción</h2>
+                    <p class="text-sm text-gray-600 leading-relaxed">
+                        Cancha de microfútbol con arcos, redes y vestuarios disponibles. 
+                        Espacio amplio con iluminación nocturna. Ideal para torneos de barrio 
+                        y encuentros amistosos.
+                    </p>
+                </div>
+
+                <!-- Inventario -->
+                <div class="mb-8">
+                    <h2 class="text-sm font-semibold text-gray-800 mb-2">Implementos</h2>
+                    <p class="text-sm text-gray-600">Arcos, redes, 4 pelotas, vestuarios, bancas</p>
+                </div>
+
+                <!-- PLACEHOLDER: Matriz de disponibilidad -->
+                <div class="mb-8">
+                    <div class="flex items-center justify-between mb-3">
+                        <h2 class="text-sm font-semibold text-gray-800">Disponibilidad</h2>
+                        <span class="text-xs text-gray-400">2 semanas</span>
+                    </div>
+                    <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                        <!-- Placeholder skeleton de la matriz 7×12 -->
+                        <div class="flex gap-1 mb-2 justify-center">
+                            <div class="w-5 h-3 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="w-5 h-3 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="w-5 h-3 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="w-5 h-3 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="w-5 h-3 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="w-5 h-3 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="w-5 h-3 bg-gray-200 rounded skeleton-pulse"></div>
+                        </div>
+                        <div class="grid grid-cols-7 gap-1 max-w-[240px] mx-auto">
+                            <div class="h-5 bg-green-200 rounded skeleton-pulse"></div>
+                            <div class="h-5 bg-green-200 rounded skeleton-pulse"></div>
+                            <div class="h-5 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="h-5 bg-green-200 rounded skeleton-pulse"></div>
+                            <div class="h-5 bg-green-200 rounded skeleton-pulse"></div>
+                            <div class="h-5 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="h-5 bg-green-200 rounded skeleton-pulse"></div>
+                        </div>
+                        <div class="grid grid-cols-7 gap-1 max-w-[240px] mx-auto mt-1">
+                            <div class="h-5 bg-green-200 rounded skeleton-pulse"></div>
+                            <div class="h-5 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="h-5 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="h-5 bg-green-200 rounded skeleton-pulse"></div>
+                            <div class="h-5 bg-green-200 rounded skeleton-pulse"></div>
+                            <div class="h-5 bg-green-200 rounded skeleton-pulse"></div>
+                            <div class="h-5 bg-gray-200 rounded skeleton-pulse"></div>
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-3 text-center italic">
+                            Matriz de franjas horarias (14 días × 12 slots)
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Mini esquema de ubicación (no mapa geográfico) -->
+                <div class="mb-8">
+                    <h2 class="text-sm font-semibold text-gray-800 mb-3">Ubicación en el mapa</h2>
+                    <a href="hub_mapa_principal.html" class="block w-full h-32 bg-gray-100 rounded-2xl relative overflow-hidden border border-gray-200 hover:border-gray-300 transition-colors">
+                        <div class="absolute inset-0 opacity-20" 
+                             style="background-image: linear-gradient(#9ca3af 1px, transparent 1px), linear-gradient(90deg, #9ca3af 1px, transparent 1px); background-size: 30px 30px;">
+                        </div>
+                        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                            <div class="w-10 h-10 bg-gray-800 rounded-full border-4 border-white shadow-lg flex items-center justify-center">
+                                <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-1 8h1m-1-4h1m-1 4h1"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="absolute bottom-2 right-2 bg-white/90 px-2 py-1 rounded-lg text-[10px] text-gray-600 font-medium">
+                            Ver en mapa →
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- SECCIÓN: TORNEOS EN ESTA CANCHA -->
+            <div class="px-6 mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-semibold text-gray-800">Torneos en esta cancha</h2>
+                    <span class="text-xs text-gray-400">3 activos</span>
+                </div>
+
+                <!-- Cards horizontales con snap -->
+                <div class="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x snap-mandatory -mx-6 px-6">
+                    <!-- Card Torneo 1 -->
+                    <div class="bg-gray-50 rounded-2xl p-4 min-w-[220px] flex-shrink-0 snap-start border border-gray-100">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-800">Copa Barrial 2026</p>
+                                <p class="text-xs text-gray-500">Martes 18:00-20:00</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded text-[10px] font-medium">IN_PROGRESS</span>
+                            <span class="text-[10px] text-gray-400">12/16 equipos</span>
+                        </div>
+                        <button class="w-full bg-gray-800 text-white py-2 rounded-xl text-xs font-medium hover:bg-gray-700 active:bg-gray-900 transition-colors">
+                            Ver torneo
+                        </button>
+                    </div>
+
+                    <!-- Card Torneo 2 -->
+                    <div class="bg-gray-50 rounded-2xl p-4 min-w-[220px] flex-shrink-0 snap-start border border-gray-100">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-800">Liga de Verano</p>
+                                <p class="text-xs text-gray-500">Sábado 20:00-22:00</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-medium">SCHEDULED</span>
+                            <span class="text-[10px] text-gray-400">8/8 equipos</span>
+                        </div>
+                        <button class="w-full bg-gray-800 text-white py-2 rounded-xl text-xs font-medium hover:bg-gray-700 active:bg-gray-900 transition-colors">
+                            Ver torneo
+                        </button>
+                    </div>
+
+                    <!-- Card Torneo 3 -->
+                    <div class="bg-gray-50 rounded-2xl p-4 min-w-[220px] flex-shrink-0 snap-start border border-gray-100">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-gray-800">Copa Vecinos</p>
+                                <p class="text-xs text-gray-500">Jueves 19:00-21:00</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 mb-3">
+                            <span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-[10px] font-medium">GRACE_PERIOD</span>
+                            <span class="text-[10px] text-gray-400">6/8 equipos</span>
+                        </div>
+                        <button class="w-full bg-gray-800 text-white py-2 rounded-xl text-xs font-medium hover:bg-gray-700 active:bg-gray-900 transition-colors">
+                            Ver torneo
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN: HISTORIAL DE TORNEOS (reemplaza "Próximos torneos") -->
+            <div class="px-6 mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-sm font-semibold text-gray-800">Historial de torneos</h2>
+                    <span class="text-xs text-gray-400">Últimos 3</span>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="bg-gray-50 rounded-2xl p-4 flex items-center gap-4 border border-gray-100">
+                        <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
+                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-800">Torneo Invierno 2025</p>
+                            <p class="text-xs text-gray-500">Finalizado • 16 equipos</p>
+                        </div>
+                        <span class="bg-gray-200 text-gray-600 px-2 py-1 rounded-full text-[10px] font-medium shrink-0">FINISHED</span>
+                    </div>
+
+                    <div class="bg-gray-50 rounded-2xl p-4 flex items-center gap-4 border border-gray-100">
+                        <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
+                            <svg class="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-medium text-gray-800">Copa Primavera 2025</p>
+                            <p class="text-xs text-gray-500">Finalizado • 8 equipos</p>
+                        </div>
+                        <span class="bg-gray-200 text-gray-600 px-2 py-1 rounded-full text-[10px] font-medium shrink-0">FINISHED</span>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- NAVBAR INFERIOR -->
+        <nav class="absolute bottom-0 w-full z-50 bg-white border-t border-gray-200" style="padding-bottom: env(safe-area-inset-bottom);">
+            <div class="grid grid-cols-4 h-16">
+                <a href="hub_mapa_principal.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Inicio">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                    <span class="text-[10px] font-medium">Inicio</span>
+                </a>
+                <a href="#" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Equipo">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    <span class="text-[10px] font-medium">Equipo</span>
+                </a>
+                <a href="#" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Torneos">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                    <span class="text-[10px] font-medium">Torneos</span>
+                </a>
+                <a href="#" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Perfil">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    <span class="text-[10px] font-medium">Perfil</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- TOAST -->
+        <div id="toast" class="absolute top-20 left-4 right-4 z-[70] pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
+            <div class="bg-gray-800 text-white px-4 py-3 rounded-2xl shadow-lg flex items-center gap-3">
+                <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <div class="flex-1">
+                    <p id="toast-title" class="text-sm font-medium text-white">Título</p>
+                    <p id="toast-subtitle" class="text-xs text-gray-400">Subtítulo</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const appLoading = document.getElementById('app-loading');
+                const mainContent = document.getElementById('main-content');
+                
+                appLoading.style.opacity = '0';
+                mainContent.style.opacity = '1';
+                
+                setTimeout(() => {
+                    appLoading.style.display = 'none';
+                    showToast('Cancha cargada', 'Información actualizada');
+                }, 500);
+            }, 1200);
+        });
+
+        let toastTimeout;
+        function showToast(title, subtitle) {
+            const toast = document.getElementById('toast');
+            clearTimeout(toastTimeout);
+            
+            document.getElementById('toast-title').innerText = title;
+            document.getElementById('toast-subtitle').innerText = subtitle;
+            
+            toast.style.opacity = '0.95';
+            toast.style.transform = 'translateY(0)';
+            
+            toastTimeout = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-8px)';
+            }, 3000);
+        }
+    </script>
+
+</body>
+</html>

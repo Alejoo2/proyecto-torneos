@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gestión de Torneo — Inscripciones — Wireframe Low-Fidelity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-950 min-h-[100dvh] flex items-center justify-center">
+
+    <!-- ============================================================ -->
+    <!-- APP SHELL: El "Móvil"                                          -->
+    <!-- ============================================================ -->
+    <div class="w-full max-w-lg min-h-[100dvh] bg-white md:min-h-[90vh] md:my-[5vh] md:rounded-[2rem] md:border-[10px] md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col relative">
+
+        <!-- ============================================================ -->
+        <!-- ESTADO DE CARGA INICIAL (Skeleton)                             -->
+        <!-- ============================================================ -->
+        <div id="app-loading" class="absolute inset-0 z-[60] bg-white flex flex-col transition-opacity duration-500">
+            <!-- Skeleton del header -->
+            <div class="px-4 py-3 flex items-center justify-between border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+                    <div class="h-4 bg-gray-200 rounded w-48 animate-pulse"></div>
+                </div>
+                <div class="w-16 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+            </div>
+            <!-- Skeleton del tab bar -->
+            <div class="px-6 pt-4 pb-2">
+                <div class="bg-gray-100 rounded-2xl p-1.5 flex h-12">
+                    <div class="flex-1 bg-gray-200 rounded-xl animate-pulse mx-0.5"></div>
+                    <div class="flex-1 bg-gray-200 rounded-xl animate-pulse mx-0.5"></div>
+                    <div class="flex-1 bg-gray-200 rounded-xl animate-pulse mx-0.5"></div>
+                </div>
+            </div>
+            <!-- Skeleton de cards de inscripción -->
+            <div class="px-6 pt-4 space-y-4">
+                <!-- Skeleton header de sección -->
+                <div class="flex items-center justify-between mb-2">
+                    <div class="h-4 bg-gray-200 rounded w-48 animate-pulse"></div>
+                    <div class="h-3 bg-gray-200 rounded w-12 animate-pulse"></div>
+                </div>
+                <!-- Card 1 -->
+                <div class="bg-white border-2 border-gray-200 rounded-2xl p-4">
+                    <div class="flex items-start gap-4">
+                        <div class="shrink-0">
+                            <div class="w-14 h-14 bg-gray-200 rounded-xl mb-2 animate-pulse"></div>
+                            <div class="h-2 bg-gray-200 rounded w-14 mx-auto animate-pulse"></div>
+                        </div>
+                        <div class="flex-1 space-y-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-5 h-5 bg-gray-200 rounded-full animate-pulse"></div>
+                                <div class="h-3 bg-gray-200 rounded w-32 animate-pulse"></div>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded w-full animate-pulse"></div>
+                            <div class="h-2 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+                            <div class="h-8 bg-gray-200 rounded-xl w-24 animate-pulse mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Card 2 (conflicto) -->
+                <div class="bg-white border-2 border-gray-200 rounded-2xl p-4">
+                    <div class="flex items-start gap-4">
+                        <div class="shrink-0">
+                            <div class="w-14 h-14 bg-gray-200 rounded-xl mb-2 animate-pulse"></div>
+                            <div class="h-2 bg-gray-200 rounded w-14 mx-auto animate-pulse"></div>
+                        </div>
+                        <div class="flex-1 space-y-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-5 h-5 bg-gray-200 rounded-full animate-pulse"></div>
+                                <div class="h-3 bg-gray-200 rounded w-32 animate-pulse"></div>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded w-full animate-pulse"></div>
+                            <div class="h-2 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+                            <div class="h-8 bg-gray-200 rounded-xl w-24 animate-pulse mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Card 3 -->
+                <div class="bg-white border-2 border-gray-200 rounded-2xl p-4">
+                    <div class="flex items-start gap-4">
+                        <div class="shrink-0">
+                            <div class="w-14 h-14 bg-gray-200 rounded-xl mb-2 animate-pulse"></div>
+                            <div class="h-2 bg-gray-200 rounded w-14 mx-auto animate-pulse"></div>
+                        </div>
+                        <div class="flex-1 space-y-2">
+                            <div class="flex items-center gap-2">
+                                <div class="w-5 h-5 bg-gray-200 rounded-full animate-pulse"></div>
+                                <div class="h-3 bg-gray-200 rounded w-32 animate-pulse"></div>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded w-full animate-pulse"></div>
+                            <div class="h-2 bg-gray-200 rounded w-2/3 animate-pulse"></div>
+                            <div class="h-8 bg-gray-200 rounded-xl w-24 animate-pulse mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- HEADER: Sticky con badge de rol Gestor                         -->
+        <!-- ============================================================ -->
+        <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
+            <div class="flex items-center justify-between px-4 py-3">
+                <div class="flex items-center gap-3">
+                    <a href="detalle_torneo.html" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px]" aria-label="Volver al torneo">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </a>
+                    <div class="h-4 bg-gray-800 rounded w-48"></div>
+                </div>
+                <div class="bg-gray-800 text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5">
+                    <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                    <div class="h-2 bg-gray-400 rounded w-14"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ============================================================ -->
+        <!-- CONTENIDO PRINCIPAL                                            -->
+        <!-- ============================================================ -->
+        <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden pb-24 opacity-0 transition-opacity duration-500">
+
+            <!-- ============================================================ -->
+            <!-- SISTEMA DE PESTAÑAS (Tabs)                                     -->
+            <!-- ============================================================ -->
+            <div class="px-6 pt-4 pb-2 sticky top-0 z-10 bg-white/80 backdrop-blur-sm">
+                <div class="bg-gray-100 rounded-2xl p-1.5 flex" role="tablist" aria-label="Gestión del torneo">
+                    <!-- Tab 1: Inscripciones (Activo) -->
+                    <button id="tab-btn-inscripciones" class="flex-1 bg-gray-800 text-white py-3 rounded-xl text-sm font-medium transition-all duration-200 min-h-[44px] relative overflow-hidden" role="tab" aria-selected="true" aria-controls="tab-inscripciones" onclick="switchTab('inscripciones')">
+                        <div class="h-3 bg-gray-400 rounded w-24 mx-auto"></div>
+                        <span class="absolute inset-0 bg-white/20 scale-0 rounded-xl transition-transform duration-300" id="ripple-inscripciones"></span>
+                    </button>
+                    <!-- Tab 2: Sorteo -->
+                    <a href="gestion_torneo_sorteo.html" id="tab-btn-sorteo" class="flex-1 text-gray-500 py-3 rounded-xl text-sm font-medium hover:text-gray-700 hover:bg-gray-200/50 active:bg-gray-200 transition-all duration-200 min-h-[44px] flex items-center justify-center" role="tab" aria-selected="false" aria-controls="tab-sorteo">
+                        <div class="h-3 bg-gray-300 rounded w-16 mx-auto"></div>
+                    </a>
+                    <!-- Tab 3: Planilla -->
+                    <a href="gestion_torneo_planilla.html" id="tab-btn-planilla" class="flex-1 text-gray-500 py-3 rounded-xl text-sm font-medium hover:text-gray-700 hover:bg-gray-200/50 active:bg-gray-200 transition-all duration-200 min-h-[44px] flex items-center justify-center" role="tab" aria-selected="false" aria-controls="tab-planilla">
+                        <div class="h-3 bg-gray-300 rounded w-20 mx-auto"></div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- TAB 1: INSCRIPCIONES                                           -->
+            <!-- ============================================================ -->
+            <div id="tab-inscripciones" class="px-6 space-y-4 pt-4" role="tabpanel" aria-labelledby="tab-btn-inscripciones">
+
+                <!-- Header de sección -->
+                <div class="flex items-center justify-between mb-2">
+                    <div class="h-4 bg-gray-800 rounded w-48"></div>
+                    <div class="h-3 bg-gray-400 rounded w-12"></div>
+                </div>
+
+                <!-- ============================================================ -->
+                <!-- CASO A: Horario cuadra — APROBABLE                             -->
+                <!-- ============================================================ -->
+                <div class="bg-white border-2 border-gray-300 rounded-2xl p-4 hover:border-gray-400 active:border-gray-500 transition-colors">
+                    <div class="flex items-start gap-4">
+                        <!-- Mini Card Maestra -->
+                        <a href="detalle_equipo_card_maestra.html" class="shrink-0 group cursor-pointer min-w-[44px] min-h-[44px]">
+                            <div class="w-14 h-14 bg-gray-200 rounded-xl mb-2 flex items-center justify-center group-hover:bg-gray-300 group-active:bg-gray-400 transition-colors">
+                                <div class="w-8 h-8 bg-gray-300 rounded-lg group-hover:bg-gray-400 transition-colors"></div>
+                            </div>
+                            <div class="h-2 bg-gray-600 rounded w-14 mx-auto group-hover:bg-gray-700 transition-colors"></div>
+                        </a>
+                        <!-- Info y acción -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center shrink-0">
+                                    <svg class="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </div>
+                                <div class="h-3 bg-gray-400 rounded w-32"></div>
+                            </div>
+                            <div class="h-2 bg-gray-300 rounded w-full mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-2/3 mb-3"></div>
+                            <button class="bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 min-h-[44px] relative overflow-hidden" onclick="aprobarInscripcion(this, 'Los Galácticos')">
+                                <div class="h-3 bg-gray-400 rounded w-16 mx-auto"></div>
+                                <span class="absolute inset-0 bg-white/20 scale-0 rounded-xl transition-transform duration-300" id="ripple-aprobar-1"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================ -->
+                <!-- CASO A (otro): Horario cuadra — APROBABLE                      -->
+                <!-- ============================================================ -->
+                <div class="bg-white border-2 border-gray-300 rounded-2xl p-4 hover:border-gray-400 active:border-gray-500 transition-colors">
+                    <div class="flex items-start gap-4">
+                        <a href="detalle_equipo_card_maestra.html" class="shrink-0 group cursor-pointer min-w-[44px] min-h-[44px]">
+                            <div class="w-14 h-14 bg-gray-200 rounded-xl mb-2 flex items-center justify-center group-hover:bg-gray-300 group-active:bg-gray-400 transition-colors">
+                                <div class="w-8 h-8 bg-gray-300 rounded-lg group-hover:bg-gray-400 transition-colors"></div>
+                            </div>
+                            <div class="h-2 bg-gray-600 rounded w-12 mx-auto group-hover:bg-gray-700 transition-colors"></div>
+                        </a>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center shrink-0">
+                                    <svg class="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </div>
+                                <div class="h-3 bg-gray-400 rounded w-28"></div>
+                            </div>
+                            <div class="h-2 bg-gray-300 rounded w-full mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-3/4 mb-3"></div>
+                            <button class="bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 min-h-[44px] relative overflow-hidden" onclick="aprobarInscripcion(this, 'FC Barrio Alto')">
+                                <div class="h-3 bg-gray-400 rounded w-16 mx-auto"></div>
+                                <span class="absolute inset-0 bg-white/20 scale-0 rounded-xl transition-transform duration-300" id="ripple-aprobar-2"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================ -->
+                <!-- CASO B: CONFLICTO — ERROR DURO (Botón bloqueado)               -->
+                <!-- ============================================================ -->
+                <!-- Intención: Error Duro. Botón visualmente inerte, sin interactividad. -->
+                <!-- El equipo tiene jugadores con horarios que chocan con otro torneo. -->
+                <div class="bg-white border-2 border-gray-400 rounded-2xl p-4 relative overflow-hidden opacity-75">
+                    <!-- Sello de conflicto -->
+                    <div class="absolute top-3 right-3 bg-gray-200 text-gray-400 px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5">
+                        <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
+                        <div class="h-2 bg-gray-400 rounded w-20"></div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <!-- Mini Card Maestra (no clickeable en conflicto) -->
+                        <div class="shrink-0">
+                            <div class="w-14 h-14 bg-gray-200 rounded-xl mb-2 flex items-center justify-center">
+                                <div class="w-8 h-8 bg-gray-300 rounded-lg"></div>
+                            </div>
+                            <div class="h-2 bg-gray-300 rounded w-16 mx-auto"></div>
+                        </div>
+                        <!-- Info y acción bloqueada -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </div>
+                                <div class="h-3 bg-gray-300 rounded w-36"></div>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded w-full mb-1"></div>
+                            <div class="h-2 bg-gray-200 rounded w-2/3 mb-3"></div>
+                            <!-- Botón DESHABILITADO: Error Duro -->
+                            <button class="bg-gray-200 text-gray-400 px-5 py-2.5 rounded-xl text-sm font-medium cursor-not-allowed min-h-[44px]" disabled aria-disabled="true" title="Conflicto de horario: 3 jugadores tienen superposición con Torneo de Verano">
+                                <div class="h-3 bg-gray-300 rounded w-16 mx-auto"></div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================ -->
+                <!-- CASO B (otro): CONFLICTO — ERROR DURO                          -->
+                <!-- ============================================================ -->
+                <div class="bg-white border-2 border-gray-400 rounded-2xl p-4 relative overflow-hidden opacity-75">
+                    <div class="absolute top-3 right-3 bg-gray-200 text-gray-400 px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5">
+                        <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
+                        <div class="h-2 bg-gray-400 rounded w-20"></div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <div class="shrink-0">
+                            <div class="w-14 h-14 bg-gray-200 rounded-xl mb-2 flex items-center justify-center">
+                                <div class="w-8 h-8 bg-gray-300 rounded-lg"></div>
+                            </div>
+                            <div class="h-2 bg-gray-300 rounded w-14 mx-auto"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="w-5 h-5 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </div>
+                                <div class="h-3 bg-gray-300 rounded w-32"></div>
+                            </div>
+                            <div class="h-2 bg-gray-200 rounded w-full mb-1"></div>
+                            <div class="h-2 bg-gray-200 rounded w-3/4 mb-3"></div>
+                            <button class="bg-gray-200 text-gray-400 px-5 py-2.5 rounded-xl text-sm font-medium cursor-not-allowed min-h-[44px]" disabled aria-disabled="true" title="Conflicto de horario: Capitán no disponible en franja horaria del torneo">
+                                <div class="h-3 bg-gray-300 rounded w-16 mx-auto"></div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ============================================================ -->
+                <!-- CASO A (otro): Horario cuadra — APROBABLE                      -->
+                <!-- ============================================================ -->
+                <div class="bg-white border-2 border-gray-300 rounded-2xl p-4 hover:border-gray-400 active:border-gray-500 transition-colors">
+                    <div class="flex items-start gap-4">
+                        <a href="detalle_equipo_card_maestra.html" class="shrink-0 group cursor-pointer min-w-[44px] min-h-[44px]">
+                            <div class="w-14 h-14 bg-gray-200 rounded-xl mb-2 flex items-center justify-center group-hover:bg-gray-300 group-active:bg-gray-400 transition-colors">
+                                <div class="w-8 h-8 bg-gray-300 rounded-lg group-hover:bg-gray-400 transition-colors"></div>
+                            </div>
+                            <div class="h-2 bg-gray-600 rounded w-18 mx-auto group-hover:bg-gray-700 transition-colors"></div>
+                        </a>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="w-5 h-5 bg-gray-300 rounded-full flex items-center justify-center shrink-0">
+                                    <svg class="w-3 h-3 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                    </svg>
+                                </div>
+                                <div class="h-3 bg-gray-400 rounded w-24"></div>
+                            </div>
+                            <div class="h-2 bg-gray-300 rounded w-full mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-2/3 mb-3"></div>
+                            <button class="bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 min-h-[44px] relative overflow-hidden" onclick="aprobarInscripcion(this, 'Real Cartagena')">
+                                <div class="h-3 bg-gray-400 rounded w-16 mx-auto"></div>
+                                <span class="absolute inset-0 bg-white/20 scale-0 rounded-xl transition-transform duration-300" id="ripple-aprobar-3"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- TAB 2: SORTEO GRÁFICO (Placeholder)                            -->
+            <!-- ============================================================ -->
+            <div id="tab-sorteo" class="px-6 pt-4 hidden" role="tabpanel" aria-labelledby="tab-btn-sorteo">
+                <div class="text-center py-12">
+                    <div class="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+                    </div>
+                    <div class="h-4 bg-gray-800 rounded w-40 mx-auto mb-2"></div>
+                    <div class="h-3 bg-gray-300 rounded w-56 mx-auto"></div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- TAB 3: CARGA DE PLANILLA (Placeholder)                         -->
+            <!-- ============================================================ -->
+            <div id="tab-planilla" class="px-6 pt-4 hidden" role="tabpanel" aria-labelledby="tab-btn-planilla">
+                <div class="text-center py-12">
+                    <div class="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+                    </div>
+                    <div class="h-4 bg-gray-800 rounded w-40 mx-auto mb-2"></div>
+                    <div class="h-3 bg-gray-300 rounded w-56 mx-auto"></div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- NOTIFICACIÓN CONTEXTUAL INFERIOR                               -->
+            <!-- ============================================================ -->
+            <div class="px-6 mt-6 mb-8">
+                <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer" onclick="showConflictDetail()">
+                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                        <div class="w-5 h-5 bg-gray-400 rounded"></div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="h-3 bg-gray-600 rounded w-56 mb-1"></div>
+                        <div class="h-2 bg-gray-300 rounded w-40"></div>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- ============================================================ -->
+        <!-- NAVBAR INFERIOR                                                -->
+        <!-- ============================================================ -->
+        <nav class="absolute bottom-0 w-full z-50 bg-white border-t border-gray-200" style="padding-bottom: env(safe-area-inset-bottom);">
+            <div class="grid grid-cols-4 h-16">
+                <a href="hub_mapa_principal.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 active:text-gray-800 transition-colors min-h-[44px]" aria-label="Inicio">
+                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
+                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                </a>
+                <a href="detalle_equipo_card_maestra.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 active:text-gray-800 transition-colors min-h-[44px]" aria-label="Equipo">
+                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
+                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                </a>
+                <a href="detalle_torneo.html" class="flex flex-col items-center justify-center gap-1 text-gray-800 min-h-[44px]" aria-label="Torneos">
+                    <div class="w-6 h-6 bg-gray-800 rounded"></div>
+                    <div class="h-2 bg-gray-800 rounded w-10"></div>
+                </a>
+                <a href="perfil_jugador.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 active:text-gray-800 transition-colors min-h-[44px]" aria-label="Perfil">
+                    <div class="w-6 h-6 bg-gray-300 rounded-full"></div>
+                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                </a>
+            </div>
+        </nav>
+
+        <!-- ============================================================ -->
+        <!-- TOAST DE NOTIFICACIÓN                                          -->
+        <!-- ============================================================ -->
+        <div id="toast" class="absolute top-20 left-4 right-4 z-[70] pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
+            <div class="bg-gray-800 text-white px-4 py-3 rounded-2xl shadow-lg flex items-center gap-3">
+                <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center shrink-0">
+                    <div class="w-4 h-4 bg-gray-400 rounded"></div>
+                </div>
+                <div class="flex-1">
+                    <div class="h-3 bg-gray-400 rounded w-3/4 mb-1" id="toast-title"></div>
+                    <div class="h-2 bg-gray-500 rounded w-1/2" id="toast-subtitle"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- MODAL DE DETALLE DE CONFLICTO                                  -->
+        <!-- ============================================================ -->
+        <div id="conflict-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300" id="conflict-modal-content">
+                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
+                <div class="h-4 bg-gray-800 rounded w-48 mb-2 mx-auto"></div>
+                <div class="h-3 bg-gray-300 rounded w-64 mb-6 mx-auto"></div>
+                
+                <div class="space-y-3 mb-6">
+                    <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-400 rounded"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-40 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-32"></div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-400 rounded"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-36 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-28"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="closeConflictModal()">
+                    <div class="h-4 bg-gray-400 rounded w-16 mx-auto"></div>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SCRIPT: Lógica de Interacción                                  -->
+    <!-- ============================================================ -->
+    <script>
+        // ============================================================
+        // ESTADO
+        // ============================================================
+        let inscripcionesAprobadas = new Set();
+
+        // ============================================================
+        // CARGA INICIAL
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const appLoading = document.getElementById('app-loading');
+                const mainContent = document.getElementById('main-content');
+                
+                appLoading.style.opacity = '0';
+                mainContent.style.opacity = '1';
+                
+                setTimeout(() => {
+                    appLoading.style.display = 'none';
+                    showToast('Gestión de inscripciones', '5 solicitudes pendientes • 2 conflictos detectados');
+                }, 500);
+            }, 1200);
+        });
+
+        // ============================================================
+        // NAVEGACIÓN DE TABS
+        // ============================================================
+        function switchTab(tabName) {
+            // Las tabs Sorteo y Planilla navegan por href (links reales)
+            // Esta función solo maneja el estado visual de la tab activa
+            if (navigator.vibrate) navigator.vibrate(20);
+        }
+
+        // ============================================================
+        // APROBAR INSCRIPCIÓN
+        // ============================================================
+        function aprobarInscripcion(btn, equipoNombre) {
+            if (inscripcionesAprobadas.has(equipoNombre)) {
+                showToast('Ya aprobado', `${equipoNombre} ya está inscrito en el torneo`);
+                return;
+            }
+
+            // Ripple effect
+            const rippleId = btn.querySelector('span')?.id;
+            if (rippleId) {
+                const ripple = document.getElementById(rippleId);
+                ripple.style.transform = 'scale(1)';
+                setTimeout(() => ripple.style.transform = 'scale(0)', 300);
+            }
+
+            // Feedback táctil
+            if (navigator.vibrate) navigator.vibrate(50);
+
+            // Transición visual del botón
+            btn.classList.remove('bg-gray-800', 'hover:bg-gray-700', 'active:bg-gray-900');
+            btn.classList.add('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
+            btn.disabled = true;
+            btn.setAttribute('aria-disabled', 'true');
+            btn.querySelector('div').style.width = '20px';
+            btn.querySelector('div').style.margin = '0 auto';
+
+            inscripcionesAprobadas.add(equipoNombre);
+
+            setTimeout(() => {
+                showToast('Inscripción aprobada', `${equipoNombre} ahora participa en el torneo`);
+            }, 300);
+        }
+
+        // ============================================================
+        // DETALLE DE CONFLICTOS
+        // ============================================================
+        function showConflictDetail() {
+            const modal = document.getElementById('conflict-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                document.getElementById('conflict-modal-content').style.transform = 'translateY(0)';
+            }, 10);
+            if (navigator.vibrate) navigator.vibrate(30);
+        }
+
+        function closeConflictModal() {
+            const modal = document.getElementById('conflict-modal');
+            modal.style.opacity = '0';
+            document.getElementById('conflict-modal-content').style.transform = 'translateY(100%)';
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        // ============================================================
+        // SISTEMA DE TOAST
+        // ============================================================
+        let toastTimeout;
+        function showToast(title, subtitle) {
+            const toast = document.getElementById('toast');
+            const toastTitle = document.getElementById('toast-title');
+            const toastSubtitle = document.getElementById('toast-subtitle');
+            
+            clearTimeout(toastTimeout);
+            
+            toastTitle.style.width = Math.min(title.length * 8, 200) + 'px';
+            toastSubtitle.style.width = Math.min(subtitle.length * 6, 150) + 'px';
+            
+            toast.style.opacity = '0.95';
+            toast.style.transform = 'translateY(0)';
+            
+            toastTimeout = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-8px)';
+            }, 3000);
+        }
+
+        // ============================================================
+        // TECLADO (Escape para cerrar modal)
+        // ============================================================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeConflictModal();
+        });
+
+        // ============================================================
+        // SWIPE PARA CERRAR MODAL
+        // ============================================================
+        let touchStartY = 0;
+        const conflictModalContent = document.getElementById('conflict-modal-content');
+        
+        if (conflictModalContent) {
+            conflictModalContent.addEventListener('touchstart', (e) => {
+                touchStartY = e.touches[0].clientY;
+            }, { passive: true });
+
+            conflictModalContent.addEventListener('touchend', (e) => {
+                const touchEndY = e.changedTouches[0].clientY;
+                if (touchEndY - touchStartY > 80) {
+                    closeConflictModal();
+                }
+            }, { passive: true });
+        }
+    </script>
+
+</body>
+</html>

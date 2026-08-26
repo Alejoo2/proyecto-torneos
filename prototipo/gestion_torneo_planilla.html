@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gestión de Torneo — Carga de Planilla — Wireframe Low-Fidelity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-950 min-h-[100dvh] flex items-center justify-center">
+
+    <!-- ============================================================ -->
+    <!-- APP SHELL: El "Móvil"                                          -->
+    <!-- ============================================================ -->
+    <div class="w-full max-w-lg min-h-[100dvh] bg-white md:min-h-[90vh] md:my-[5vh] md:rounded-[2rem] md:border-[10px] md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col relative">
+
+        <!-- ============================================================ -->
+        <!-- ESTADO DE CARGA INICIAL (Skeleton)                             -->
+        <!-- ============================================================ -->
+        <div id="app-loading" class="absolute inset-0 z-[60] bg-white flex flex-col transition-opacity duration-500">
+            <!-- Skeleton del header -->
+            <div class="px-4 py-3 flex items-center justify-between border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+                    <div class="h-4 bg-gray-200 rounded w-48 animate-pulse"></div>
+                </div>
+                <div class="w-16 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+            </div>
+            <!-- Skeleton del tab bar -->
+            <div class="px-6 pt-4 pb-2">
+                <div class="bg-gray-100 rounded-2xl p-1.5 flex h-12">
+                    <div class="flex-1 bg-gray-200 rounded-xl animate-pulse mx-0.5"></div>
+                    <div class="flex-1 bg-gray-200 rounded-xl animate-pulse mx-0.5"></div>
+                    <div class="flex-1 bg-gray-200 rounded-xl animate-pulse mx-0.5"></div>
+                </div>
+            </div>
+            <!-- Skeleton selector de partido -->
+            <div class="px-6 pt-4">
+                <div class="h-4 bg-gray-200 rounded w-32 animate-pulse mb-3"></div>
+                <div class="bg-gray-100 rounded-2xl p-4 h-20 animate-pulse"></div>
+            </div>
+            <!-- Skeleton marcador -->
+            <div class="px-6 pt-4">
+                <div class="bg-gray-200 rounded-2xl p-5 h-24 animate-pulse"></div>
+            </div>
+            <!-- Skeleton columnas de jugadores -->
+            <div class="px-6 pt-4 grid grid-cols-2 gap-4">
+                <div class="bg-gray-100 rounded-2xl p-4 h-64 animate-pulse"></div>
+                <div class="bg-gray-100 rounded-2xl p-4 h-64 animate-pulse"></div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- HEADER: Sticky con badge de rol Gestor                         -->
+        <!-- ============================================================ -->
+        <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
+            <div class="flex items-center justify-between px-4 py-3">
+                <div class="flex items-center gap-3">
+                    <a href="detalle_torneo.html" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px]" aria-label="Volver al torneo">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </a>
+                    <div class="h-4 bg-gray-800 rounded w-48"></div>
+                </div>
+                <div class="bg-gray-800 text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5">
+                    <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                    <div class="h-2 bg-gray-400 rounded w-14"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ============================================================ -->
+        <!-- CONTENIDO PRINCIPAL                                            -->
+        <!-- ============================================================ -->
+        <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden pb-24 opacity-0 transition-opacity duration-500">
+
+            <!-- ============================================================ -->
+            <!-- SISTEMA DE PESTAÑAS (Tabs)                                     -->
+            <!-- ============================================================ -->
+            <div class="px-6 pt-4 pb-2 sticky top-0 z-10 bg-white/80 backdrop-blur-sm">
+                <div class="bg-gray-100 rounded-2xl p-1.5 flex" role="tablist" aria-label="Gestión del torneo">
+                    <!-- Tab 1: Inscripciones -->
+                    <a href="gestion_torneo_inscripciones.html" id="tab-btn-inscripciones" class="flex-1 text-gray-500 py-3 rounded-xl text-sm font-medium hover:text-gray-700 hover:bg-gray-200/50 active:bg-gray-200 transition-all duration-200 min-h-[44px] flex items-center justify-center" role="tab" aria-selected="false" aria-controls="tab-inscripciones">
+                        <div class="h-3 bg-gray-300 rounded w-24 mx-auto"></div>
+                    </a>
+                    <!-- Tab 2: Sorteo -->
+                    <a href="gestion_torneo_sorteo.html" id="tab-btn-sorteo" class="flex-1 text-gray-500 py-3 rounded-xl text-sm font-medium hover:text-gray-700 hover:bg-gray-200/50 active:bg-gray-200 transition-all duration-200 min-h-[44px] flex items-center justify-center" role="tab" aria-selected="false" aria-controls="tab-sorteo">
+                        <div class="h-3 bg-gray-300 rounded w-16 mx-auto"></div>
+                    </a>
+                    <!-- Tab 3: Planilla (Activo) -->
+                    <button id="tab-btn-planilla" class="flex-1 bg-gray-800 text-white py-3 rounded-xl text-sm font-medium transition-all duration-200 min-h-[44px] relative overflow-hidden" role="tab" aria-selected="true" aria-controls="tab-planilla" onclick="switchTab('planilla')">
+                        <div class="h-3 bg-gray-400 rounded w-20 mx-auto"></div>
+                        <span class="absolute inset-0 bg-white/20 scale-0 rounded-xl transition-transform duration-300" id="ripple-planilla"></span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- TAB 3: CARGA DE PLANILLA                                       -->
+            <!-- ============================================================ -->
+            <div id="tab-planilla" class="px-6 pt-4" role="tabpanel" aria-labelledby="tab-btn-planilla">
+
+                <!-- Selector de partido -->
+                <div class="mb-6">
+                    <div class="h-4 bg-gray-800 rounded w-32 mb-3"></div>
+                    <button class="bg-gray-100 rounded-2xl p-4 w-full text-left hover:bg-gray-200 active:bg-gray-300 transition-colors relative overflow-hidden min-h-[44px]" onclick="abrirSelectorPartido()">
+                        <div class="flex items-center justify-between mb-3">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
+                                    <div class="w-4 h-4 bg-gray-300 rounded"></div>
+                                </div>
+                                <div class="h-3 bg-gray-800 rounded w-20"></div>
+                            </div>
+                            <div class="h-3 bg-gray-600 rounded w-8"></div>
+                            <div class="flex items-center gap-2">
+                                <div class="h-3 bg-gray-800 rounded w-20"></div>
+                                <div class="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
+                                    <div class="w-4 h-4 bg-gray-300 rounded"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="h-2 bg-gray-300 rounded w-full mb-1"></div>
+                        <div class="h-2 bg-gray-300 rounded w-2/3"></div>
+                        <svg class="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Marcador final -->
+                <div class="bg-gray-800 rounded-2xl p-5 mb-6">
+                    <div class="flex items-center justify-center gap-6">
+                        <!-- Team A -->
+                        <div class="flex flex-col items-center">
+                            <div class="w-12 h-12 bg-gray-600 rounded-xl mb-2 flex items-center justify-center">
+                                <div class="w-6 h-6 bg-gray-400 rounded-lg"></div>
+                            </div>
+                            <div class="h-2 bg-gray-400 rounded w-16"></div>
+                        </div>
+                        <!-- Inputs de marcador -->
+                        <div class="flex items-center gap-3">
+                            <button class="w-16 h-16 bg-gray-700 hover:bg-gray-600 active:bg-gray-500 rounded-xl flex items-center justify-center border-2 border-gray-600 transition-colors min-h-[44px] relative overflow-hidden" onclick="ajustarMarcador('a', 1)" aria-label="Aumentar gol equipo A">
+                                <div class="h-6 bg-gray-400 rounded w-8" id="marcador-a">0</div>
+                                <span class="absolute inset-0 bg-white/10 scale-0 rounded-xl transition-transform duration-300" id="ripple-marcador-a"></span>
+                            </button>
+                            <div class="h-4 bg-gray-500 rounded w-4"></div>
+                            <button class="w-16 h-16 bg-gray-700 hover:bg-gray-600 active:bg-gray-500 rounded-xl flex items-center justify-center border-2 border-gray-600 transition-colors min-h-[44px] relative overflow-hidden" onclick="ajustarMarcador('b', 1)" aria-label="Aumentar gol equipo B">
+                                <div class="h-6 bg-gray-400 rounded w-8" id="marcador-b">0</div>
+                                <span class="absolute inset-0 bg-white/10 scale-0 rounded-xl transition-transform duration-300" id="ripple-marcador-b"></span>
+                            </button>
+                        </div>
+                        <!-- Team B -->
+                        <div class="flex flex-col items-center">
+                            <div class="w-12 h-12 bg-gray-600 rounded-xl mb-2 flex items-center justify-center">
+                                <div class="w-6 h-6 bg-gray-400 rounded-lg"></div>
+                            </div>
+                            <div class="h-2 bg-gray-400 rounded w-16"></div>
+                        </div>
+                    </div>
+                    <!-- Controles de decremento -->
+                    <div class="flex items-center justify-center gap-6 mt-3">
+                        <button class="w-10 h-10 bg-gray-700 hover:bg-gray-600 active:bg-gray-500 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="ajustarMarcador('a', -1)" aria-label="Disminuir gol equipo A">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                            </svg>
+                        </button>
+                        <div class="w-4"></div>
+                        <button class="w-10 h-10 bg-gray-700 hover:bg-gray-600 active:bg-gray-500 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="ajustarMarcador('b', -1)" aria-label="Disminuir gol equipo B">
+                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- ============================================================ -->
+                <!-- FORMULARIO: Dos columnas (Equipo A, Equipo B)                  -->
+                <!-- ============================================================ -->
+                <div class="grid grid-cols-2 gap-4 mb-6">
+
+                    <!-- ========================================================== -->
+                    <!-- COLUMNA: EQUIPO A                                            -->
+                    <!-- ========================================================== -->
+                    <div class="bg-gray-100 rounded-2xl p-4">
+                        <div class="flex items-center gap-2 mb-4">
+                            <div class="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
+                                <div class="w-4 h-4 bg-gray-300 rounded"></div>
+                            </div>
+                            <div class="h-3 bg-gray-800 rounded w-20"></div>
+                        </div>
+
+                        <!-- Jugador 1 -->
+                        <div class="mb-4 pb-4 border-b border-gray-200">
+                            <div class="flex items-center gap-2 mb-3">
+                                <a href="perfil_jugador.html" class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 active:bg-gray-400 transition-colors shrink-0 min-w-[32px] min-h-[32px]">
+                                    <div class="w-4 h-4 bg-gray-300 rounded-full"></div>
+                                </a>
+                                <div class="h-2 bg-gray-600 rounded w-16"></div>
+                            </div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="h-2 bg-gray-400 rounded w-8 shrink-0"></div>
+                                <button class="w-12 h-12 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl border-2 border-gray-300 flex items-center justify-center transition-colors min-h-[44px]" onclick="ajustarStat('a', 1, 'goles', 1)" aria-label="Gol jugador 1 equipo A">
+                                    <div class="h-4 bg-gray-300 rounded w-6" id="goles-a-1">0</div>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="h-2 bg-gray-400 rounded w-12 shrink-0"></div>
+                                <div class="flex gap-1">
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-yellow-200 active:bg-yellow-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('a', 1, 'amarilla')" aria-label="Tarjeta amarilla jugador 1 equipo A" id="tarjeta-a-1-amarilla">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="amarilla-a-1"></div>
+                                    </button>
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-red-200 active:bg-red-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('a', 1, 'roja')" aria-label="Tarjeta roja jugador 1 equipo A" id="tarjeta-a-1-roja">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="roja-a-1"></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Jugador 2 -->
+                        <div class="mb-4 pb-4 border-b border-gray-200">
+                            <div class="flex items-center gap-2 mb-3">
+                                <a href="perfil_jugador.html" class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 active:bg-gray-400 transition-colors shrink-0 min-w-[32px] min-h-[32px]">
+                                    <div class="w-4 h-4 bg-gray-300 rounded-full"></div>
+                                </a>
+                                <div class="h-2 bg-gray-600 rounded w-14"></div>
+                            </div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="h-2 bg-gray-400 rounded w-8 shrink-0"></div>
+                                <button class="w-12 h-12 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl border-2 border-gray-300 flex items-center justify-center transition-colors min-h-[44px]" onclick="ajustarStat('a', 2, 'goles', 1)" aria-label="Gol jugador 2 equipo A">
+                                    <div class="h-4 bg-gray-300 rounded w-6" id="goles-a-2">0</div>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="h-2 bg-gray-400 rounded w-12 shrink-0"></div>
+                                <div class="flex gap-1">
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-yellow-200 active:bg-yellow-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('a', 2, 'amarilla')" aria-label="Tarjeta amarilla jugador 2 equipo A" id="tarjeta-a-2-amarilla">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="amarilla-a-2"></div>
+                                    </button>
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-red-200 active:bg-red-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('a', 2, 'roja')" aria-label="Tarjeta roja jugador 2 equipo A" id="tarjeta-a-2-roja">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="roja-a-2"></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Jugador 3 -->
+                        <div class="mb-4 pb-4 border-b border-gray-200">
+                            <div class="flex items-center gap-2 mb-3">
+                                <a href="perfil_jugador.html" class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 active:bg-gray-400 transition-colors shrink-0 min-w-[32px] min-h-[32px]">
+                                    <div class="w-4 h-4 bg-gray-300 rounded-full"></div>
+                                </a>
+                                <div class="h-2 bg-gray-600 rounded w-18"></div>
+                            </div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="h-2 bg-gray-400 rounded w-8 shrink-0"></div>
+                                <button class="w-12 h-12 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl border-2 border-gray-300 flex items-center justify-center transition-colors min-h-[44px]" onclick="ajustarStat('a', 3, 'goles', 1)" aria-label="Gol jugador 3 equipo A">
+                                    <div class="h-4 bg-gray-300 rounded w-6" id="goles-a-3">0</div>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="h-2 bg-gray-400 rounded w-12 shrink-0"></div>
+                                <div class="flex gap-1">
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-yellow-200 active:bg-yellow-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('a', 3, 'amarilla')" aria-label="Tarjeta amarilla jugador 3 equipo A" id="tarjeta-a-3-amarilla">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="amarilla-a-3"></div>
+                                    </button>
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-red-200 active:bg-red-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('a', 3, 'roja')" aria-label="Tarjeta roja jugador 3 equipo A" id="tarjeta-a-3-roja">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="roja-a-3"></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Jugador 4 -->
+                        <div class="mb-4 pb-4 border-b border-gray-200">
+                            <div class="flex items-center gap-2 mb-3">
+                                <a href="perfil_jugador.html" class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 active:bg-gray-400 transition-colors shrink-0 min-w-[32px] min-h-[32px]">
+                                    <div class="w-4 h-4 bg-gray-300 rounded-full"></div>
+                                </a>
+                                <div class="h-2 bg-gray-600 rounded w-12"></div>
+                            </div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="h-2 bg-gray-400 rounded w-8 shrink-0"></div>
+                                <button class="w-12 h-12 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl border-2 border-gray-300 flex items-center justify-center transition-colors min-h-[44px]" onclick="ajustarStat('a', 4, 'goles', 1)" aria-label="Gol jugador 4 equipo A">
+                                    <div class="h-4 bg-gray-300 rounded w-6" id="goles-a-4">0</div>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="h-2 bg-gray-400 rounded w-12 shrink-0"></div>
+                                <div class="flex gap-1">
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-yellow-200 active:bg-yellow-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('a', 4, 'amarilla')" aria-label="Tarjeta amarilla jugador 4 equipo A" id="tarjeta-a-4-amarilla">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="amarilla-a-4"></div>
+                                    </button>
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-red-200 active:bg-red-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('a', 4, 'roja')" aria-label="Tarjeta roja jugador 4 equipo A" id="tarjeta-a-4-roja">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="roja-a-4"></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Jugador 5 -->
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <a href="perfil_jugador.html" class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 active:bg-gray-400 transition-colors shrink-0 min-w-[32px] min-h-[32px]">
+                                    <div class="w-4 h-4 bg-gray-300 rounded-full"></div>
+                                </a>
+                                <div class="h-2 bg-gray-600 rounded w-16"></div>
+                            </div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="h-2 bg-gray-400 rounded w-8 shrink-0"></div>
+                                <button class="w-12 h-12 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl border-2 border-gray-300 flex items-center justify-center transition-colors min-h-[44px]" onclick="ajustarStat('a', 5, 'goles', 1)" aria-label="Gol jugador 5 equipo A">
+                                    <div class="h-4 bg-gray-300 rounded w-6" id="goles-a-5">0</div>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="h-2 bg-gray-400 rounded w-12 shrink-0"></div>
+                                <div class="flex gap-1">
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-yellow-200 active:bg-yellow-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('a', 5, 'amarilla')" aria-label="Tarjeta amarilla jugador 5 equipo A" id="tarjeta-a-5-amarilla">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="amarilla-a-5"></div>
+                                    </button>
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-red-200 active:bg-red-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('a', 5, 'roja')" aria-label="Tarjeta roja jugador 5 equipo A" id="tarjeta-a-5-roja">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="roja-a-5"></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ========================================================== -->
+                    <!-- COLUMNA: EQUIPO B                                            -->
+                    <!-- ========================================================== -->
+                    <div class="bg-gray-100 rounded-2xl p-4">
+                        <div class="flex items-center gap-2 mb-4">
+                            <div class="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
+                                <div class="w-4 h-4 bg-gray-300 rounded"></div>
+                            </div>
+                            <div class="h-3 bg-gray-800 rounded w-20"></div>
+                        </div>
+
+                        <!-- Jugador 1 -->
+                        <div class="mb-4 pb-4 border-b border-gray-200">
+                            <div class="flex items-center gap-2 mb-3">
+                                <a href="perfil_jugador.html" class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 active:bg-gray-400 transition-colors shrink-0 min-w-[32px] min-h-[32px]">
+                                    <div class="w-4 h-4 bg-gray-300 rounded-full"></div>
+                                </a>
+                                <div class="h-2 bg-gray-600 rounded w-14"></div>
+                            </div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="h-2 bg-gray-400 rounded w-8 shrink-0"></div>
+                                <button class="w-12 h-12 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl border-2 border-gray-300 flex items-center justify-center transition-colors min-h-[44px]" onclick="ajustarStat('b', 1, 'goles', 1)" aria-label="Gol jugador 1 equipo B">
+                                    <div class="h-4 bg-gray-300 rounded w-6" id="goles-b-1">0</div>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="h-2 bg-gray-400 rounded w-12 shrink-0"></div>
+                                <div class="flex gap-1">
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-yellow-200 active:bg-yellow-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('b', 1, 'amarilla')" aria-label="Tarjeta amarilla jugador 1 equipo B" id="tarjeta-b-1-amarilla">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="amarilla-b-1"></div>
+                                    </button>
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-red-200 active:bg-red-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('b', 1, 'roja')" aria-label="Tarjeta roja jugador 1 equipo B" id="tarjeta-b-1-roja">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="roja-b-1"></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Jugador 2 -->
+                        <div class="mb-4 pb-4 border-b border-gray-200">
+                            <div class="flex items-center gap-2 mb-3">
+                                <a href="perfil_jugador.html" class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 active:bg-gray-400 transition-colors shrink-0 min-w-[32px] min-h-[32px]">
+                                    <div class="w-4 h-4 bg-gray-300 rounded-full"></div>
+                                </a>
+                                <div class="h-2 bg-gray-600 rounded w-16"></div>
+                            </div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="h-2 bg-gray-400 rounded w-8 shrink-0"></div>
+                                <button class="w-12 h-12 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl border-2 border-gray-300 flex items-center justify-center transition-colors min-h-[44px]" onclick="ajustarStat('b', 2, 'goles', 1)" aria-label="Gol jugador 2 equipo B">
+                                    <div class="h-4 bg-gray-300 rounded w-6" id="goles-b-2">0</div>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="h-2 bg-gray-400 rounded w-12 shrink-0"></div>
+                                <div class="flex gap-1">
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-yellow-200 active:bg-yellow-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('b', 2, 'amarilla')" aria-label="Tarjeta amarilla jugador 2 equipo B" id="tarjeta-b-2-amarilla">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="amarilla-b-2"></div>
+                                    </button>
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-red-200 active:bg-red-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('b', 2, 'roja')" aria-label="Tarjeta roja jugador 2 equipo B" id="tarjeta-b-2-roja">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="roja-b-2"></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Jugador 3 -->
+                        <div class="mb-4 pb-4 border-b border-gray-200">
+                            <div class="flex items-center gap-2 mb-3">
+                                <a href="perfil_jugador.html" class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 active:bg-gray-400 transition-colors shrink-0 min-w-[32px] min-h-[32px]">
+                                    <div class="w-4 h-4 bg-gray-300 rounded-full"></div>
+                                </a>
+                                <div class="h-2 bg-gray-600 rounded w-12"></div>
+                            </div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="h-2 bg-gray-400 rounded w-8 shrink-0"></div>
+                                <button class="w-12 h-12 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl border-2 border-gray-300 flex items-center justify-center transition-colors min-h-[44px]" onclick="ajustarStat('b', 3, 'goles', 1)" aria-label="Gol jugador 3 equipo B">
+                                    <div class="h-4 bg-gray-300 rounded w-6" id="goles-b-3">0</div>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="h-2 bg-gray-400 rounded w-12 shrink-0"></div>
+                                <div class="flex gap-1">
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-yellow-200 active:bg-yellow-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('b', 3, 'amarilla')" aria-label="Tarjeta amarilla jugador 3 equipo B" id="tarjeta-b-3-amarilla">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="amarilla-b-3"></div>
+                                    </button>
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-red-200 active:bg-red-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('b', 3, 'roja')" aria-label="Tarjeta roja jugador 3 equipo B" id="tarjeta-b-3-roja">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="roja-b-3"></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Jugador 4 -->
+                        <div class="mb-4 pb-4 border-b border-gray-200">
+                            <div class="flex items-center gap-2 mb-3">
+                                <a href="perfil_jugador.html" class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 active:bg-gray-400 transition-colors shrink-0 min-w-[32px] min-h-[32px]">
+                                    <div class="w-4 h-4 bg-gray-300 rounded-full"></div>
+                                </a>
+                                <div class="h-2 bg-gray-600 rounded w-18"></div>
+                            </div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="h-2 bg-gray-400 rounded w-8 shrink-0"></div>
+                                <button class="w-12 h-12 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl border-2 border-gray-300 flex items-center justify-center transition-colors min-h-[44px]" onclick="ajustarStat('b', 4, 'goles', 1)" aria-label="Gol jugador 4 equipo B">
+                                    <div class="h-4 bg-gray-300 rounded w-6" id="goles-b-4">0</div>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="h-2 bg-gray-400 rounded w-12 shrink-0"></div>
+                                <div class="flex gap-1">
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-yellow-200 active:bg-yellow-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('b', 4, 'amarilla')" aria-label="Tarjeta amarilla jugador 4 equipo B" id="tarjeta-b-4-amarilla">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="amarilla-b-4"></div>
+                                    </button>
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-red-200 active:bg-red-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('b', 4, 'roja')" aria-label="Tarjeta roja jugador 4 equipo B" id="tarjeta-b-4-roja">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="roja-b-4"></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Jugador 5 -->
+                        <div>
+                            <div class="flex items-center gap-2 mb-3">
+                                <a href="perfil_jugador.html" class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center hover:bg-gray-300 active:bg-gray-400 transition-colors shrink-0 min-w-[32px] min-h-[32px]">
+                                    <div class="w-4 h-4 bg-gray-300 rounded-full"></div>
+                                </a>
+                                <div class="h-2 bg-gray-600 rounded w-14"></div>
+                            </div>
+                            <div class="flex items-center gap-2 mb-2">
+                                <div class="h-2 bg-gray-400 rounded w-8 shrink-0"></div>
+                                <button class="w-12 h-12 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl border-2 border-gray-300 flex items-center justify-center transition-colors min-h-[44px]" onclick="ajustarStat('b', 5, 'goles', 1)" aria-label="Gol jugador 5 equipo B">
+                                    <div class="h-4 bg-gray-300 rounded w-6" id="goles-b-5">0</div>
+                                </button>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="h-2 bg-gray-400 rounded w-12 shrink-0"></div>
+                                <div class="flex gap-1">
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-yellow-200 active:bg-yellow-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('b', 5, 'amarilla')" aria-label="Tarjeta amarilla jugador 5 equipo B" id="tarjeta-b-5-amarilla">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="amarilla-b-5"></div>
+                                    </button>
+                                    <button class="w-8 h-10 bg-gray-200 hover:bg-red-200 active:bg-red-300 rounded-lg flex items-center justify-center transition-colors min-h-[44px]" onclick="toggleTarjeta('b', 5, 'roja')" aria-label="Tarjeta roja jugador 5 equipo B" id="tarjeta-b-5-roja">
+                                        <div class="w-4 h-6 bg-gray-300 rounded" id="roja-b-5"></div>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Botón Guardar Resultados -->
+                <button id="btn-guardar-planilla" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 mb-6 shadow-lg min-h-[56px] relative overflow-hidden" onclick="guardarPlanilla()">
+                    <div class="h-4 bg-gray-400 rounded w-40 mx-auto"></div>
+                    <span class="absolute inset-0 bg-white/20 scale-0 rounded-2xl transition-transform duration-300" id="ripple-guardar"></span>
+                </button>
+
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- TAB 1: INSCRIPCIONES (Placeholder)                             -->
+            <!-- ============================================================ -->
+            <div id="tab-inscripciones" class="px-6 pt-4 hidden" role="tabpanel" aria-labelledby="tab-btn-inscripciones">
+                <div class="text-center py-12">
+                    <div class="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+                    </div>
+                    <div class="h-4 bg-gray-800 rounded w-40 mx-auto mb-2"></div>
+                    <div class="h-3 bg-gray-300 rounded w-56 mx-auto"></div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- TAB 2: SORTEO (Placeholder)                                    -->
+            <!-- ============================================================ -->
+            <div id="tab-sorteo" class="px-6 pt-4 hidden" role="tabpanel" aria-labelledby="tab-btn-sorteo">
+                <div class="text-center py-12">
+                    <div class="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+                    </div>
+                    <div class="h-4 bg-gray-800 rounded w-40 mx-auto mb-2"></div>
+                    <div class="h-3 bg-gray-300 rounded w-56 mx-auto"></div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- NOTIFICACIÓN CONTEXTUAL INFERIOR                               -->
+            <!-- ============================================================ -->
+            <div class="px-6 mt-6 mb-8">
+                <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer" onclick="showPlanillaInfo()">
+                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                        <div class="w-5 h-5 bg-gray-400 rounded"></div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="h-3 bg-gray-600 rounded w-48 mb-1"></div>
+                        <div class="h-2 bg-gray-300 rounded w-32"></div>
+                    </div>
+                    <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- ============================================================ -->
+        <!-- NAVBAR INFERIOR                                                -->
+        <!-- ============================================================ -->
+        <nav class="absolute bottom-0 w-full z-50 bg-white border-t border-gray-200" style="padding-bottom: env(safe-area-inset-bottom);">
+            <div class="grid grid-cols-4 h-16">
+                <a href="hub_mapa_principal.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 active:text-gray-800 transition-colors min-h-[44px]" aria-label="Inicio">
+                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
+                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                </a>
+                <a href="detalle_equipo_card_maestra.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 active:text-gray-800 transition-colors min-h-[44px]" aria-label="Equipo">
+                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
+                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                </a>
+                <a href="detalle_torneo.html" class="flex flex-col items-center justify-center gap-1 text-gray-800 min-h-[44px]" aria-label="Torneos">
+                    <div class="w-6 h-6 bg-gray-800 rounded"></div>
+                    <div class="h-2 bg-gray-800 rounded w-10"></div>
+                </a>
+                <a href="perfil_jugador.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 active:text-gray-800 transition-colors min-h-[44px]" aria-label="Perfil">
+                    <div class="w-6 h-6 bg-gray-300 rounded-full"></div>
+                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                </a>
+            </div>
+        </nav>
+
+        <!-- ============================================================ -->
+        <!-- TOAST DE NOTIFICACIÓN                                          -->
+        <!-- ============================================================ -->
+        <div id="toast" class="absolute top-20 left-4 right-4 z-[70] pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
+            <div class="bg-gray-800 text-white px-4 py-3 rounded-2xl shadow-lg flex items-center gap-3">
+                <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center shrink-0">
+                    <div class="w-4 h-4 bg-gray-400 rounded"></div>
+                </div>
+                <div class="flex-1">
+                    <div class="h-3 bg-gray-400 rounded w-3/4 mb-1" id="toast-title"></div>
+                    <div class="h-2 bg-gray-500 rounded w-1/2" id="toast-subtitle"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- MODAL DE CONFIRMACIÓN GUARDAR PLANILLA                         -->
+        <!-- ============================================================ -->
+        <div id="confirmar-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300" id="confirmar-modal-content">
+                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
+                <div class="h-4 bg-gray-800 rounded w-48 mb-2 mx-auto"></div>
+                <div class="h-3 bg-gray-300 rounded w-64 mb-6 mx-auto"></div>
+                
+                <!-- Resumen del marcador -->
+                <div class="bg-gray-100 rounded-2xl p-4 mb-6 flex items-center justify-center gap-4">
+                    <div class="flex flex-col items-center">
+                        <div class="w-10 h-10 bg-gray-200 rounded-lg mb-1 flex items-center justify-center">
+                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
+                        </div>
+                        <div class="h-2 bg-gray-400 rounded w-12"></div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="h-6 bg-gray-800 rounded w-6" id="resumen-marcador-a"></div>
+                        <div class="h-4 bg-gray-400 rounded w-3"></div>
+                        <div class="h-6 bg-gray-800 rounded w-6" id="resumen-marcador-b"></div>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-10 h-10 bg-gray-200 rounded-lg mb-1 flex items-center justify-center">
+                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
+                        </div>
+                        <div class="h-2 bg-gray-400 rounded w-12"></div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button class="flex-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="closeConfirmarModal()">
+                        <div class="h-4 bg-gray-400 rounded w-20 mx-auto"></div>
+                    </button>
+                    <button class="flex-1 bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="confirmarGuardado()">
+                        <div class="h-4 bg-gray-400 rounded w-24 mx-auto"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- MODAL DE INFO DE PLANILLA                                      -->
+        <!-- ============================================================ -->
+        <div id="info-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300" id="info-modal-content">
+                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
+                <div class="h-4 bg-gray-800 rounded w-48 mb-2 mx-auto"></div>
+                <div class="h-3 bg-gray-300 rounded w-64 mb-6 mx-auto"></div>
+                
+                <div class="space-y-3 mb-6">
+                    <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-400 rounded"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-48 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-32"></div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-400 rounded"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-40 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-28"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="closeInfoModal()">
+                    <div class="h-4 bg-gray-400 rounded w-16 mx-auto"></div>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SCRIPT: Lógica de Interacción                                  -->
+    <!-- ============================================================ -->
+    <script>
+        // ============================================================
+        // ESTADO
+        // ============================================================
+        let marcador = { a: 0, b: 0 };
+        let stats = {};
+        let planillaGuardada = false;
+
+        // Inicializar stats para todos los jugadores
+        ['a', 'b'].forEach(equipo => {
+            for (let i = 1; i <= 5; i++) {
+                stats[`${equipo}-${i}`] = { goles: 0, amarilla: false, roja: false };
+            }
+        });
+
+        // ============================================================
+        // CARGA INICIAL
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const appLoading = document.getElementById('app-loading');
+                const mainContent = document.getElementById('main-content');
+                
+                appLoading.style.opacity = '0';
+                mainContent.style.opacity = '1';
+                
+                setTimeout(() => {
+                    appLoading.style.display = 'none';
+                    showToast('Carga de planilla', 'Selecciona un partido para comenzar');
+                }, 500);
+            }, 1200);
+        });
+
+        // ============================================================
+        // NAVEGACIÓN DE TABS
+        // ============================================================
+        function switchTab(tabName) {
+            if (navigator.vibrate) navigator.vibrate(20);
+        }
+
+        // ============================================================
+        // SELECTOR DE PARTIDO
+        // ============================================================
+        function abrirSelectorPartido() {
+            showToast('Selector de partido', 'Abriendo lista de partidos programados...');
+        }
+
+        // ============================================================
+        // MARCADOR
+        // ============================================================
+        function ajustarMarcador(equipo, delta) {
+            const nuevoValor = marcador[equipo] + delta;
+            if (nuevoValor < 0) return;
+            
+            marcador[equipo] = nuevoValor;
+            document.getElementById(`marcador-${equipo}`).textContent = nuevoValor;
+            
+            // Ripple effect
+            const ripple = document.getElementById(`ripple-marcador-${equipo}`);
+            if (ripple) {
+                ripple.style.transform = 'scale(1)';
+                setTimeout(() => ripple.style.transform = 'scale(0)', 300);
+            }
+            
+            if (navigator.vibrate) navigator.vibrate(20);
+        }
+
+        // ============================================================
+        // STATS DE JUGADORES (GOLES Y TARJETAS)
+        // ============================================================
+        function ajustarStat(equipo, jugador, tipo, delta) {
+            const key = `${equipo}-${jugador}`;
+            const nuevoValor = stats[key][tipo] + delta;
+            if (nuevoValor < 0) return;
+            
+            stats[key][tipo] = nuevoValor;
+            document.getElementById(`${tipo}-${equipo}-${jugador}`).textContent = nuevoValor;
+            
+            if (navigator.vibrate) navigator.vibrate(15);
+        }
+
+        function toggleTarjeta(equipo, jugador, tipo) {
+            const key = `${equipo}-${jugador}`;
+            stats[key][tipo] = !stats[key][tipo];
+            
+            const btn = document.getElementById(`tarjeta-${equipo}-${jugador}-${tipo}`);
+            const indicador = document.getElementById(`${tipo}-${equipo}-${jugador}`);
+            
+            if (stats[key][tipo]) {
+                // Tarjeta activada
+                if (tipo === 'amarilla') {
+                    btn.classList.remove('bg-gray-200', 'hover:bg-yellow-200', 'active:bg-yellow-300');
+                    btn.classList.add('bg-yellow-400', 'hover:bg-yellow-500', 'active:bg-yellow-600');
+                    indicador.classList.remove('bg-gray-300');
+                    indicador.classList.add('bg-yellow-600');
+                } else {
+                    btn.classList.remove('bg-gray-200', 'hover:bg-red-200', 'active:bg-red-300');
+                    btn.classList.add('bg-red-500', 'hover:bg-red-600', 'active:bg-red-700');
+                    indicador.classList.remove('bg-gray-300');
+                    indicador.classList.add('bg-red-100');
+                }
+                if (navigator.vibrate) navigator.vibrate([30, 20]);
+            } else {
+                // Tarjeta desactivada
+                if (tipo === 'amarilla') {
+                    btn.classList.add('bg-gray-200', 'hover:bg-yellow-200', 'active:bg-yellow-300');
+                    btn.classList.remove('bg-yellow-400', 'hover:bg-yellow-500', 'active:bg-yellow-600');
+                    indicador.classList.add('bg-gray-300');
+                    indicador.classList.remove('bg-yellow-600');
+                } else {
+                    btn.classList.add('bg-gray-200', 'hover:bg-red-200', 'active:bg-red-300');
+                    btn.classList.remove('bg-red-500', 'hover:bg-red-600', 'active:bg-red-700');
+                    indicador.classList.add('bg-gray-300');
+                    indicador.classList.remove('bg-red-100');
+                }
+            }
+        }
+
+        // ============================================================
+        // GUARDAR PLANILLA
+        // ============================================================
+        function guardarPlanilla() {
+            if (planillaGuardada) {
+                showToast('Planilla guardada', 'Los resultados ya fueron registrados');
+                return;
+            }
+
+            // Ripple effect
+            const ripple = document.getElementById('ripple-guardar');
+            ripple.style.transform = 'scale(1)';
+            setTimeout(() => ripple.style.transform = 'scale(0)', 300);
+
+            if (navigator.vibrate) navigator.vibrate(50);
+
+            // Actualizar resumen en modal
+            document.getElementById('resumen-marcador-a').textContent = marcador.a;
+            document.getElementById('resumen-marcador-b').textContent = marcador.b;
+
+            // Abrir modal de confirmación
+            const modal = document.getElementById('confirmar-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                document.getElementById('confirmar-modal-content').style.transform = 'translateY(0)';
+            }, 10);
+        }
+
+        function closeConfirmarModal() {
+            const modal = document.getElementById('confirmar-modal');
+            modal.style.opacity = '0';
+            document.getElementById('confirmar-modal-content').style.transform = 'translateY(100%)';
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function confirmarGuardado() {
+            planillaGuardada = true;
+            closeConfirmarModal();
+
+            // Actualizar botón
+            const btn = document.getElementById('btn-guardar-planilla');
+            btn.classList.remove('bg-gray-800', 'hover:bg-gray-700', 'active:bg-gray-900');
+            btn.classList.add('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
+            btn.disabled = true;
+            btn.setAttribute('aria-disabled', 'true');
+            btn.querySelector('div').style.width = '20px';
+            btn.querySelector('div').style.margin = '0 auto';
+
+            setTimeout(() => {
+                showToast('Planilla guardada', `Resultado: ${marcador.a} - ${marcador.b} registrado exitosamente`);
+            }, 300);
+        }
+
+        // ============================================================
+        // INFO DE PLANILLA
+        // ============================================================
+        function showPlanillaInfo() {
+            const modal = document.getElementById('info-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                document.getElementById('info-modal-content').style.transform = 'translateY(0)';
+            }, 10);
+            if (navigator.vibrate) navigator.vibrate(30);
+        }
+
+        function closeInfoModal() {
+            const modal = document.getElementById('info-modal');
+            modal.style.opacity = '0';
+            document.getElementById('info-modal-content').style.transform = 'translateY(100%)';
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        // ============================================================
+        // SISTEMA DE TOAST
+        // ============================================================
+        let toastTimeout;
+        function showToast(title, subtitle) {
+            const toast = document.getElementById('toast');
+            const toastTitle = document.getElementById('toast-title');
+            const toastSubtitle = document.getElementById('toast-subtitle');
+            
+            clearTimeout(toastTimeout);
+            
+            toastTitle.style.width = Math.min(title.length * 8, 200) + 'px';
+            toastSubtitle.style.width = Math.min(subtitle.length * 6, 150) + 'px';
+            
+            toast.style.opacity = '0.95';
+            toast.style.transform = 'translateY(0)';
+            
+            toastTimeout = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-8px)';
+            }, 3000);
+        }
+
+        // ============================================================
+        // TECLADO (Escape para cerrar modales)
+        // ============================================================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeConfirmarModal();
+                closeInfoModal();
+            }
+        });
+
+        // ============================================================
+        // SWIPE PARA CERRAR MODALES
+        // ============================================================
+        function setupSwipeModal(contentId, closeFn) {
+            let touchStartY = 0;
+            const content = document.getElementById(contentId);
+            
+            if (content) {
+                content.addEventListener('touchstart', (e) => {
+                    touchStartY = e.touches[0].clientY;
+                }, { passive: true });
+
+                content.addEventListener('touchend', (e) => {
+                    const touchEndY = e.changedTouches[0].clientY;
+                    if (touchEndY - touchStartY > 80) {
+                        closeFn();
+                    }
+                }, { passive: true });
+            }
+        }
+
+        setupSwipeModal('confirmar-modal-content', closeConfirmarModal);
+        setupSwipeModal('info-modal-content', closeInfoModal);
+    </script>
+
+</body>
+</html>

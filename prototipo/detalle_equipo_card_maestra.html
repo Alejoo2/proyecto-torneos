@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Detalle de Equipo (Card Maestra) — Wireframe Low-Fidelity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-950 min-h-[100dvh] flex items-center justify-center">
+
+    <!-- ============================================================ -->
+    <!-- APP SHELL: El "Móvil"                                          -->
+    <!-- ============================================================ -->
+    <div class="w-full max-w-lg min-h-[100dvh] bg-white md:min-h-[90vh] md:my-[5vh] md:rounded-[2rem] md:border-[10px] md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col relative">
+
+        <!-- ============================================================ -->
+        <!-- ESTADO DE CARGA INICIAL (Skeleton)                             -->
+        <!-- ============================================================ -->
+        <div id="app-loading" class="absolute inset-0 z-[60] bg-white flex flex-col transition-opacity duration-500">
+            <!-- Skeleton del header -->
+            <div class="px-4 py-3 flex items-center justify-between border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+                    <div class="h-4 bg-gray-200 rounded w-40 animate-pulse"></div>
+                </div>
+                <div class="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+            </div>
+            <!-- Skeleton de la card maestra -->
+            <div class="px-6 pt-6 pb-4">
+                <div class="flex items-start gap-4 mb-4">
+                    <div class="w-20 h-20 bg-gray-200 rounded-2xl animate-pulse shrink-0"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-5 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                        <div class="h-3 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+                        <div class="h-2 bg-gray-200 rounded w-full animate-pulse"></div>
+                        <div class="h-2 bg-gray-200 rounded w-full animate-pulse"></div>
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <div class="h-8 bg-gray-200 rounded-full w-20 animate-pulse"></div>
+                    <div class="h-8 bg-gray-200 rounded-full w-24 animate-pulse"></div>
+                    <div class="h-8 bg-gray-200 rounded-full w-16 animate-pulse"></div>
+                </div>
+            </div>
+            <!-- Skeleton de la cancha táctica -->
+            <div class="px-6 mb-6">
+                <div class="h-4 bg-gray-200 rounded w-32 mb-3 animate-pulse"></div>
+                <div class="bg-gray-200 rounded-2xl h-64 animate-pulse"></div>
+            </div>
+            <!-- Skeleton de jugadores -->
+            <div class="px-6">
+                <div class="h-4 bg-gray-200 rounded w-24 mb-4 animate-pulse"></div>
+                <div class="grid grid-cols-5 gap-3">
+                    <div class="w-14 h-14 bg-gray-200 rounded-full animate-pulse mx-auto"></div>
+                    <div class="w-14 h-14 bg-gray-200 rounded-full animate-pulse mx-auto"></div>
+                    <div class="w-14 h-14 bg-gray-200 rounded-full animate-pulse mx-auto"></div>
+                    <div class="w-14 h-14 bg-gray-200 rounded-full animate-pulse mx-auto"></div>
+                    <div class="w-14 h-14 bg-gray-200 rounded-full animate-pulse mx-auto"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- HEADER: Sticky                                                 -->
+        <!-- ============================================================ -->
+        <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
+            <div class="flex items-center justify-between px-4 py-3">
+                <div class="flex items-center gap-3">
+                    <a href="hub_mapa_principal.html" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px]" aria-label="Volver al inicio">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </a>
+                    <div class="h-4 bg-gray-800 rounded w-40"></div>
+                </div>
+                <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px]" aria-label="Más opciones" onclick="showTeamOptions()">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- ============================================================ -->
+        <!-- CONTENIDO PRINCIPAL                                            -->
+        <!-- ============================================================ -->
+        <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden pb-24 opacity-0 transition-opacity duration-500">
+
+            <!-- ============================================================ -->
+            <!-- CARD MAESTRA: HEADER (Escudo + Nombre + Stats)                 -->
+            <!-- ============================================================ -->
+            <div class="px-6 pt-6 pb-4">
+                <div class="flex items-start gap-4 mb-4">
+                    <!-- Escudo del equipo -->
+                    <div class="w-20 h-20 bg-gray-200 rounded-2xl flex items-center justify-center shrink-0 border-2 border-gray-100 hover:bg-gray-300 transition-colors cursor-pointer" onclick="editTeamLogo()">
+                        <div class="w-10 h-10 bg-gray-300 rounded-xl"></div>
+                    </div>
+                    <div class="flex-1 min-w-0 pt-1">
+                        <div class="h-5 bg-gray-800 rounded w-3/4 mb-2"></div>
+                        <div class="h-3 bg-gray-300 rounded w-1/2 mb-3"></div>
+                        <!-- Barra de stats: AVG -->
+                        <div class="flex items-center gap-2 mb-2 cursor-pointer" onclick="showStatDetail('avg')">
+                            <div class="h-2 bg-gray-400 rounded w-8"></div>
+                            <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-gray-600 rounded-full transition-all duration-500" style="width: 78%"></div>
+                            </div>
+                            <div class="h-2 bg-gray-600 rounded w-6"></div>
+                        </div>
+                        <!-- Barra de stats: Fair Play -->
+                        <div class="flex items-center gap-2 cursor-pointer" onclick="showStatDetail('fairplay')">
+                            <div class="h-2 bg-gray-400 rounded w-12"></div>
+                            <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                                <div class="h-full bg-gray-500 rounded-full transition-all duration-500" style="width: 92%"></div>
+                            </div>
+                            <div class="h-2 bg-gray-600 rounded w-6"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Info adicional del equipo -->
+                <div class="flex gap-3 mb-4 flex-wrap">
+                    <div class="bg-gray-100 px-3 py-1.5 rounded-full hover:bg-gray-200 transition-colors cursor-pointer" onclick="showTagDetail('torneos')">
+                        <div class="h-2.5 bg-gray-400 rounded w-16"></div>
+                    </div>
+                    <div class="bg-gray-100 px-3 py-1.5 rounded-full hover:bg-gray-200 transition-colors cursor-pointer" onclick="showTagDetail('jugadores')">
+                        <div class="h-2.5 bg-gray-400 rounded w-20"></div>
+                    </div>
+                    <div class="bg-gray-100 px-3 py-1.5 rounded-full hover:bg-gray-200 transition-colors cursor-pointer" onclick="showTagDetail('ranking')">
+                        <div class="h-2.5 bg-gray-400 rounded w-14"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- PREVISUALIZACIÓN TÁCTICA: Cancha de Fútbol Sala                  -->
+            <!-- ============================================================ -->
+            <!-- Intención: Representación gráfica de la mitad de cancha.        -->
+            <!-- Los íconos de jugadores seleccionados se reflejan aquí.         -->
+            <div class="px-6 mb-6">
+                <div class="h-4 bg-gray-800 rounded w-32 mb-3"></div>
+                <div class="bg-gray-100 rounded-2xl p-4 relative overflow-hidden" style="aspect-ratio: 4/3;">
+                    <!-- Líneas de la cancha (SVG) -->
+                    <svg class="absolute inset-0 w-full h-full" viewBox="0 0 400 300" fill="none" stroke="#d1d5db" stroke-width="2">
+                        <!-- Borde exterior -->
+                        <rect x="10" y="10" width="380" height="280" rx="8"/>
+                        <!-- Línea media -->
+                        <line x1="200" y1="10" x2="200" y2="290"/>
+                        <!-- Círculo central -->
+                        <circle cx="200" cy="150" r="40"/>
+                        <!-- Área -->
+                        <rect x="10" y="80" width="80" height="140"/>
+                        <!-- Portería -->
+                        <rect x="2" y="110" width="8" height="80" fill="#e5e7eb" stroke="none"/>
+                    </svg>
+
+                    <!-- Jugadores en cancha (posicionados absolutamente) -->
+                    <!-- Se actualizan dinámicamente según el mosaico -->
+                    <div id="tactic-portero" class="absolute left-[8%] top-[45%] w-10 h-10 bg-gray-800 rounded-full border-3 border-white shadow-lg flex items-center justify-center z-10 transition-all duration-300">
+                        <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
+                    </div>
+                    <div id="tactic-def-izq" class="absolute left-[22%] top-[25%] w-10 h-10 bg-gray-800 rounded-full border-3 border-white shadow-lg flex items-center justify-center z-10 transition-all duration-300">
+                        <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
+                    </div>
+                    <div id="tactic-def-der" class="absolute left-[22%] top-[65%] w-10 h-10 bg-gray-800 rounded-full border-3 border-white shadow-lg flex items-center justify-center z-10 transition-all duration-300">
+                        <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
+                    </div>
+                    <div id="tactic-medio" class="absolute left-[38%] top-[45%] w-10 h-10 bg-gray-800 rounded-full border-3 border-white shadow-lg flex items-center justify-center z-10 transition-all duration-300">
+                        <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
+                    </div>
+                    <div id="tactic-delantero" class="absolute left-[55%] top-[45%] w-10 h-10 bg-gray-800 rounded-full border-3 border-white shadow-lg flex items-center justify-center z-10 transition-all duration-300">
+                        <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
+                    </div>
+                </div>
+                <!-- Indicador de formación -->
+                <div class="flex items-center justify-center gap-2 mt-2">
+                    <div class="h-2 bg-gray-400 rounded w-20"></div>
+                    <div class="h-2 bg-gray-600 rounded w-8"></div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- SECCIÓN: CANCHA (Titulares / Mosaico de Toggles)               -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="h-4 bg-gray-800 rounded w-24"></div>
+                    <div id="cancha-counter" class="bg-gray-800 text-white text-xs px-3 py-1 rounded-full transition-all duration-200">
+                        <span id="counter-text">5/5</span>
+                    </div>
+                </div>
+
+                <!-- Mosaico de jugadores en Cancha -->
+                <!-- Intención: Cada ícono ES el toggle. Borde oscuro/fuerte = activo (Cancha) -->
+                <div id="cancha-grid" class="grid grid-cols-5 gap-3">
+                    <!-- Los jugadores se generan por JS -->
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- SECCIÓN: BANCO (Suplentes / Mosaico de Toggles inactivos)      -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="h-4 bg-gray-800 rounded w-20"></div>
+                    <div id="banco-counter" class="bg-gray-200 text-gray-500 text-xs px-3 py-1 rounded-full">
+                        <span id="banco-text">7</span>
+                    </div>
+                </div>
+
+                <!-- Mosaico de jugadores en Banco -->
+                <div id="banco-grid" class="grid grid-cols-5 gap-3">
+                    <!-- Los jugadores se generan por JS -->
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- ACCIÓN: Transferir Capitanía                                   -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-6">
+                <div class="bg-gray-100 rounded-2xl p-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="h-3 bg-gray-800 rounded w-40 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-56"></div>
+                        </div>
+                        <button class="bg-gray-800 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-gray-700 active:bg-gray-900 transition-colors min-h-[44px]" onclick="openTransferModal()">
+                            <div class="h-3 bg-gray-400 rounded w-20"></div>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- ACCIÓN: Reclutar Jugadores                                     -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-6">
+                <a href="directorio_reclutamiento.html" class="block w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-colors text-center min-h-[56px] flex items-center justify-center">
+                    <div class="h-4 bg-gray-400 rounded w-40 mx-auto"></div>
+                </a>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- NOTIFICACIÓN CONTEXTUAL INFERIOR                               -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-8">
+                <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                        <div class="w-5 h-5 bg-gray-400 rounded"></div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="h-3 bg-gray-600 rounded w-48 mb-1"></div>
+                        <div class="h-2 bg-gray-300 rounded w-32"></div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- ============================================================ -->
+        <!-- NAVBAR INFERIOR                                                -->
+        <!-- ============================================================ -->
+        <nav class="absolute bottom-0 w-full z-50 bg-white border-t border-gray-200" style="padding-bottom: env(safe-area-inset-bottom);">
+            <div class="grid grid-cols-4 h-16">
+                <a href="hub_mapa_principal.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Inicio">
+                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
+                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                </a>
+                <button class="flex flex-col items-center justify-center gap-1 text-gray-800 min-h-[44px]" aria-label="Equipo">
+                    <div class="w-6 h-6 bg-gray-800 rounded"></div>
+                    <div class="h-2 bg-gray-800 rounded w-10"></div>
+                </button>
+                <a href="detalle_torneo.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Torneos">
+                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
+                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                </a>
+                <a href="perfil_jugador.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Perfil">
+                    <div class="w-6 h-6 bg-gray-300 rounded-full"></div>
+                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                </a>
+            </div>
+        </nav>
+
+        <!-- ============================================================ -->
+        <!-- TOAST DE NOTIFICACIÓN                                          -->
+        <!-- ============================================================ -->
+        <div id="toast" class="absolute top-20 left-4 right-4 z-[70] pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
+            <div class="bg-gray-800 text-white px-4 py-3 rounded-2xl shadow-lg flex items-center gap-3">
+                <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center shrink-0">
+                    <div class="w-4 h-4 bg-gray-400 rounded"></div>
+                </div>
+                <div class="flex-1">
+                    <div class="h-3 bg-gray-400 rounded w-3/4 mb-1" id="toast-title"></div>
+                    <div class="h-2 bg-gray-500 rounded w-1/2" id="toast-subtitle"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- MODAL DE TRANSFERENCIA DE CAPITANÍA                            -->
+        <!-- ============================================================ -->
+        <div id="transfer-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300">
+                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
+                <div class="h-4 bg-gray-800 rounded w-48 mb-2 mx-auto"></div>
+                <div class="h-3 bg-gray-300 rounded w-64 mb-6 mx-auto"></div>
+                
+                <div class="space-y-3 mb-6">
+                    <button class="w-full bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors" onclick="selectTransferTarget(1)">
+                        <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                            <div class="w-6 h-6 bg-gray-300 rounded-full"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-32 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-20"></div>
+                        </div>
+                        <div class="w-6 h-6 bg-gray-300 rounded-full" id="transfer-check-1"></div>
+                    </button>
+                    <button class="w-full bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors" onclick="selectTransferTarget(2)">
+                        <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                            <div class="w-6 h-6 bg-gray-300 rounded-full"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-28 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-20"></div>
+                        </div>
+                        <div class="w-6 h-6 bg-gray-300 rounded-full" id="transfer-check-2"></div>
+                    </button>
+                </div>
+
+                <div class="flex gap-3">
+                    <button class="flex-1 bg-gray-100 text-gray-700 py-4 rounded-2xl font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors min-h-[56px]" onclick="closeTransferModal()">
+                        <div class="h-4 bg-gray-400 rounded w-20 mx-auto"></div>
+                    </button>
+                    <button class="flex-1 bg-gray-800 text-white py-4 rounded-2xl font-medium hover:bg-gray-700 active:bg-gray-900 transition-colors min-h-[56px]" onclick="confirmTransfer()">
+                        <div class="h-4 bg-gray-400 rounded w-24 mx-auto"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SCRIPT: Lógica de Interacción                                  -->
+    <!-- ============================================================ -->
+    <script>
+        // ============================================================
+        // DATOS DE JUGADORES
+        // ============================================================
+        const players = [
+            { id: 1, name: 'Jugador 1', inCancha: true, position: 'portero' },
+            { id: 2, name: 'Jugador 2', inCancha: true, position: 'def-izq' },
+            { id: 3, name: 'Jugador 3', inCancha: true, position: 'def-der' },
+            { id: 4, name: 'Jugador 4', inCancha: true, position: 'medio' },
+            { id: 5, name: 'Jugador 5', inCancha: true, position: 'delantero' },
+            { id: 6, name: 'Jugador 6', inCancha: false, position: null },
+            { id: 7, name: 'Jugador 7', inCancha: false, position: null },
+            { id: 8, name: 'Jugador 8', inCancha: false, position: null },
+            { id: 9, name: 'Jugador 9', inCancha: false, position: null },
+            { id: 10, name: 'Jugador 10', inCancha: false, position: null },
+            { id: 11, name: 'Jugador 11', inCancha: false, position: null },
+            { id: 12, name: 'Jugador 12', inCancha: false, position: null },
+        ];
+
+        const MAX_CANCHA = 5;
+        let transferTarget = null;
+
+        // ============================================================
+        // CARGA INICIAL
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            renderPlayers();
+            
+            setTimeout(() => {
+                const appLoading = document.getElementById('app-loading');
+                const mainContent = document.getElementById('main-content');
+                
+                appLoading.style.opacity = '0';
+                mainContent.style.opacity = '1';
+                
+                setTimeout(() => {
+                    appLoading.style.display = 'none';
+                    showToast('Equipo cargado', 'Toca los jugadores para moverlos entre Cancha y Banco');
+                }, 500);
+            }, 1000);
+        });
+
+        // ============================================================
+        // RENDERIZAR JUGADORES
+        // ============================================================
+        function renderPlayers() {
+            const canchaGrid = document.getElementById('cancha-grid');
+            const bancoGrid = document.getElementById('banco-grid');
+            
+            const canchaPlayers = players.filter(p => p.inCancha);
+            const bancoPlayers = players.filter(p => !p.inCancha);
+            
+            // Renderizar cancha
+            canchaGrid.innerHTML = canchaPlayers.map((p, idx) => `
+                <button class="flex flex-col items-center gap-1 group" onclick="togglePlayer(${p.id})">
+                    <div class="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center border-4 border-gray-800 shadow-md transition-all hover:scale-105 active:scale-95 ${idx === canchaPlayers.length - 1 && canchaPlayers.length === MAX_CANCHA ? 'ring-2 ring-gray-400 ring-offset-2' : ''}">
+                        <div class="w-7 h-7 bg-gray-400 rounded-full"></div>
+                    </div>
+                    <div class="h-2 bg-gray-600 rounded w-12"></div>
+                </button>
+            `).join('');
+            
+            // Renderizar banco
+            bancoGrid.innerHTML = bancoPlayers.map(p => `
+                <button class="flex flex-col items-center gap-1 group" onclick="togglePlayer(${p.id})">
+                    <div class="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center border-2 border-gray-300 transition-all hover:border-gray-400 hover:bg-gray-200 active:scale-95">
+                        <div class="w-7 h-7 bg-gray-300 rounded-full"></div>
+                    </div>
+                    <div class="h-2 bg-gray-300 rounded w-12"></div>
+                </button>
+            `).join('');
+            
+            // Actualizar contadores
+            document.getElementById('counter-text').textContent = `${canchaPlayers.length}/${MAX_CANCHA}`;
+            document.getElementById('banco-text').textContent = bancoPlayers.length;
+            
+            // Actualizar cancha táctica
+            updateTacticField();
+        }
+
+        // ============================================================
+        // TOGGLE JUGADOR (Optimistic UI)
+        // ============================================================
+        function togglePlayer(playerId) {
+            const player = players.find(p => p.id === playerId);
+            if (!player) return;
+            
+            const canchaCount = players.filter(p => p.inCancha).length;
+            
+            if (!player.inCancha && canchaCount >= MAX_CANCHA) {
+                // Límite alcanzado - error
+                if (navigator.vibrate) navigator.vibrate([50, 100, 50]);
+                showToast('Límite alcanzado', `Máximo ${MAX_CANCHA} jugadores en cancha. Saca uno primero.`);
+                return;
+            }
+            
+            // Feedback táctil
+            if (navigator.vibrate) navigator.vibrate(30);
+            
+            // Toggle
+            player.inCancha = !player.inCancha;
+            
+            // Reordenar posiciones tácticas
+            if (player.inCancha) {
+                const positions = ['portero', 'def-izq', 'def-der', 'medio', 'delantero'];
+                const usedPositions = players.filter(p => p.inCancha && p.position).map(p => p.position);
+                const availablePosition = positions.find(pos => !usedPositions.includes(pos));
+                player.position = availablePosition || null;
+            } else {
+                player.position = null;
+            }
+            
+            renderPlayers();
+            
+            const action = player.inCancha ? 'a la Cancha' : 'al Banco';
+            showToast('Jugador movido', `${player.name} movido ${action}`);
+        }
+
+        // ============================================================
+        // ACTUALIZAR CANCHA TÁCTICA
+        // ============================================================
+        function updateTacticField() {
+            const positions = {
+                'portero': 'tactic-portero',
+                'def-izq': 'tactic-def-izq',
+                'def-der': 'tactic-def-der',
+                'medio': 'tactic-medio',
+                'delantero': 'tactic-delantero'
+            };
+            
+            // Ocultar todos
+            Object.values(positions).forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.opacity = '0';
+                    el.style.transform = 'scale(0.5)';
+                }
+            });
+            
+            // Mostrar activos
+            players.filter(p => p.inCancha && p.position).forEach(p => {
+                const el = document.getElementById(positions[p.position]);
+                if (el) {
+                    el.style.opacity = '1';
+                    el.style.transform = 'scale(1)';
+                }
+            });
+        }
+
+        // ============================================================
+        // MODAL DE TRANSFERENCIA
+        // ============================================================
+        function openTransferModal() {
+            const modal = document.getElementById('transfer-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                modal.querySelector('div').style.transform = 'translateY(0)';
+            }, 10);
+        }
+
+        function closeTransferModal() {
+            const modal = document.getElementById('transfer-modal');
+            modal.style.opacity = '0';
+            modal.querySelector('div').style.transform = 'translateY(100%)';
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            transferTarget = null;
+            document.querySelectorAll('[id^="transfer-check-"]').forEach(el => {
+                el.classList.remove('bg-gray-800');
+                el.classList.add('bg-gray-300');
+            });
+        }
+
+        function selectTransferTarget(id) {
+            transferTarget = id;
+            document.querySelectorAll('[id^="transfer-check-"]').forEach(el => {
+                el.classList.remove('bg-gray-800');
+                el.classList.add('bg-gray-300');
+            });
+            const check = document.getElementById(`transfer-check-${id}`);
+            check.classList.remove('bg-gray-300');
+            check.classList.add('bg-gray-800');
+        }
+
+        function confirmTransfer() {
+            if (!transferTarget) {
+                showToast('Error', 'Selecciona un jugador primero');
+                return;
+            }
+            closeTransferModal();
+            setTimeout(() => {
+                showToast('Capitanía transferida', 'Ahora eres jugador regular');
+            }, 300);
+        }
+
+        // ============================================================
+        // DETALLES
+        // ============================================================
+        function showStatDetail(stat) {
+            const labels = { 'avg': 'Promedio general: 7.8/10', 'fairplay': 'Fair Play: 92% positivo' };
+            showToast('Estadística', labels[stat]);
+        }
+
+        function showTagDetail(tag) {
+            const labels = { 'torneos': '3 torneos activos', 'jugadores': '12 jugadores en plantel', 'ranking': 'Top 5 de la liga' };
+            showToast('Información', labels[tag]);
+        }
+
+        function editTeamLogo() {
+            showToast('Galería', 'Abriendo selector de escudo...');
+        }
+
+        function showTeamOptions() {
+            showToast('Opciones', 'Menú de configuración del equipo');
+        }
+
+        // ============================================================
+        // SISTEMA DE TOAST
+        // ============================================================
+        let toastTimeout;
+        function showToast(title, subtitle) {
+            const toast = document.getElementById('toast');
+            const toastTitle = document.getElementById('toast-title');
+            const toastSubtitle = document.getElementById('toast-subtitle');
+            
+            clearTimeout(toastTimeout);
+            
+            toastTitle.style.width = Math.min(title.length * 8, 200) + 'px';
+            toastSubtitle.style.width = Math.min(subtitle.length * 6, 150) + 'px';
+            
+            toast.style.opacity = '0.95';
+            toast.style.transform = 'translateY(0)';
+            
+            toastTimeout = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-8px)';
+            }, 3000);
+        }
+
+        // ============================================================
+        // TECLADO (Escape para cerrar modal)
+        // ============================================================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeTransferModal();
+        });
+    </script>
+
+</body>
+</html>

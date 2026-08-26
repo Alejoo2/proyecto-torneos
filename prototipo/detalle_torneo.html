@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Detalle de Torneo — Wireframe Refactorizado</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        // Estados del torneo (coherentes con Sistema 6)
+                        'tournament-scheduled': '#3B82F6',    // Azul
+                        'tournament-grace': '#F59E0B',      // Naranja
+                        'tournament-progress': '#10B981',   // Verde
+                        'tournament-finished': '#6B7280',     // Gris
+                        'tournament-cancelled': '#EF4444',    // Rojo
+                        'tournament-suspended': '#8B5CF6',    // Violeta
+                        // Estados de inscripción
+                        'enrollment-approved': '#10B981',
+                        'enrollment-pending-pay': '#F59E0B',
+                        'enrollment-pending-avail': '#EF4444',
+                        'enrollment-rejected': '#6B7280',
+                        // Sala de Cine
+                        'hold-active': '#F97316',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-950 min-h-[100dvh] flex items-center justify-center">
+
+    <!-- APP SHELL -->
+    <div class="w-full max-w-lg min-h-[100dvh] bg-white md:min-h-[90vh] md:my-[5vh] md:rounded-[2rem] md:border-[10px] md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col relative">
+
+        <!-- ============================================================ -->
+        <!-- ESTADO DE CARGA INICIAL (Skeleton)                             -->
+        <!-- ============================================================ -->
+        <div id="app-loading" class="absolute inset-0 z-[60] bg-white flex flex-col transition-opacity duration-500">
+            <div class="px-4 py-3 flex items-center justify-between border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+                    <div class="h-4 bg-gray-200 rounded w-40 animate-pulse"></div>
+                </div>
+            </div>
+            <div class="px-6 py-4 space-y-4">
+                <div class="h-6 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                <div class="h-3 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+                <div class="grid grid-cols-2 gap-3 mt-4">
+                    <div class="h-16 bg-gray-200 rounded-2xl animate-pulse"></div>
+                    <div class="h-16 bg-gray-200 rounded-2xl animate-pulse"></div>
+                    <div class="h-16 bg-gray-200 rounded-2xl animate-pulse"></div>
+                    <div class="h-16 bg-gray-200 rounded-2xl animate-pulse"></div>
+                </div>
+                <div class="h-14 bg-gray-200 rounded-2xl animate-pulse mt-4"></div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- HEADER: Sticky (sin botón de compartir)                        -->
+        <!-- ============================================================ -->
+        <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
+            <div class="flex items-center justify-between px-4 py-3">
+                <div class="flex items-center gap-3">
+                    <a href="hub_mapa_principal.html" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px]" aria-label="Volver al inicio">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </a>
+                    <!-- Badge de estado del torneo (dinámico según Sistema 6) -->
+                    <div class="flex items-center gap-2">
+                        <span id="tournament-status-badge" class="px-2.5 py-1 rounded-full text-xs font-semibold bg-tournament-scheduled text-white">
+                            SCHEDULED
+                        </span>
+                        <span id="tournament-type-badge" class="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                            PÚBLICO
+                        </span>
+                    </div>
+                </div>
+                <!-- Sala de Cine: contador de hold activo (solo si aplica) -->
+                <div id="hold-timer" class="hidden flex items-center gap-1.5 px-3 py-1.5 bg-orange-50 border border-orange-200 rounded-full">
+                    <svg class="w-4 h-4 text-hold-active animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                    </svg>
+                    <span class="text-xs font-mono font-semibold text-hold-active" id="hold-countdown">4:32</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- ============================================================ -->
+        <!-- CONTENIDO PRINCIPAL                                            -->
+        <!-- ============================================================ -->
+        <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden pb-24 opacity-0 transition-opacity duration-500">
+
+            <!-- ============================================================ -->
+            <!-- INFO PRINCIPAL DEL TORNEO (sin hero visual)                    -->
+            <!-- ============================================================ -->
+            <div class="px-6 pt-5 pb-4">
+                <!-- Nombre del torneo -->
+                <h1 class="text-xl font-bold text-gray-900 mb-1 leading-tight">Copa Barrial 2026</h1>
+                <!-- Cancha (link a detalle) -->
+                <a href="detalle_cancha_sede.html" class="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    Cancha El Parque
+                </a>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- STATS DEL TORNEO (4 cols redefinidas según Sistema 6)        -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-6">
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Cupos: X/Y equipos -->
+                    <div class="bg-gray-50 rounded-2xl p-3.5 border border-gray-100">
+                        <div class="flex items-baseline gap-1 mb-1">
+                            <span class="text-xl font-bold text-gray-900">12</span>
+                            <span class="text-sm text-gray-400">/16</span>
+                        </div>
+                        <div class="text-xs text-gray-500 font-medium">Equipos inscritos</div>
+                        <!-- Barra de progreso -->
+                        <div class="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                            <div class="h-full bg-tournament-scheduled rounded-full" style="width: 75%"></div>
+                        </div>
+                    </div>
+                    <!-- Franja horaria -->
+                    <div class="bg-gray-50 rounded-2xl p-3.5 border border-gray-100">
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="text-sm font-semibold text-gray-900">Martes</span>
+                        </div>
+                        <div class="text-xs text-gray-500 font-medium">18:00 – 20:00</div>
+                        <div class="text-xs text-gray-400 mt-0.5">Franja 9</div>
+                    </div>
+                    <!-- Fecha límite -->
+                    <div class="bg-gray-50 rounded-2xl p-3.5 border border-gray-100">
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                            </svg>
+                            <span class="text-sm font-semibold text-gray-900">2 días</span>
+                        </div>
+                        <div class="text-xs text-gray-500 font-medium">Cierra inscripción</div>
+                        <div class="text-xs text-gray-400 mt-0.5">15 Sep 2026</div>
+                    </div>
+                    <!-- Estado + Formato -->
+                    <div class="bg-gray-50 rounded-2xl p-3.5 border border-gray-100">
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="text-sm font-semibold text-gray-900">Elim. Simple</span>
+                        </div>
+                        <div class="text-xs text-gray-500 font-medium">Formato</div>
+                        <div class="text-xs text-gray-400 mt-0.5">16 equipos</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- DESCRIPCIÓN DEL TORNEO                                         -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-6">
+                <h2 class="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-2">Descripción</h2>
+                <p class="text-sm text-gray-600 leading-relaxed">
+                    Torneo de microfútbol barrial con formato de eliminación directa. 
+                    Todos los partidos se juegan los martes en la franja de la noche. 
+                    Inscripción abierta hasta completar los 16 cupos.
+                </p>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- DETALLES DEL TORNEO (coherentes con Sistema 6)                 -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-6">
+                <div class="space-y-3">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-sm font-medium text-gray-900">Cancha El Parque</div>
+                            <div class="text-xs text-gray-500">Calle 123 #45-67, Barrio Central</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-sm font-medium text-gray-900">Gestor: Carlos López</div>
+                            <div class="text-xs text-gray-500">Organizador del torneo</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-sm font-medium text-gray-900">Inscripciones abiertas</div>
+                            <div class="text-xs text-gray-500">7 de 16 cupos disponibles</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- BOTÓN DE ACCIÓN PRINCIPAL (condicional por rol)                  -->
+            <!-- ============================================================ -->
+            <!-- 
+                VISTA CAPITÁN (torneo SCHEDULED): Iniciar Sala de Cine 
+                - Muestra prereserva de 5min al hacer click
+                - Aparece countdown en header
+            -->
+            <div class="px-6 mb-8" id="action-captain">
+                <button onclick="handleInscripcion()" class="w-full bg-gray-900 hover:bg-gray-800 active:bg-black text-white py-4 rounded-2xl font-semibold transition-all duration-200 shadow-lg min-h-[56px] flex items-center justify-center gap-2 group">
+                    <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                    </svg>
+                    Inscribir equipo
+                </button>
+                <p class="text-xs text-center text-gray-400 mt-2">Se reservará un cupo por 5 minutos</p>
+            </div>
+
+            <!-- VISTA GESTOR (del torneo): Panel de gestión -->
+            <div class="px-6 mb-8 hidden" id="action-manager">
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="closeEnrollments()" class="bg-gray-900 hover:bg-gray-800 active:bg-black text-white py-3.5 rounded-2xl font-medium transition-all min-h-[48px] text-sm">
+                        Cerrar inscripciones
+                    </button>
+                    <button onclick="manageEnrollments()" class="bg-white border-2 border-gray-900 text-gray-900 hover:bg-gray-50 active:bg-gray-100 py-3.5 rounded-2xl font-medium transition-all min-h-[48px] text-sm">
+                        Ver inscripciones
+                    </button>
+                </div>
+            </div>
+
+            <!-- VISTA JUGADOR NO CAPITÁN: Sin acción -->
+            <div class="px-6 mb-8 hidden" id="action-viewer">
+                <div class="bg-gray-50 rounded-2xl p-4 text-center border border-gray-100">
+                    <p class="text-sm text-gray-500">Solo los capitanes pueden inscribir equipos</p>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- SECCIÓN: EQUIPOS INSCRITOS (con estados de Sistema 6)          -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-bold text-gray-900">Equipos inscritos</h2>
+                    <span class="text-xs text-gray-400 font-mono">12/16</span>
+                </div>
+
+                <!-- Grid de equipos con estados reales -->
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Equipo APPROVED -->
+                    <a href="detalle_equipo_card_maestra.html" class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md active:shadow-sm transition-all">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm" style="background-color: #FF5733;">
+                                LSP
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-enrollment-approved/10 text-enrollment-approved">
+                                ✓ APROBADO
+                            </span>
+                        </div>
+                        <div class="text-sm font-semibold text-gray-900 truncate">Los Pibes</div>
+                        <div class="text-xs text-gray-400">12 jugadores</div>
+                    </a>
+
+                    <!-- Equipo PENDING_PAYMENT -->
+                    <a href="detalle_equipo_card_maestra.html" class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md active:shadow-sm transition-all">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm" style="background-color: #3366FF;">
+                                FCC
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-enrollment-pending-pay/10 text-enrollment-pending-pay">
+                                ⏳ PAGO
+                            </span>
+                        </div>
+                        <div class="text-sm font-semibold text-gray-900 truncate">FC Central</div>
+                        <div class="text-xs text-gray-400">10 jugadores</div>
+                    </a>
+
+                    <!-- Equipo APPROVED -->
+                    <a href="detalle_equipo_card_maestra.html" class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md active:shadow-sm transition-all">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm" style="background-color: #33FF57;">
+                                LB
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-enrollment-approved/10 text-enrollment-approved">
+                                ✓ APROBADO
+                            </span>
+                        </div>
+                        <div class="text-sm font-semibold text-gray-900 truncate">La Banda</div>
+                        <div class="text-xs text-gray-400">8 jugadores</div>
+                    </a>
+
+                    <!-- Equipo PENDING_AVAILABILITY (badge rojo con conflicto) -->
+                    <a href="detalle_equipo_card_maestra.html" class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md active:shadow-sm transition-all">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm" style="background-color: #FF3333;">
+                                ER
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-enrollment-pending-avail/10 text-enrollment-pending-avail" title="Solo 3 de 12 jugadores disponibles">
+                                ⚠ CONFLICTO
+                            </span>
+                        </div>
+                        <div class="text-sm font-semibold text-gray-900 truncate">Equipo Rojo</div>
+                        <div class="text-xs text-gray-400">12 jugadores · 3 disp.</div>
+                    </a>
+
+                    <!-- Equipo APPROVED -->
+                    <a href="detalle_equipo_card_maestra.html" class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md active:shadow-sm transition-all">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm" style="background-color: #9933FF;">
+                                EA
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-enrollment-approved/10 text-enrollment-approved">
+                                ✓ APROBADO
+                            </span>
+                        </div>
+                        <div class="text-sm font-semibold text-gray-900 truncate">Equipo Azul</div>
+                        <div class="text-xs text-gray-400">15 jugadores</div>
+                    </a>
+
+                    <!-- Equipo APPROVED -->
+                    <a href="detalle_equipo_card_maestra.html" class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md active:shadow-sm transition-all">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm" style="background-color: #FF9933;">
+                                TC
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-enrollment-approved/10 text-enrollment-approved">
+                                ✓ APROBADO
+                            </span>
+                        </div>
+                        <div class="text-sm font-semibold text-gray-900 truncate">Torneo Calle</div>
+                        <div class="text-xs text-gray-400">9 jugadores</div>
+                    </a>
+
+                    <!-- SLOT HOLD (Sala de Cine — plaza reservada pendiente) -->
+                    <div class="bg-orange-50 rounded-2xl p-4 border-2 border-dashed border-hold-active/30">
+                        <div class="flex items-center justify-between mb-2">
+                            <div class="w-12 h-12 rounded-xl bg-orange-100 flex items-center justify-center">
+                                <svg class="w-6 h-6 text-hold-active animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                            </div>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-hold-active/10 text-hold-active">
+                                ⏱ RESERVADA
+                            </span>
+                        </div>
+                        <div class="text-sm font-semibold text-gray-900">Plaza reservada</div>
+                        <div class="text-xs text-hold-active font-mono">Expira en 3:45</div>
+                    </div>
+
+                    <!-- Cupo disponible (libre, sin slot hold) -->
+                    <div class="bg-gray-50 rounded-2xl p-4 border-2 border-dashed border-gray-200 flex flex-col items-center justify-center text-center">
+                        <div class="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center mb-2">
+                            <svg class="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                        </div>
+                        <div class="text-sm font-medium text-gray-400">Cupo libre</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- SECCIÓN: PRÓXIMOS PARTIDOS (con fases de Sistema 7)            -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-bold text-gray-900">Próximos partidos</h2>
+                    <a href="#" class="text-xs text-gray-500 hover:text-gray-700 font-medium">Ver todos</a>
+                </div>
+
+                <div class="space-y-3">
+                    <!-- Partido de Fase 1 (equipos definidos) -->
+                    <a href="detalle_partido_vs.html" class="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm hover:shadow-md active:shadow-sm transition-all block">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Octavos de Final · Jornada 1</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-50 text-blue-600">SCHEDULED</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5 flex-1">
+                                <div class="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-xs" style="background-color: #FF5733;">LSP</div>
+                                <span class="text-sm font-semibold text-gray-900 truncate">Los Pibes</span>
+                            </div>
+                            <div class="px-3">
+                                <span class="text-lg font-bold text-gray-300">VS</span>
+                            </div>
+                            <div class="flex items-center gap-2.5 flex-1 justify-end">
+                                <span class="text-sm font-semibold text-gray-900 truncate">FC Central</span>
+                                <div class="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold text-xs" style="background-color: #3366FF;">FCC</div>
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-3 border-t border-gray-50 flex items-center justify-between text-xs text-gray-400">
+                            <span class="flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                Mar 16 Sep · 18:00
+                            </span>
+                            <span class="flex items-center gap-1">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                </svg>
+                                El Parque
+                            </span>
+                        </div>
+                    </a>
+
+                    <!-- Partido de Fase 2 (por definir — Sistema 7) -->
+                    <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wide">Cuartos de Final · Por definir</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-400">PENDIENTE</span>
+                        </div>
+                        <div class="flex items-center justify-between opacity-50">
+                            <div class="flex items-center gap-2.5 flex-1">
+                                <div class="w-9 h-9 rounded-lg bg-gray-200 flex items-center justify-center">
+                                    <span class="text-gray-400 text-xs">?</span>
+                                </div>
+                                <span class="text-sm font-medium text-gray-400 truncate">Por definir</span>
+                            </div>
+                            <div class="px-3">
+                                <span class="text-lg font-bold text-gray-300">VS</span>
+                            </div>
+                            <div class="flex items-center gap-2.5 flex-1 justify-end">
+                                <span class="text-sm font-medium text-gray-400 truncate">Por definir</span>
+                                <div class="w-9 h-9 rounded-lg bg-gray-200 flex items-center justify-center">
+                                    <span class="text-gray-400 text-xs">?</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-3 pt-3 border-t border-gray-100 text-center">
+                            <span class="text-xs text-gray-400 italic">Se define tras Octavos de Final</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- SECCIÓN: TABLA DE POSICIONES (condicional — Sistema 10)        -->
+            <!-- Solo visible si hay partidos FINISHED/WALKOVER                 -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-8" id="standings-section">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-base font-bold text-gray-900">Tabla de posiciones</h2>
+                    <button class="text-xs text-gray-500 hover:text-gray-700 font-medium" onclick="showFullTable()">Ver completa</button>
+                </div>
+
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <!-- Header -->
+                    <div class="flex items-center px-4 py-3 bg-gray-50 border-b border-gray-100 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        <div class="w-8 mr-3">Pos</div>
+                        <div class="flex-1">Equipo</div>
+                        <div class="w-8 text-center mr-3">PJ</div>
+                        <div class="w-8 text-center mr-3">PG</div>
+                        <div class="w-8 text-center mr-3">PE</div>
+                        <div class="w-8 text-center mr-3">PP</div>
+                        <div class="w-10 text-center font-bold">Pts</div>
+                    </div>
+                    <!-- Fila 1 -->
+                    <div class="flex items-center px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer">
+                        <div class="w-8 mr-3">
+                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold">1</span>
+                        </div>
+                        <div class="flex items-center gap-2 flex-1 min-w-0">
+                            <div class="w-6 h-6 rounded flex items-center justify-center text-white font-bold text-[10px]" style="background-color: #FF5733;">L</div>
+                            <span class="text-sm font-medium text-gray-900 truncate">Los Pibes</span>
+                        </div>
+                        <div class="w-8 text-center text-sm text-gray-600 mr-3">3</div>
+                        <div class="w-8 text-center text-sm text-gray-600 mr-3">3</div>
+                        <div class="w-8 text-center text-sm text-gray-600 mr-3">0</div>
+                        <div class="w-8 text-center text-sm text-gray-600 mr-3">0</div>
+                        <div class="w-10 text-center text-sm font-bold text-gray-900">9</div>
+                    </div>
+                    <!-- Fila 2 -->
+                    <div class="flex items-center px-4 py-3 border-b border-gray-50 hover:bg-gray-50 transition-colors cursor-pointer">
+                        <div class="w-8 mr-3">
+                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-gray-600 text-xs font-bold">2</span>
+                        </div>
+                        <div class="flex items-center gap-2 flex-1 min-w-0">
+                            <div class="w-6 h-6 rounded flex items-center justify-center text-white font-bold text-[10px]" style="background-color: #3366FF;">F</div>
+                            <span class="text-sm font-medium text-gray-900 truncate">FC Central</span>
+                        </div>
+                        <div class="w-8 text-center text-sm text-gray-600 mr-3">3</div>
+                        <div class="w-8 text-center text-sm text-gray-600 mr-3">2</div>
+                        <div class="w-8 text-center text-sm text-gray-600 mr-3">0</div>
+                        <div class="w-8 text-center text-sm text-gray-600 mr-3">1</div>
+                        <div class="w-10 text-center text-sm font-bold text-gray-900">6</div>
+                    </div>
+                    <!-- Fila 3 -->
+                    <div class="flex items-center px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer">
+                        <div class="w-8 mr-3">
+                            <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gray-100 text-gray-600 text-xs font-bold">3</span>
+                        </div>
+                        <div class="flex items-center gap-2 flex-1 min-w-0">
+                            <div class="w-6 h-6 rounded flex items-center justify-center text-white font-bold text-[10px]" style="background-color: #33FF57;">L</div>
+                            <span class="text-sm font-medium text-gray-900 truncate">La Banda</span>
+                        </div>
+                        <div class="w-8 text-center text-sm text-gray-600 mr-3">3</div>
+                        <div class="w-8 text-center text-sm text-gray-600 mr-3">1</div>
+                        <div class="w-8 text-center text-sm text-gray-600 mr-3">1</div>
+                        <div class="w-8 text-center text-sm text-gray-600 mr-3">1</div>
+                        <div class="w-10 text-center text-sm font-bold text-gray-900">4</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PLACEHOLDER: Sin partidos jugados (estado SCHEDULED/GRACE_PERIOD) -->
+            <div class="px-6 mb-8 hidden" id="standings-placeholder">
+                <div class="bg-gray-50 rounded-2xl p-6 text-center border border-gray-100">
+                    <svg class="w-12 h-12 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                    </svg>
+                    <h3 class="text-sm font-semibold text-gray-500 mb-1">Tabla no disponible</h3>
+                    <p class="text-xs text-gray-400">La clasificación aparecerá tras el primer partido</p>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- ============================================================ -->
+        <!-- NAVBAR INFERIOR                                                -->
+        <!-- ============================================================ -->
+        <nav class="absolute bottom-0 w-full z-50 bg-white border-t border-gray-200" style="padding-bottom: env(safe-area-inset-bottom);">
+            <div class="grid grid-cols-4 h-16">
+                <a href="hub_mapa_principal.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Inicio">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span class="text-[10px] font-medium">Inicio</span>
+                </a>
+                <a href="detalle_equipo_card_maestra.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Equipo">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <span class="text-[10px] font-medium">Equipo</span>
+                </a>
+                <button class="flex flex-col items-center justify-center gap-1 text-gray-900 min-h-[44px]" aria-label="Torneos">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                    </svg>
+                    <span class="text-[10px] font-medium">Torneos</span>
+                </button>
+                <a href="perfil_jugador.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Perfil">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <span class="text-[10px] font-medium">Perfil</span>
+                </a>
+            </div>
+        </nav>
+
+        <!-- ============================================================ -->
+        <!-- TOAST DE NOTIFICACIÓN                                          -->
+        <!-- ============================================================ -->
+        <div id="toast" class="absolute top-20 left-4 right-4 z-[70] pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
+            <div class="bg-gray-900 text-white px-4 py-3 rounded-2xl shadow-lg flex items-center gap-3">
+                <div class="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <div class="text-sm font-medium" id="toast-title"></div>
+                    <div class="text-xs text-gray-400" id="toast-subtitle"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- MODAL: SALA DE CINE (Prereserva 5min — Sistema 6)              -->
+        <!-- ============================================================ -->
+        <div id="sala-cine-modal" class="absolute inset-0 z-[80] bg-gray-950/70 flex items-end justify-center hidden">
+            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300" id="sala-cine-panel">
+                <div class="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-6"></div>
+                
+                <!-- Header del modal -->
+                <div class="text-center mb-6">
+                    <div class="inline-flex items-center justify-center w-14 h-14 bg-orange-50 rounded-2xl mb-3">
+                        <svg class="w-7 h-7 text-hold-active" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-1">Reserva tu cupo</h3>
+                    <p class="text-sm text-gray-500">Tienes 5 minutos para confirmar la inscripción</p>
+                </div>
+
+                <!-- Countdown -->
+                <div class="bg-orange-50 rounded-2xl p-4 mb-6 text-center border border-orange-100">
+                    <div class="text-xs text-orange-600 font-medium uppercase tracking-wide mb-1">Tiempo restante</div>
+                    <div class="text-4xl font-mono font-bold text-hold-active" id="modal-countdown">04:59</div>
+                </div>
+
+                <!-- Info del equipo a inscribir -->
+                <div class="bg-gray-50 rounded-2xl p-4 mb-6">
+                    <div class="flex items-center gap-3 mb-3">
+                        <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold" style="background-color: #FF5733;">LSP</div>
+                        <div>
+                            <div class="text-sm font-semibold text-gray-900">Los Pibes</div>
+                            <div class="text-xs text-gray-500">12 jugadores · Capitán: Juan Pérez</div>
+                        </div>
+                    </div>
+                    <div class="text-xs text-gray-500 bg-white rounded-lg p-2.5 border border-gray-100">
+                        <span class="font-medium text-gray-700">Disponibilidad:</span> 10 de 12 jugadores disponibles en la franja del torneo
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="flex gap-3">
+                    <button class="flex-1 bg-gray-100 text-gray-700 py-4 rounded-2xl font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors min-h-[56px]" onclick="closeSalaCineModal()">
+                        Cancelar
+                    </button>
+                    <button class="flex-1 bg-gray-900 text-white py-4 rounded-2xl font-medium hover:bg-gray-800 active:bg-black transition-colors min-h-[56px]" onclick="confirmSalaCine()">
+                        Confirmar inscripción
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- MODAL: RESULTADO DE INSCRIPCIÓN (Factor 1 — Sistema 6)         -->
+        <!-- ============================================================ -->
+        <div id="resultado-inscripcion-modal" class="absolute inset-0 z-[80] bg-gray-950/70 flex items-center justify-center hidden px-6">
+            <div class="bg-white rounded-3xl p-6 w-full max-w-sm transform scale-95 opacity-0 transition-all duration-300" id="resultado-panel">
+                <!-- Éxito: PENDING_PAYMENT -->
+                <div id="resultado-success" class="hidden text-center">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-green-50 rounded-full mb-4">
+                        <svg class="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">¡Inscripción enviada!</h3>
+                    <p class="text-sm text-gray-500 mb-4">Tu equipo cumple con la disponibilidad horaria. El gestor debe verificar el pago para aprobarte.</p>
+                    <div class="bg-yellow-50 rounded-xl p-3 mb-4 border border-yellow-100">
+                        <div class="text-xs text-yellow-700 font-medium">Estado: PENDIENTE DE PAGO</div>
+                    </div>
+                    <button class="w-full bg-gray-900 text-white py-3.5 rounded-2xl font-medium hover:bg-gray-800 transition-colors" onclick="closeResultadoModal()">
+                        Entendido
+                    </button>
+                </div>
+
+                <!-- Conflicto: PENDING_AVAILABILITY -->
+                <div id="resultado-conflict" class="hidden text-center">
+                    <div class="inline-flex items-center justify-center w-16 h-16 bg-red-50 rounded-full mb-4">
+                        <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">Disponibilidad insuficiente</h3>
+                    <p class="text-sm text-gray-500 mb-4">Solo <span class="font-semibold text-red-600">3 de 12</span> jugadores están disponibles en la franja del torneo.</p>
+                    <div class="bg-red-50 rounded-xl p-3 mb-4 border border-red-100">
+                        <div class="text-xs text-red-700 font-medium">Estado: CONFLICTO DE HORARIO</div>
+                    </div>
+                    <p class="text-xs text-gray-400 mb-4">Actualiza la disponibilidad de tu plantilla y solicita re-evaluación.</p>
+                    <div class="flex gap-3">
+                        <button class="flex-1 bg-gray-100 text-gray-700 py-3.5 rounded-2xl font-medium hover:bg-gray-200 transition-colors" onclick="closeResultadoModal()">
+                            Más tarde
+                        </button>
+                        <button class="flex-1 bg-gray-900 text-white py-3.5 rounded-2xl font-medium hover:bg-gray-800 transition-colors" onclick="goToAvailability()">
+                            Actualizar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SCRIPT: Lógica de Interacción Refactorizada                    -->
+    <!-- ============================================================ -->
+    <script>
+        // ============================================================
+        // ESTADO (simulado — en producción vendría de tRPC)
+        // ============================================================
+        const TORNEO = {
+            id: 't_001',
+            status: 'SCHEDULED', // DRAFT | SCHEDULED | GRACE_PERIOD | IN_PROGRESS | FINISHED | CANCELLED | SUSPENDED
+            type: 'PUBLIC', // PUBLIC | PRIVATE
+            maxTeams: 16,
+            enrolledApproved: 8,
+            enrolledPendingPay: 2,
+            enrolledPendingAvail: 1,
+            activeHolds: 1,
+            dayOfWeek: 2, // Martes
+            timeSlot: 9, // 18:00-20:00
+            format: 'SINGLE_ELIMINATION',
+            enrollmentDeadline: '2026-09-15T23:59:00Z',
+        };
+
+        const USER = {
+            role: 'captain', // captain | manager | player | admin
+            isManagerOfThisTournament: false,
+            teams: [{ id: 'team_001', name: 'Los Pibes', abbreviation: 'LSP', color: '#FF5733', members: 12 }],
+        };
+
+        let holdTimer = null;
+        let holdSeconds = 300; // 5 minutos
+
+        // ============================================================
+        // CARGA INICIAL
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const appLoading = document.getElementById('app-loading');
+                const mainContent = document.getElementById('main-content');
+                
+                appLoading.style.opacity = '0';
+                mainContent.style.opacity = '1';
+                
+                setTimeout(() => {
+                    appLoading.style.display = 'none';
+                    renderByRole();
+                    showToast('Torneo cargado', `${TORNEO.enrolledApproved + TORNEO.enrolledPendingPay} de ${TORNEO.maxTeams} equipos confirmados`);
+                }, 500);
+            }, 1200);
+        });
+
+        // ============================================================
+        // RENDERIZADO CONDICIONAL POR ROL
+        // ============================================================
+        function renderByRole() {
+            // Ocultar todas las vistas de acción
+            document.getElementById('action-captain').classList.add('hidden');
+            document.getElementById('action-manager').classList.add('hidden');
+            document.getElementById('action-viewer').classList.add('hidden');
+
+            // Mostrar según rol y estado del torneo
+            if (USER.role === 'captain' && TORNEO.status === 'SCHEDULED') {
+                document.getElementById('action-captain').classList.remove('hidden');
+            } else if (USER.role === 'manager' && USER.isManagerOfThisTournament) {
+                document.getElementById('action-manager').classList.remove('hidden');
+            } else {
+                document.getElementById('action-viewer').classList.remove('hidden');
+            }
+
+            // Tabla de posiciones: solo si hay partidos jugados
+            const hasFinishedMatches = true; // Simulado — en prod: consultar MatchResult
+            if (!hasFinishedMatches && (TORNEO.status === 'SCHEDULED' || TORNEO.status === 'GRACE_PERIOD')) {
+                document.getElementById('standings-section').classList.add('hidden');
+                document.getElementById('standings-placeholder').classList.remove('hidden');
+            }
+        }
+
+        // ============================================================
+        // SALA DE CINE — PRERRESERVA (Sistema 6)
+        // ============================================================
+        function handleInscripcion() {
+            // 1. Verificar cupos disponibles
+            const occupied = TORNEO.enrolledApproved + TORNEO.enrolledPendingPay + TORNEO.activeHolds;
+            if (occupied >= TORNEO.maxTeams) {
+                showToast('Cupos agotados', 'No hay plazas disponibles en este torneo');
+                return;
+            }
+
+            // 2. Abrir modal de Sala de Cine
+            const modal = document.getElementById('sala-cine-modal');
+            const panel = document.getElementById('sala-cine-panel');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                panel.style.transform = 'translateY(0)';
+            }, 10);
+
+            // 3. Iniciar countdown de 5 min
+            startHoldTimer();
+            if (navigator.vibrate) navigator.vibrate(50);
+        }
+
+        function startHoldTimer() {
+            holdSeconds = 300;
+            updateHoldDisplay();
+            
+            // Mostrar timer en header
+            document.getElementById('hold-timer').classList.remove('hidden');
+            
+            holdTimer = setInterval(() => {
+                holdSeconds--;
+                updateHoldDisplay();
+                if (holdSeconds <= 0) {
+                    expireHold();
+                }
+            }, 1000);
+        }
+
+        function updateHoldDisplay() {
+            const mins = Math.floor(holdSeconds / 60);
+            const secs = holdSeconds % 60;
+            const text = `${mins}:${secs.toString().padStart(2, '0')}`;
+            
+            document.getElementById('hold-countdown').textContent = text;
+            document.getElementById('modal-countdown').textContent = text;
+        }
+
+        function expireHold() {
+            clearInterval(holdTimer);
+            closeSalaCineModal();
+            showToast('Reserva expirada', 'El cupo ha sido liberado. Puedes intentar de nuevo.');
+            document.getElementById('hold-timer').classList.add('hidden');
+        }
+
+        function closeSalaCineModal() {
+            clearInterval(holdTimer);
+            const modal = document.getElementById('sala-cine-modal');
+            const panel = document.getElementById('sala-cine-panel');
+            panel.style.transform = 'translateY(100%)';
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            document.getElementById('hold-timer').classList.add('hidden');
+        }
+
+        function confirmSalaCine() {
+            clearInterval(holdTimer);
+            closeSalaCineModal();
+            
+            // Simular Factor 1: disponibilidad horaria
+            const availablePlayers = 10; // En prod: cruzar PlayerAvailability con dayOfWeek/timeSlot
+            const totalPlayers = 12;
+            
+            const modal = document.getElementById('resultado-inscripcion-modal');
+            const panel = document.getElementById('resultado-panel');
+            modal.classList.remove('hidden');
+            
+            setTimeout(() => {
+                panel.style.transform = 'scale(1)';
+                panel.style.opacity = '1';
+            }, 10);
+
+            if (availablePlayers >= 5) {
+                // ÉXITO: PENDING_PAYMENT
+                document.getElementById('resultado-success').classList.remove('hidden');
+                document.getElementById('resultado-conflict').classList.add('hidden');
+            } else {
+                // CONFLICTO: PENDING_AVAILABILITY
+                document.getElementById('resultado-success').classList.add('hidden');
+                document.getElementById('resultado-conflict').classList.remove('hidden');
+            }
+        }
+
+        function closeResultadoModal() {
+            const modal = document.getElementById('resultado-inscripcion-modal');
+            const panel = document.getElementById('resultado-panel');
+            panel.style.transform = 'scale(0.95)';
+            panel.style.opacity = '0';
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function goToAvailability() {
+            window.location.href = 'perfil_jugador.html?tab=disponibilidad';
+        }
+
+        // ============================================================
+        // ACCIONES DE GESTOR
+        // ============================================================
+        function closeEnrollments() {
+            showToast('Inscripciones cerradas', 'Preparando sorteo de fases...');
+        }
+
+        function manageEnrollments() {
+            showToast('Panel de gestor', 'Redirigiendo a inscripciones...');
+        }
+
+        // ============================================================
+        // SISTEMA DE TOAST
+        // ============================================================
+        let toastTimeout;
+        function showToast(title, subtitle) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-title').textContent = title;
+            document.getElementById('toast-subtitle').textContent = subtitle;
+            
+            clearTimeout(toastTimeout);
+            toast.style.opacity = '0.95';
+            toast.style.transform = 'translateY(0)';
+            
+            toastTimeout = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-8px)';
+            }, 3000);
+        }
+
+        // ============================================================
+        // TECLADO
+        // ============================================================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeSalaCineModal();
+                closeResultadoModal();
+            }
+        });
+    </script>
+
+</body>
+</html>

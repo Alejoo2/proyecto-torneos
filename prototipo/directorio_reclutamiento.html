@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Directorio de Reclutamiento — Wireframe Low-Fidelity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-950 min-h-[100dvh] flex items-center justify-center">
+
+    <!-- ============================================================ -->
+    <!-- APP SHELL: El "Móvil"                                          -->
+    <!-- ============================================================ -->
+    <div class="w-full max-w-lg min-h-[100dvh] bg-white md:min-h-[90vh] md:my-[5vh] md:rounded-[2rem] md:border-[10px] md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col relative">
+
+        <!-- ============================================================ -->
+        <!-- ESTADO DE CARGA INICIAL (Skeleton)                             -->
+        <!-- ============================================================ -->
+        <div id="app-loading" class="absolute inset-0 z-[60] bg-white flex flex-col transition-opacity duration-500">
+            <!-- Skeleton del header -->
+            <div class="px-4 py-3 flex items-center justify-between border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+                    <div class="h-4 bg-gray-200 rounded w-48 animate-pulse"></div>
+                </div>
+                <div class="h-6 bg-gray-200 rounded-full w-20 animate-pulse"></div>
+            </div>
+            <!-- Skeleton del search -->
+            <div class="px-6 pt-6 pb-4">
+                <div class="bg-gray-100 rounded-2xl h-14 animate-pulse"></div>
+            </div>
+            <!-- Skeleton de filtros -->
+            <div class="px-6 pb-4 flex gap-2">
+                <div class="h-10 bg-gray-300 rounded-full w-20 animate-pulse"></div>
+                <div class="h-10 bg-gray-200 rounded-full w-24 animate-pulse"></div>
+                <div class="h-10 bg-gray-200 rounded-full w-20 animate-pulse"></div>
+            </div>
+            <!-- Skeleton de jugadores -->
+            <div class="px-6 space-y-4">
+                <div class="h-20 bg-gray-200 rounded-2xl animate-pulse"></div>
+                <div class="h-20 bg-gray-200 rounded-2xl animate-pulse"></div>
+                <div class="h-20 bg-gray-800 rounded-2xl animate-pulse"></div>
+                <div class="h-20 bg-gray-200 rounded-2xl animate-pulse"></div>
+                <div class="h-20 bg-gray-200 rounded-2xl animate-pulse"></div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- HEADER: Sticky con título y badge de rol                       -->
+        <!-- ============================================================ -->
+        <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
+            <div class="flex items-center justify-between px-4 py-3">
+                <div class="flex items-center gap-3">
+                    <a href="detalle_equipo_card_maestra.html" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px]" aria-label="Volver al equipo">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </a>
+                    <div class="h-4 bg-gray-800 rounded w-48"></div>
+                </div>
+                <!-- Badge: Solo Capitanes -->
+                <div class="bg-gray-800 text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1">
+                    <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
+                    <div class="h-2 bg-gray-400 rounded w-14"></div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ============================================================ -->
+        <!-- CONTENIDO PRINCIPAL                                            -->
+        <!-- ============================================================ -->
+        <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden pb-24 opacity-0 transition-opacity duration-500">
+
+            <!-- ============================================================ -->
+            <!-- SEARCH BAR: Buscador de jugadores libres                       -->
+            <!-- ============================================================ -->
+            <div class="px-6 pt-6 pb-4">
+                <div class="bg-gray-100 rounded-2xl flex items-center gap-3 px-4 py-3 focus-within:bg-gray-50 focus-within:ring-2 focus-within:ring-gray-300 transition-all">
+                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                        </svg>
+                    </div>
+                    <input 
+                        type="text" 
+                        id="search-input"
+                        placeholder="Buscar jugadores libres..." 
+                        class="w-full bg-transparent outline-none text-gray-800 placeholder-gray-400 text-base"
+                        oninput="handleSearch(this.value)"
+                    >
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- FILTROS RÁPIDOS                                                -->
+            <!-- ============================================================ -->
+            <div class="px-6 pb-4">
+                <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide snap-x snap-mandatory">
+                    <button id="filter-todos" class="bg-gray-800 text-white px-4 py-2 rounded-full text-sm font-medium shrink-0 hover:bg-gray-700 active:bg-gray-900 transition-colors min-h-[44px] snap-start" onclick="setFilter('todos')">
+                        Todos
+                    </button>
+                    <button id="filter-delanteros" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-sm font-medium shrink-0 hover:bg-gray-200 active:bg-gray-300 transition-colors min-h-[44px] snap-start" onclick="setFilter('delanteros')">
+                        <div class="h-3 bg-gray-300 rounded w-16"></div>
+                    </button>
+                    <button id="filter-defensas" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-sm font-medium shrink-0 hover:bg-gray-200 active:bg-gray-300 transition-colors min-h-[44px] snap-start" onclick="setFilter('defensas')">
+                        <div class="h-3 bg-gray-300 rounded w-14"></div>
+                    </button>
+                    <button id="filter-mediocampo" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-sm font-medium shrink-0 hover:bg-gray-200 active:bg-gray-300 transition-colors min-h-[44px] snap-start" onclick="setFilter('mediocampo')">
+                        <div class="h-3 bg-gray-300 rounded w-18"></div>
+                    </button>
+                    <button id="filter-porteros" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-sm font-medium shrink-0 hover:bg-gray-200 active:bg-gray-300 transition-colors min-h-[44px] snap-start" onclick="setFilter('porteros')">
+                        <div class="h-3 bg-gray-300 rounded w-12"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- RESULTADOS: Lista de jugadores libres                          -->
+            <!-- ============================================================ -->
+            <div id="players-list" class="px-6 space-y-4">
+                <!-- Los jugadores se generan dinámicamente por JS -->
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- ESTADO VACÍO (Oculto por defecto)                              -->
+            <!-- ============================================================ -->
+            <div id="empty-state" class="hidden px-6 py-12 flex flex-col items-center">
+                <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+                    <div class="w-12 h-12 bg-gray-300 rounded-full"></div>
+                </div>
+                <div class="h-4 bg-gray-800 rounded w-48 mb-2"></div>
+                <div class="h-3 bg-gray-300 rounded w-64"></div>
+                <button class="mt-6 bg-gray-800 text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-gray-700 active:bg-gray-900 transition-colors" onclick="clearSearch()">
+                    Limpiar búsqueda
+                </button>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- NOTIFICACIÓN CONTEXTUAL INFERIOR                               -->
+            <!-- ============================================================ -->
+            <div class="px-6 mt-6 mb-8">
+                <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                        <div class="w-5 h-5 bg-gray-400 rounded"></div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="h-3 bg-gray-600 rounded w-56 mb-1"></div>
+                        <div class="h-2 bg-gray-300 rounded w-40"></div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- ============================================================ -->
+        <!-- NAVBAR INFERIOR                                                -->
+        <!-- ============================================================ -->
+        <nav class="absolute bottom-0 w-full z-50 bg-white border-t border-gray-200" style="padding-bottom: env(safe-area-inset-bottom);">
+            <div class="grid grid-cols-4 h-16">
+                <a href="hub_mapa_principal.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Inicio">
+                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
+                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                </a>
+                <button class="flex flex-col items-center justify-center gap-1 text-gray-800 min-h-[44px]" aria-label="Equipo">
+                    <div class="w-6 h-6 bg-gray-800 rounded"></div>
+                    <div class="h-2 bg-gray-800 rounded w-10"></div>
+                </button>
+                <a href="detalle_torneo.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Torneos">
+                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
+                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                </a>
+                <a href="perfil_jugador.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Perfil">
+                    <div class="w-6 h-6 bg-gray-300 rounded-full"></div>
+                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                </a>
+            </div>
+        </nav>
+
+        <!-- ============================================================ -->
+        <!-- TOAST DE NOTIFICACIÓN                                          -->
+        <!-- ============================================================ -->
+        <div id="toast" class="absolute top-20 left-4 right-4 z-[70] pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
+            <div class="bg-gray-800 text-white px-4 py-3 rounded-2xl shadow-lg flex items-center gap-3">
+                <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center shrink-0">
+                    <div class="w-4 h-4 bg-gray-400 rounded"></div>
+                </div>
+                <div class="flex-1">
+                    <div class="h-3 bg-gray-400 rounded w-3/4 mb-1" id="toast-title"></div>
+                    <div class="h-2 bg-gray-500 rounded w-1/2" id="toast-subtitle"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- MODAL DE CONFIRMACIÓN DE RECLUTAMIENTO                         -->
+        <!-- ============================================================ -->
+        <div id="recruit-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300">
+                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
+                <div class="flex items-center gap-4 mb-6">
+                    <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                        <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
+                    </div>
+                    <div>
+                        <div class="h-4 bg-gray-800 rounded w-40 mb-2"></div>
+                        <div class="h-3 bg-gray-300 rounded w-32"></div>
+                    </div>
+                </div>
+                <div class="h-3 bg-gray-300 rounded w-full mb-2"></div>
+                <div class="h-3 bg-gray-300 rounded w-3/4 mb-6"></div>
+                <div class="flex gap-3">
+                    <button class="flex-1 bg-gray-100 text-gray-700 py-4 rounded-2xl font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors min-h-[56px]" onclick="closeRecruitModal()">
+                        <div class="h-4 bg-gray-400 rounded w-20 mx-auto"></div>
+                    </button>
+                    <button class="flex-1 bg-gray-800 text-white py-4 rounded-2xl font-medium hover:bg-gray-700 active:bg-gray-900 transition-colors min-h-[56px]" onclick="confirmRecruit()">
+                        <div class="h-4 bg-gray-400 rounded w-24 mx-auto"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- ESTILOS ADICIONALES                                            -->
+    <!-- ============================================================ -->
+    <style>
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+
+    <!-- ============================================================ -->
+    <!-- SCRIPT: Lógica de Interacción                                  -->
+    <!-- ============================================================ -->
+    <script>
+        // ============================================================
+        // DATOS DE JUGADORES
+        // ============================================================
+        const players = [
+            { id: 1, name: 'Carlos Rodríguez', pos: 'Delantero', stats: '12 goles', rating: '4.5', featured: false, recruited: false },
+            { id: 2, name: 'Andrés Martínez', pos: 'Defensa', stats: '8 clean sheets', rating: '4.2', featured: false, recruited: false },
+            { id: 3, name: 'Luis Fernando', pos: 'Mediocampista', stats: '15 asistencias', rating: '4.8', featured: true, recruited: false },
+            { id: 4, name: 'Pedro Gómez', pos: 'Portero', stats: '3.2 avg', rating: '4.0', featured: false, recruited: false },
+            { id: 5, name: 'Juan Pablo', pos: 'Delantero', stats: '9 goles', rating: '4.3', featured: false, recruited: false },
+            { id: 6, name: 'Diego Hernández', pos: 'Mediocampista', stats: '10 asistencias', rating: '4.1', featured: false, recruited: false },
+            { id: 7, name: 'Santiago López', pos: 'Defensa', stats: '6 clean sheets', rating: '4.4', featured: false, recruited: false },
+            { id: 8, name: 'Mateo Silva', pos: 'Portero', stats: '2.8 avg', rating: '4.6', featured: false, recruited: false },
+        ];
+
+        let currentFilter = 'todos';
+        let searchQuery = '';
+        let selectedPlayer = null;
+
+        // ============================================================
+        // CARGA INICIAL
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            renderPlayers();
+            
+            setTimeout(() => {
+                const appLoading = document.getElementById('app-loading');
+                const mainContent = document.getElementById('main-content');
+                
+                appLoading.style.opacity = '0';
+                mainContent.style.opacity = '1';
+                
+                setTimeout(() => {
+                    appLoading.style.display = 'none';
+                    showToast('Directorio cargado', '8 jugadores libres disponibles');
+                }, 500);
+            }, 1000);
+        });
+
+        // ============================================================
+        // RENDERIZAR JUGADORES
+        // ============================================================
+        function renderPlayers() {
+            const list = document.getElementById('players-list');
+            const emptyState = document.getElementById('empty-state');
+            
+            // Filtrar
+            let filtered = players.filter(p => {
+                const matchesFilter = currentFilter === 'todos' || 
+                    (currentFilter === 'delanteros' && p.pos === 'Delantero') ||
+                    (currentFilter === 'defensas' && p.pos === 'Defensa') ||
+                    (currentFilter === 'mediocampo' && p.pos === 'Mediocampista') ||
+                    (currentFilter === 'porteros' && p.pos === 'Portero');
+                
+                const matchesSearch = !searchQuery || 
+                    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    p.pos.toLowerCase().includes(searchQuery.toLowerCase());
+                
+                return matchesFilter && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                list.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            list.classList.remove('hidden');
+            emptyState.classList.add('hidden');
+
+            list.innerHTML = filtered.map(player => `
+                <div class="${player.featured ? 'bg-gray-800' : 'bg-gray-100'} rounded-2xl p-4 flex items-center gap-4 ${player.recruited ? 'opacity-50' : ''} transition-all duration-200">
+                    <a href="perfil_jugador.html" class="w-14 h-14 ${player.featured ? 'bg-gray-600' : 'bg-gray-200'} rounded-full flex items-center justify-center shrink-0 hover:scale-105 transition-transform">
+                        <div class="w-8 h-8 ${player.featured ? 'bg-gray-400' : 'bg-gray-300'} rounded-full"></div>
+                    </a>
+                    <a href="perfil_jugador.html" class="flex-1 min-w-0">
+                        <div class="h-3 ${player.featured ? 'bg-gray-200' : 'bg-gray-800'} rounded w-${Math.min(player.name.length * 2, 40)} mb-1"></div>
+                        <div class="h-2 bg-gray-300 rounded w-20 mb-1"></div>
+                        <div class="flex items-center gap-2">
+                            <div class="h-2 ${player.featured ? 'bg-gray-300' : 'bg-gray-400'} rounded w-12"></div>
+                            <div class="h-2 bg-gray-300 rounded w-16"></div>
+                        </div>
+                    </a>
+                    ${player.recruited 
+                        ? `<div class="bg-gray-400 text-white px-5 py-2.5 rounded-xl text-sm font-medium shrink-0">
+                             <div class="h-3 bg-gray-200 rounded w-16"></div>
+                           </div>`
+                        : `<button class="${player.featured ? 'bg-white text-gray-800 hover:bg-gray-100 active:bg-gray-200' : 'bg-gray-800 text-white hover:bg-gray-700 active:bg-gray-900'} px-5 py-2.5 rounded-xl text-sm font-medium transition-colors shrink-0 min-h-[44px]" onclick="openRecruitModal(${player.id})">
+                             <div class="h-3 ${player.featured ? 'bg-gray-600' : 'bg-gray-400'} rounded w-12"></div>
+                           </button>`
+                    }
+                </div>
+            `).join('');
+        }
+
+        // ============================================================
+        // BÚSQUEDA
+        // ============================================================
+        function handleSearch(value) {
+            searchQuery = value;
+            renderPlayers();
+        }
+
+        function clearSearch() {
+            document.getElementById('search-input').value = '';
+            searchQuery = '';
+            renderPlayers();
+        }
+
+        // ============================================================
+        // FILTROS
+        // ============================================================
+        function setFilter(filter) {
+            currentFilter = filter;
+            
+            const filters = ['todos', 'delanteros', 'defensas', 'mediocampo', 'porteros'];
+            filters.forEach(f => {
+                const btn = document.getElementById(`filter-${f}`);
+                if (f === filter) {
+                    btn.classList.remove('bg-gray-100', 'text-gray-600');
+                    btn.classList.add('bg-gray-800', 'text-white');
+                } else {
+                    btn.classList.remove('bg-gray-800', 'text-white');
+                    btn.classList.add('bg-gray-100', 'text-gray-600');
+                }
+            });
+            
+            renderPlayers();
+            if (navigator.vibrate) navigator.vibrate(30);
+        }
+
+        // ============================================================
+        // MODAL DE RECLUTAMIENTO
+        // ============================================================
+        function openRecruitModal(playerId) {
+            selectedPlayer = players.find(p => p.id === playerId);
+            const modal = document.getElementById('recruit-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                modal.querySelector('div').style.transform = 'translateY(0)';
+            }, 10);
+            if (navigator.vibrate) navigator.vibrate(50);
+        }
+
+        function closeRecruitModal() {
+            const modal = document.getElementById('recruit-modal');
+            modal.style.opacity = '0';
+            modal.querySelector('div').style.transform = 'translateY(100%)';
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            selectedPlayer = null;
+        }
+
+        function confirmRecruit() {
+            if (!selectedPlayer) return;
+            
+            // Marcar como reclutado
+            selectedPlayer.recruited = true;
+            
+            closeRecruitModal();
+            
+            setTimeout(() => {
+                renderPlayers();
+                showToast('¡Reclutamiento enviado!', `Solicitud enviada a ${selectedPlayer.name}`);
+            }, 300);
+        }
+
+        // ============================================================
+        // SISTEMA DE TOAST
+        // ============================================================
+        let toastTimeout;
+        function showToast(title, subtitle) {
+            const toast = document.getElementById('toast');
+            const toastTitle = document.getElementById('toast-title');
+            const toastSubtitle = document.getElementById('toast-subtitle');
+            
+            clearTimeout(toastTimeout);
+            
+            toastTitle.style.width = Math.min(title.length * 8, 200) + 'px';
+            toastSubtitle.style.width = Math.min(subtitle.length * 6, 150) + 'px';
+            
+            toast.style.opacity = '0.95';
+            toast.style.transform = 'translateY(0)';
+            
+            toastTimeout = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-8px)';
+            }, 3000);
+        }
+
+        // ============================================================
+        // TECLADO (Escape para cerrar modal)
+        // ============================================================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeRecruitModal();
+        });
+    </script>
+
+</body>
+</html>

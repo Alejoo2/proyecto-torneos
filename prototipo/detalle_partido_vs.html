@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Detalle de Partido (VS) — Wireframe Low-Fidelity</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-950 min-h-[100dvh] flex items-center justify-center">
+
+    <!-- ============================================================ -->
+    <!-- APP SHELL: El "Móvil"                                          -->
+    <!-- ============================================================ -->
+    <div class="w-full max-w-lg min-h-[100dvh] bg-white md:min-h-[90vh] md:my-[5vh] md:rounded-[2rem] md:border-[10px] md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col relative">
+
+        <!-- ============================================================ -->
+        <!-- ESTADO DE CARGA INICIAL (Skeleton)                             -->
+        <!-- ============================================================ -->
+        <div id="app-loading" class="absolute inset-0 z-[60] bg-white flex flex-col transition-opacity duration-500">
+            <!-- Skeleton del header -->
+            <div class="px-4 py-3 flex items-center justify-between border-b border-gray-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+                    <div class="h-4 bg-gray-200 rounded w-40 animate-pulse"></div>
+                </div>
+                <div class="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+            </div>
+            <!-- Skeleton del hero VS -->
+            <div class="px-6 pt-6 pb-4">
+                <div class="flex items-center justify-center gap-2 mb-6">
+                    <div class="h-3 bg-gray-200 rounded w-20 animate-pulse"></div>
+                    <div class="w-1.5 h-1.5 bg-gray-200 rounded-full animate-pulse"></div>
+                    <div class="h-3 bg-gray-200 rounded w-16 animate-pulse"></div>
+                </div>
+                <div class="flex items-center justify-between gap-4 mb-6">
+                    <div class="flex-1 flex flex-col items-center">
+                        <div class="w-20 h-20 bg-gray-200 rounded-2xl mb-3 animate-pulse"></div>
+                        <div class="h-4 bg-gray-200 rounded w-24 mb-1 animate-pulse"></div>
+                        <div class="h-2 bg-gray-200 rounded w-16 animate-pulse"></div>
+                    </div>
+                    <div class="flex flex-col items-center px-2">
+                        <div class="h-8 bg-gray-200 rounded w-12 mb-1 animate-pulse"></div>
+                        <div class="h-2 bg-gray-200 rounded w-8 animate-pulse"></div>
+                    </div>
+                    <div class="flex-1 flex flex-col items-center">
+                        <div class="w-20 h-20 bg-gray-200 rounded-2xl mb-3 animate-pulse"></div>
+                        <div class="h-4 bg-gray-200 rounded w-24 mb-1 animate-pulse"></div>
+                        <div class="h-2 bg-gray-200 rounded w-16 animate-pulse"></div>
+                    </div>
+                </div>
+                <div class="bg-gray-200 rounded-2xl h-16 animate-pulse"></div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- HEADER: Sticky                                                 -->
+        <!-- ============================================================ -->
+        <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
+            <div class="flex items-center justify-between px-4 py-3">
+                <div class="flex items-center gap-3">
+                    <a href="detalle_torneo.html" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px]" aria-label="Volver al torneo">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                        </svg>
+                    </a>
+                    <div class="h-4 bg-gray-800 rounded w-40"></div>
+                </div>
+                <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px]" aria-label="Más opciones" onclick="showMatchOptions()">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- ============================================================ -->
+        <!-- CONTENIDO PRINCIPAL                                            -->
+        <!-- ============================================================ -->
+        <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden pb-24 opacity-0 transition-opacity duration-500">
+
+            <!-- ============================================================ -->
+            <!-- HERO: Enfrentamiento VS                                        -->
+            <!-- ============================================================ -->
+            <div class="px-6 pt-6 pb-4">
+                <!-- Fecha y estado del partido -->
+                <div class="flex items-center justify-center gap-2 mb-6">
+                    <div class="h-3 bg-gray-300 rounded w-20"></div>
+                    <div class="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                    <div class="h-3 bg-gray-400 rounded w-16"></div>
+                </div>
+
+                <!-- Cards Maestras enfrentadas -->
+                <div class="flex items-center justify-between gap-4 mb-6">
+                    <!-- Team A -->
+                    <a href="detalle_equipo_card_maestra.html" class="flex-1 flex flex-col items-center group">
+                        <div class="w-20 h-20 bg-gray-200 rounded-2xl mb-3 flex items-center justify-center border-2 border-gray-100 group-hover:border-gray-300 group-hover:bg-gray-300 transition-all active:scale-95">
+                            <div class="w-10 h-10 bg-gray-300 rounded-xl group-hover:bg-gray-400 transition-colors"></div>
+                        </div>
+                        <div class="h-4 bg-gray-800 rounded w-24 mb-1 text-center"></div>
+                        <div class="h-2 bg-gray-300 rounded w-16"></div>
+                    </a>
+
+                    <!-- VS -->
+                    <div class="flex flex-col items-center px-2">
+                        <div class="h-8 bg-gray-800 rounded w-12 mb-1"></div>
+                        <div class="h-2 bg-gray-300 rounded w-8"></div>
+                    </div>
+
+                    <!-- Team B -->
+                    <a href="detalle_equipo_card_maestra.html" class="flex-1 flex flex-col items-center group">
+                        <div class="w-20 h-20 bg-gray-200 rounded-2xl mb-3 flex items-center justify-center border-2 border-gray-100 group-hover:border-gray-300 group-hover:bg-gray-300 transition-all active:scale-95">
+                            <div class="w-10 h-10 bg-gray-300 rounded-xl group-hover:bg-gray-400 transition-colors"></div>
+                        </div>
+                        <div class="h-4 bg-gray-800 rounded w-24 mb-1 text-center"></div>
+                        <div class="h-2 bg-gray-300 rounded w-16"></div>
+                    </a>
+                </div>
+
+                <!-- Resultado (si ya se jugó) -->
+                <div class="bg-gray-800 rounded-2xl p-4 mb-6">
+                    <div class="flex items-center justify-center gap-4">
+                        <div class="h-10 bg-gray-200 rounded w-12"></div>
+                        <div class="h-3 bg-gray-400 rounded w-4"></div>
+                        <div class="h-10 bg-gray-200 rounded w-12"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- DETALLES DEL PARTIDO                                           -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-6">
+                <div class="bg-gray-100 rounded-2xl p-5 space-y-4">
+                    <!-- Fecha y hora -->
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-24 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-40"></div>
+                        </div>
+                    </div>
+                    <!-- Cancha / Lugar -->
+                    <a href="detalle_cancha_sede.html" class="flex items-center gap-3 group cursor-pointer">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-gray-300 transition-colors">
+                            <div class="w-5 h-5 bg-gray-300 rounded group-hover:bg-gray-400 transition-colors"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-20 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-48"></div>
+                        </div>
+                    </a>
+                    <!-- Árbitro -->
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-16 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-32"></div>
+                        </div>
+                    </div>
+                    <!-- Estado -->
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-16 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-24"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- ALINEACIONES: Cards Maestras Mini de cada equipo               -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-6">
+                <div class="h-4 bg-gray-800 rounded w-32 mb-4"></div>
+
+                <!-- Team A Alineación -->
+                <div class="bg-gray-100 rounded-2xl p-4 mb-3">
+                    <a href="detalle_equipo_card_maestra.html" class="flex items-center gap-3 mb-4 group cursor-pointer">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center group-hover:bg-gray-300 transition-colors">
+                            <div class="w-5 h-5 bg-gray-300 rounded-lg group-hover:bg-gray-400 transition-colors"></div>
+                        </div>
+                        <div class="h-3 bg-gray-800 rounded w-24"></div>
+                    </a>
+                    <!-- Jugadores en cancha -->
+                    <div class="grid grid-cols-5 gap-2">
+                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
+                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
+                            </div>
+                            <div class="h-2 bg-gray-600 rounded w-10"></div>
+                        </a>
+                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
+                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
+                            </div>
+                            <div class="h-2 bg-gray-600 rounded w-8"></div>
+                        </a>
+                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
+                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
+                            </div>
+                            <div class="h-2 bg-gray-600 rounded w-10"></div>
+                        </a>
+                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
+                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
+                            </div>
+                            <div class="h-2 bg-gray-600 rounded w-8"></div>
+                        </a>
+                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
+                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
+                            </div>
+                            <div class="h-2 bg-gray-600 rounded w-10"></div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Team B Alineación -->
+                <div class="bg-gray-100 rounded-2xl p-4">
+                    <a href="detalle_equipo_card_maestra.html" class="flex items-center gap-3 mb-4 group cursor-pointer">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center group-hover:bg-gray-300 transition-colors">
+                            <div class="w-5 h-5 bg-gray-300 rounded-lg group-hover:bg-gray-400 transition-colors"></div>
+                        </div>
+                        <div class="h-3 bg-gray-800 rounded w-20"></div>
+                    </a>
+                    <!-- Jugadores en cancha -->
+                    <div class="grid grid-cols-5 gap-2">
+                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
+                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
+                            </div>
+                            <div class="h-2 bg-gray-600 rounded w-10"></div>
+                        </a>
+                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
+                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
+                            </div>
+                            <div class="h-2 bg-gray-600 rounded w-8"></div>
+                        </a>
+                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
+                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
+                            </div>
+                            <div class="h-2 bg-gray-600 rounded w-12"></div>
+                        </a>
+                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
+                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
+                            </div>
+                            <div class="h-2 bg-gray-600 rounded w-8"></div>
+                        </a>
+                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
+                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
+                            </div>
+                            <div class="h-2 bg-gray-600 rounded w-10"></div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- ESTADÍSTICAS DEL PARTIDO (Si ya se jugó)                       -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-6">
+                <div class="h-4 bg-gray-800 rounded w-40 mb-4"></div>
+                <div class="bg-gray-100 rounded-2xl p-5 space-y-4">
+                    <!-- Goles -->
+                    <div class="flex items-center justify-between cursor-pointer hover:bg-gray-200 rounded-xl p-2 -mx-2 transition-colors" onclick="showStatCompare('goles')">
+                        <div class="flex items-center gap-2 flex-1">
+                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
+                            <div class="h-3 bg-gray-800 rounded w-20"></div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="h-4 bg-gray-800 rounded w-6"></div>
+                            <div class="h-3 bg-gray-300 rounded w-4"></div>
+                            <div class="h-4 bg-gray-800 rounded w-6"></div>
+                        </div>
+                        <div class="flex items-center gap-2 flex-1 justify-end">
+                            <div class="h-3 bg-gray-800 rounded w-20"></div>
+                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                    <!-- Tarjetas -->
+                    <div class="flex items-center justify-between cursor-pointer hover:bg-gray-200 rounded-xl p-2 -mx-2 transition-colors" onclick="showStatCompare('tarjetas')">
+                        <div class="flex items-center gap-2 flex-1">
+                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
+                            <div class="h-3 bg-gray-800 rounded w-20"></div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="h-4 bg-gray-800 rounded w-6"></div>
+                            <div class="h-3 bg-gray-300 rounded w-4"></div>
+                            <div class="h-4 bg-gray-800 rounded w-6"></div>
+                        </div>
+                        <div class="flex items-center gap-2 flex-1 justify-end">
+                            <div class="h-3 bg-gray-800 rounded w-20"></div>
+                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                    <!-- Faltas -->
+                    <div class="flex items-center justify-between cursor-pointer hover:bg-gray-200 rounded-xl p-2 -mx-2 transition-colors" onclick="showStatCompare('faltas')">
+                        <div class="flex items-center gap-2 flex-1">
+                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
+                            <div class="h-3 bg-gray-800 rounded w-20"></div>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="h-4 bg-gray-800 rounded w-6"></div>
+                            <div class="h-3 bg-gray-300 rounded w-4"></div>
+                            <div class="h-4 bg-gray-800 rounded w-6"></div>
+                        </div>
+                        <div class="flex items-center gap-2 flex-1 justify-end">
+                            <div class="h-3 bg-gray-800 rounded w-20"></div>
+                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- GOLEADORES DEL PARTIDO                                         -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-8">
+                <div class="h-4 bg-gray-800 rounded w-32 mb-4"></div>
+                <div class="space-y-3">
+                    <a href="perfil_jugador.html" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer block">
+                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                            <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-28 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-20"></div>
+                        </div>
+                        <div class="h-4 bg-gray-800 rounded w-4"></div>
+                    </a>
+                    <a href="perfil_jugador.html" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer block">
+                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                            <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-24 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-20"></div>
+                        </div>
+                        <div class="h-4 bg-gray-800 rounded w-4"></div>
+                    </a>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- ============================================================ -->
+        <!-- NAVBAR INFERIOR                                                -->
+        <!-- ============================================================ -->
+        <nav class="absolute bottom-0 w-full z-50 bg-white border-t border-gray-200" style="padding-bottom: env(safe-area-inset-bottom);">
+            <div class="grid grid-cols-4 h-16">
+                <a href="hub_mapa_principal.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Inicio">
+                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
+                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                </a>
+                <a href="detalle_equipo_card_maestra.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Equipo">
+                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
+                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                </a>
+                <button class="flex flex-col items-center justify-center gap-1 text-gray-800 min-h-[44px]" aria-label="Partidos">
+                    <div class="w-6 h-6 bg-gray-800 rounded"></div>
+                    <div class="h-2 bg-gray-800 rounded w-10"></div>
+                </button>
+                <a href="perfil_jugador.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Perfil">
+                    <div class="w-6 h-6 bg-gray-300 rounded-full"></div>
+                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                </a>
+            </div>
+        </nav>
+
+        <!-- ============================================================ -->
+        <!-- TOAST DE NOTIFICACIÓN                                          -->
+        <!-- ============================================================ -->
+        <div id="toast" class="absolute top-20 left-4 right-4 z-[70] pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
+            <div class="bg-gray-800 text-white px-4 py-3 rounded-2xl shadow-lg flex items-center gap-3">
+                <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center shrink-0">
+                    <div class="w-4 h-4 bg-gray-400 rounded"></div>
+                </div>
+                <div class="flex-1">
+                    <div class="h-3 bg-gray-400 rounded w-3/4 mb-1" id="toast-title"></div>
+                    <div class="h-2 bg-gray-500 rounded w-1/2" id="toast-subtitle"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- MODAL DE OPCIONES DEL PARTIDO                                  -->
+        <!-- ============================================================ -->
+        <div id="options-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300">
+                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
+                <div class="space-y-3">
+                    <button class="w-full bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors" onclick="shareMatch()">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
+                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
+                        </div>
+                        <div class="h-3 bg-gray-800 rounded w-32"></div>
+                    </button>
+                    <button class="w-full bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors" onclick="reportMatch()">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
+                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
+                        </div>
+                        <div class="h-3 bg-gray-800 rounded w-40"></div>
+                    </button>
+                    <button class="w-full bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors" onclick="downloadStats()">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
+                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
+                        </div>
+                        <div class="h-3 bg-gray-800 rounded w-36"></div>
+                    </button>
+                </div>
+                <button class="w-full mt-4 bg-gray-200 text-gray-700 py-4 rounded-2xl font-medium hover:bg-gray-300 active:bg-gray-400 transition-colors min-h-[56px]" onclick="closeOptionsModal()">
+                    <div class="h-4 bg-gray-400 rounded w-16 mx-auto"></div>
+                </button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- SCRIPT: Lógica de Interacción                                  -->
+    <!-- ============================================================ -->
+    <script>
+        // ============================================================
+        // CARGA INICIAL
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const appLoading = document.getElementById('app-loading');
+                const mainContent = document.getElementById('main-content');
+                
+                appLoading.style.opacity = '0';
+                mainContent.style.opacity = '1';
+                
+                setTimeout(() => {
+                    appLoading.style.display = 'none';
+                    showToast('Partido cargado', 'Resultado final: 3 - 2');
+                }, 500);
+            }, 1000);
+        });
+
+        // ============================================================
+        // MODAL DE OPCIONES
+        // ============================================================
+        function showMatchOptions() {
+            const modal = document.getElementById('options-modal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                modal.querySelector('div').style.transform = 'translateY(0)';
+            }, 10);
+            if (navigator.vibrate) navigator.vibrate(50);
+        }
+
+        function closeOptionsModal() {
+            const modal = document.getElementById('options-modal');
+            modal.style.opacity = '0';
+            modal.querySelector('div').style.transform = 'translateY(100%)';
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function shareMatch() {
+            closeOptionsModal();
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Los Leones vs Los Tigres',
+                    text: 'Mira el resultado de este partidazo',
+                    url: window.location.href
+                }).catch(() => {
+                    showToast('Compartido', 'Enlace copiado al portapapeles');
+                });
+            } else {
+                showToast('Compartido', 'Enlace copiado al portapapeles');
+            }
+        }
+
+        function reportMatch() {
+            closeOptionsModal();
+            showToast('Reporte enviado', 'Gracias por tu feedback');
+        }
+
+        function downloadStats() {
+            closeOptionsModal();
+            showToast('Descargando', 'Estadísticas del partido...');
+        }
+
+        // ============================================================
+        // DETALLES
+        // ============================================================
+        function showStatCompare(stat) {
+            const labels = {
+                'goles': '3-2 en goles',
+                'tarjetas': '2-1 en tarjetas',
+                'faltas': '8-6 en faltas'
+            };
+            showToast('Comparativa', labels[stat]);
+        }
+
+        // ============================================================
+        // SISTEMA DE TOAST
+        // ============================================================
+        let toastTimeout;
+        function showToast(title, subtitle) {
+            const toast = document.getElementById('toast');
+            const toastTitle = document.getElementById('toast-title');
+            const toastSubtitle = document.getElementById('toast-subtitle');
+            
+            clearTimeout(toastTimeout);
+            
+            toastTitle.style.width = Math.min(title.length * 8, 200) + 'px';
+            toastSubtitle.style.width = Math.min(subtitle.length * 6, 150) + 'px';
+            
+            toast.style.opacity = '0.95';
+            toast.style.transform = 'translateY(0)';
+            
+            toastTimeout = setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-8px)';
+            }, 3000);
+        }
+
+        // ============================================================
+        // TECLADO (Escape para cerrar modal)
+        // ============================================================
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeOptionsModal();
+        });
+    </script>
+
+</body>
+</html>
