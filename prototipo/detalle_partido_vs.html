@@ -5,11 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Detalle de Partido (VS) — Wireframe Low-Fidelity</title>
     <script src="https://cdn.tailwindcss.com"></script>
+<base target="_blank">
 </head>
 <body class="bg-gray-950 min-h-[100dvh] flex items-center justify-center">
 
     <!-- ============================================================ -->
-    <!-- APP SHELL: El "Móvil"                                          -->
+    <!-- APP SHELL: El "Movil"                                          -->
     <!-- ============================================================ -->
     <div class="w-full max-w-lg min-h-[100dvh] bg-white md:min-h-[90vh] md:my-[5vh] md:rounded-[2rem] md:border-[10px] md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col relative">
 
@@ -17,15 +18,16 @@
         <!-- ESTADO DE CARGA INICIAL (Skeleton)                             -->
         <!-- ============================================================ -->
         <div id="app-loading" class="absolute inset-0 z-[60] bg-white flex flex-col transition-opacity duration-500">
-            <!-- Skeleton del header -->
             <div class="px-4 py-3 flex items-center justify-between border-b border-gray-100">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
                     <div class="h-4 bg-gray-200 rounded w-40 animate-pulse"></div>
                 </div>
-                <div class="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+                <div class="flex items-center gap-2">
+                    <div class="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+                    <div class="w-14 h-6 bg-gray-200 rounded-full animate-pulse"></div>
+                </div>
             </div>
-            <!-- Skeleton del hero VS -->
             <div class="px-6 pt-6 pb-4">
                 <div class="flex items-center justify-center gap-2 mb-6">
                     <div class="h-3 bg-gray-200 rounded w-20 animate-pulse"></div>
@@ -53,7 +55,8 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- HEADER: Sticky                                                 -->
+        <!-- HEADER: Sticky — VISTA PUBLICA / GESTOR / CAPITAN / JUGADOR    -->
+        <!-- Sistema 7 — Match status badges                                -->
         <!-- ============================================================ -->
         <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
             <div class="flex items-center justify-between px-4 py-3">
@@ -65,11 +68,20 @@
                     </a>
                     <div class="h-4 bg-gray-800 rounded w-40"></div>
                 </div>
-                <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px]" aria-label="Más opciones" onclick="showMatchOptions()">
-                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"/>
-                    </svg>
-                </button>
+                <div class="flex items-center gap-2">
+                    <!-- Badge de notificaciones no leidas (Sistema 11) -->
+                    <button class="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px]" aria-label="Notificaciones" onclick="showNotifications()">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        <span class="absolute top-1 right-1 w-5 h-5 bg-gray-800 text-white text-[10px] font-bold rounded-full flex items-center justify-center">2</span>
+                    </button>
+                    <!-- Badge de estado del partido (Sistema 7) -->
+                    <!-- Colores: SCHEDULED=azul, IN_PROGRESS=amarillo, FINISHED=verde, POSTPONED=naranja, WALKOVER=rojo -->
+                    <div class="bg-blue-100 text-blue-700 text-xs px-3 py-1.5 rounded-full font-medium">
+                        <div class="h-2 bg-blue-400 rounded w-16"></div>
+                    </div>
+                </div>
             </div>
         </header>
 
@@ -79,7 +91,10 @@
         <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden pb-24 opacity-0 transition-opacity duration-500">
 
             <!-- ============================================================ -->
-            <!-- HERO: Enfrentamiento VS                                        -->
+            <!-- HERO: Enfrentamiento VS — VISTA PUBLICA                        -->
+            <!-- Card Maestra local vs Card Maestra visitante                   -->
+            <!-- NO son alineaciones de 5 jugadores. Son las cards de equipos.  -->
+            <!-- Sistema 7 — Match.homeTeam vs Match.awayTeam                   -->
             <!-- ============================================================ -->
             <div class="px-6 pt-6 pb-4">
                 <!-- Fecha y estado del partido -->
@@ -91,7 +106,7 @@
 
                 <!-- Cards Maestras enfrentadas -->
                 <div class="flex items-center justify-between gap-4 mb-6">
-                    <!-- Team A -->
+                    <!-- Team A (Local) -->
                     <a href="detalle_equipo_card_maestra.html" class="flex-1 flex flex-col items-center group">
                         <div class="w-20 h-20 bg-gray-200 rounded-2xl mb-3 flex items-center justify-center border-2 border-gray-100 group-hover:border-gray-300 group-hover:bg-gray-300 transition-all active:scale-95">
                             <div class="w-10 h-10 bg-gray-300 rounded-xl group-hover:bg-gray-400 transition-colors"></div>
@@ -100,13 +115,13 @@
                         <div class="h-2 bg-gray-300 rounded w-16"></div>
                     </a>
 
-                    <!-- VS -->
+                    <!-- VS / Score -->
                     <div class="flex flex-col items-center px-2">
                         <div class="h-8 bg-gray-800 rounded w-12 mb-1"></div>
                         <div class="h-2 bg-gray-300 rounded w-8"></div>
                     </div>
 
-                    <!-- Team B -->
+                    <!-- Team B (Visitante) -->
                     <a href="detalle_equipo_card_maestra.html" class="flex-1 flex flex-col items-center group">
                         <div class="w-20 h-20 bg-gray-200 rounded-2xl mb-3 flex items-center justify-center border-2 border-gray-100 group-hover:border-gray-300 group-hover:bg-gray-300 transition-all active:scale-95">
                             <div class="w-10 h-10 bg-gray-300 rounded-xl group-hover:bg-gray-400 transition-colors"></div>
@@ -116,7 +131,7 @@
                     </a>
                 </div>
 
-                <!-- Resultado (si ya se jugó) -->
+                <!-- Resultado (si ya se jugo) -->
                 <div class="bg-gray-800 rounded-2xl p-4 mb-6">
                     <div class="flex items-center justify-center gap-4">
                         <div class="h-10 bg-gray-200 rounded w-12"></div>
@@ -127,7 +142,8 @@
             </div>
 
             <!-- ============================================================ -->
-            <!-- DETALLES DEL PARTIDO                                           -->
+            <!-- DETALLES DEL PARTIDO — VISTA PUBLICA                           -->
+            <!-- Sistema 7 — scheduledAt, court, referee, timeSlot, postponeReason -->
             <!-- ============================================================ -->
             <div class="px-6 mb-6">
                 <div class="bg-gray-100 rounded-2xl p-5 space-y-4">
@@ -141,7 +157,7 @@
                             <div class="h-2 bg-gray-300 rounded w-40"></div>
                         </div>
                     </div>
-                    <!-- Cancha / Lugar -->
+                    <!-- Cancha / Lugar (link a detalle de cancha) -->
                     <a href="detalle_cancha_sede.html" class="flex items-center gap-3 group cursor-pointer">
                         <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-gray-300 transition-colors">
                             <div class="w-5 h-5 bg-gray-300 rounded group-hover:bg-gray-400 transition-colors"></div>
@@ -151,7 +167,7 @@
                             <div class="h-2 bg-gray-300 rounded w-48"></div>
                         </div>
                     </a>
-                    <!-- Árbitro -->
+                    <!-- Arbitro asignado (directorio pasivo: nombre + telefono) -->
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
                             <div class="w-5 h-5 bg-gray-300 rounded"></div>
@@ -161,205 +177,497 @@
                             <div class="h-2 bg-gray-300 rounded w-32"></div>
                         </div>
                     </div>
-                    <!-- Estado -->
+                    <!-- Franja horaria (timeSlot) -->
                     <div class="flex items-center gap-3">
                         <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
                             <div class="w-5 h-5 bg-gray-300 rounded"></div>
                         </div>
                         <div class="flex-1">
-                            <div class="h-3 bg-gray-800 rounded w-16 mb-1"></div>
+                            <div class="h-3 bg-gray-800 rounded w-20 mb-1"></div>
                             <div class="h-2 bg-gray-300 rounded w-24"></div>
                         </div>
                     </div>
-                </div>
-            </div>
-
-            <!-- ============================================================ -->
-            <!-- ALINEACIONES: Cards Maestras Mini de cada equipo               -->
-            <!-- ============================================================ -->
-            <div class="px-6 mb-6">
-                <div class="h-4 bg-gray-800 rounded w-32 mb-4"></div>
-
-                <!-- Team A Alineación -->
-                <div class="bg-gray-100 rounded-2xl p-4 mb-3">
-                    <a href="detalle_equipo_card_maestra.html" class="flex items-center gap-3 mb-4 group cursor-pointer">
-                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center group-hover:bg-gray-300 transition-colors">
-                            <div class="w-5 h-5 bg-gray-300 rounded-lg group-hover:bg-gray-400 transition-colors"></div>
-                        </div>
-                        <div class="h-3 bg-gray-800 rounded w-24"></div>
-                    </a>
-                    <!-- Jugadores en cancha -->
-                    <div class="grid grid-cols-5 gap-2">
-                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
-                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
-                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
-                            </div>
-                            <div class="h-2 bg-gray-600 rounded w-10"></div>
-                        </a>
-                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
-                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
-                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
-                            </div>
-                            <div class="h-2 bg-gray-600 rounded w-8"></div>
-                        </a>
-                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
-                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
-                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
-                            </div>
-                            <div class="h-2 bg-gray-600 rounded w-10"></div>
-                        </a>
-                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
-                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
-                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
-                            </div>
-                            <div class="h-2 bg-gray-600 rounded w-8"></div>
-                        </a>
-                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
-                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
-                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
-                            </div>
-                            <div class="h-2 bg-gray-600 rounded w-10"></div>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- Team B Alineación -->
-                <div class="bg-gray-100 rounded-2xl p-4">
-                    <a href="detalle_equipo_card_maestra.html" class="flex items-center gap-3 mb-4 group cursor-pointer">
-                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center group-hover:bg-gray-300 transition-colors">
-                            <div class="w-5 h-5 bg-gray-300 rounded-lg group-hover:bg-gray-400 transition-colors"></div>
-                        </div>
-                        <div class="h-3 bg-gray-800 rounded w-20"></div>
-                    </a>
-                    <!-- Jugadores en cancha -->
-                    <div class="grid grid-cols-5 gap-2">
-                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
-                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
-                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
-                            </div>
-                            <div class="h-2 bg-gray-600 rounded w-10"></div>
-                        </a>
-                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
-                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
-                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
-                            </div>
-                            <div class="h-2 bg-gray-600 rounded w-8"></div>
-                        </a>
-                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
-                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
-                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
-                            </div>
-                            <div class="h-2 bg-gray-600 rounded w-12"></div>
-                        </a>
-                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
-                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
-                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
-                            </div>
-                            <div class="h-2 bg-gray-600 rounded w-8"></div>
-                        </a>
-                        <a href="perfil_jugador.html" class="flex flex-col items-center gap-1 group cursor-pointer">
-                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center border-2 border-gray-800 group-hover:bg-gray-300 transition-colors">
-                                <div class="w-5 h-5 bg-gray-400 rounded-full"></div>
-                            </div>
-                            <div class="h-2 bg-gray-600 rounded w-10"></div>
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ============================================================ -->
-            <!-- ESTADÍSTICAS DEL PARTIDO (Si ya se jugó)                       -->
-            <!-- ============================================================ -->
-            <div class="px-6 mb-6">
-                <div class="h-4 bg-gray-800 rounded w-40 mb-4"></div>
-                <div class="bg-gray-100 rounded-2xl p-5 space-y-4">
-                    <!-- Goles -->
-                    <div class="flex items-center justify-between cursor-pointer hover:bg-gray-200 rounded-xl p-2 -mx-2 transition-colors" onclick="showStatCompare('goles')">
-                        <div class="flex items-center gap-2 flex-1">
-                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
-                            <div class="h-3 bg-gray-800 rounded w-20"></div>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div class="h-4 bg-gray-800 rounded w-6"></div>
-                            <div class="h-3 bg-gray-300 rounded w-4"></div>
-                            <div class="h-4 bg-gray-800 rounded w-6"></div>
-                        </div>
-                        <div class="flex items-center gap-2 flex-1 justify-end">
-                            <div class="h-3 bg-gray-800 rounded w-20"></div>
-                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
-                        </div>
-                    </div>
-                    <!-- Tarjetas -->
-                    <div class="flex items-center justify-between cursor-pointer hover:bg-gray-200 rounded-xl p-2 -mx-2 transition-colors" onclick="showStatCompare('tarjetas')">
-                        <div class="flex items-center gap-2 flex-1">
-                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
-                            <div class="h-3 bg-gray-800 rounded w-20"></div>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div class="h-4 bg-gray-800 rounded w-6"></div>
-                            <div class="h-3 bg-gray-300 rounded w-4"></div>
-                            <div class="h-4 bg-gray-800 rounded w-6"></div>
-                        </div>
-                        <div class="flex items-center gap-2 flex-1 justify-end">
-                            <div class="h-3 bg-gray-800 rounded w-20"></div>
-                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
-                        </div>
-                    </div>
-                    <!-- Faltas -->
-                    <div class="flex items-center justify-between cursor-pointer hover:bg-gray-200 rounded-xl p-2 -mx-2 transition-colors" onclick="showStatCompare('faltas')">
-                        <div class="flex items-center gap-2 flex-1">
-                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
-                            <div class="h-3 bg-gray-800 rounded w-20"></div>
-                        </div>
-                        <div class="flex items-center gap-4">
-                            <div class="h-4 bg-gray-800 rounded w-6"></div>
-                            <div class="h-3 bg-gray-300 rounded w-4"></div>
-                            <div class="h-4 bg-gray-800 rounded w-6"></div>
-                        </div>
-                        <div class="flex items-center gap-2 flex-1 justify-end">
-                            <div class="h-3 bg-gray-800 rounded w-20"></div>
-                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- ============================================================ -->
-            <!-- GOLEADORES DEL PARTIDO                                         -->
-            <!-- ============================================================ -->
-            <div class="px-6 mb-8">
-                <div class="h-4 bg-gray-800 rounded w-32 mb-4"></div>
-                <div class="space-y-3">
-                    <a href="perfil_jugador.html" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer block">
-                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                            <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
-                        </div>
-                        <div class="flex-1">
-                            <div class="h-3 bg-gray-800 rounded w-28 mb-1"></div>
-                            <div class="h-2 bg-gray-300 rounded w-20"></div>
-                        </div>
-                        <div class="h-4 bg-gray-800 rounded w-4"></div>
-                    </a>
-                    <a href="perfil_jugador.html" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer block">
-                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                            <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
+                    <!-- Motivo de aplazamiento (solo si status = POSTPONED) -->
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
                         </div>
                         <div class="flex-1">
                             <div class="h-3 bg-gray-800 rounded w-24 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-48"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- SECCION: CONVOCATORIA (Sistema 7 — MatchCallUp)               -->
+            <!-- VISTA CAPITAN / VISTA JUGADOR                                  -->
+            <!-- NO es una alineacion de 5 jugadores. Es la lista completa de   -->
+            <!-- miembros activos del equipo generada automaticamente.          -->
+            <!-- Cada jugador: avatar, nombre, toggle "Ausente" (isAbsent).     -->
+            <!-- Campo de nota opcional del capitan al marcar ausente.          -->
+            <!-- Regla: El ausente es puramente informativo. No afecta horarios -->
+            <!-- ni reagendamiento. Optimistic UI al marcar/desmarcar.          -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-6">
+                <div class="h-4 bg-gray-800 rounded w-32 mb-4"></div>
+                <div class="bg-gray-100 rounded-2xl p-5 space-y-3">
+                    <!-- Jugador 1: Presente -->
+                    <div class="flex items-center gap-3 p-3 bg-white rounded-xl">
+                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="h-3 bg-gray-800 rounded w-28 mb-1"></div>
                             <div class="h-2 bg-gray-300 rounded w-20"></div>
                         </div>
-                        <div class="h-4 bg-gray-800 rounded w-4"></div>
-                    </a>
+                        <button class="w-14 h-8 bg-gray-800 rounded-full relative transition-colors" onclick="toggleAbsent(this)" aria-label="Marcar ausente">
+                            <span class="absolute right-1 top-1 w-6 h-6 bg-white rounded-full transition-transform"></span>
+                        </button>
+                    </div>
+                    <!-- Jugador 2: Ausente (con nota del capitan) -->
+                    <div class="flex items-center gap-3 p-3 bg-white rounded-xl">
+                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="h-3 bg-gray-800 rounded w-24 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-20"></div>
+                            <div class="h-2 bg-gray-400 rounded w-32 mt-1"></div>
+                        </div>
+                        <button class="w-14 h-8 bg-gray-300 rounded-full relative transition-colors" onclick="toggleAbsent(this)" aria-label="Marcar presente">
+                            <span class="absolute right-1 top-1 w-6 h-6 bg-white rounded-full transition-transform translate-x-[-24px]"></span>
+                        </button>
+                    </div>
+                    <!-- Jugador 3: Presente -->
+                    <div class="flex items-center gap-3 p-3 bg-white rounded-xl">
+                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="h-3 bg-gray-800 rounded w-32 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-16"></div>
+                        </div>
+                        <button class="w-14 h-8 bg-gray-800 rounded-full relative transition-colors" onclick="toggleAbsent(this)" aria-label="Marcar ausente">
+                            <span class="absolute right-1 top-1 w-6 h-6 bg-white rounded-full transition-transform"></span>
+                        </button>
+                    </div>
+                    <!-- Jugador 4: Ausente -->
+                    <div class="flex items-center gap-3 p-3 bg-white rounded-xl">
+                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="h-3 bg-gray-800 rounded w-28 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-20"></div>
+                        </div>
+                        <button class="w-14 h-8 bg-gray-300 rounded-full relative transition-colors" onclick="toggleAbsent(this)" aria-label="Marcar presente">
+                            <span class="absolute right-1 top-1 w-6 h-6 bg-white rounded-full transition-transform translate-x-[-24px]"></span>
+                        </button>
+                    </div>
+                    <!-- Jugador 5: Presente -->
+                    <div class="flex items-center gap-3 p-3 bg-white rounded-xl">
+                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="h-3 bg-gray-800 rounded w-24 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-24"></div>
+                        </div>
+                        <button class="w-14 h-8 bg-gray-800 rounded-full relative transition-colors" onclick="toggleAbsent(this)" aria-label="Marcar ausente">
+                            <span class="absolute right-1 top-1 w-6 h-6 bg-white rounded-full transition-transform"></span>
+                        </button>
+                    </div>
+                    <!-- Jugador 6: Presente -->
+                    <div class="flex items-center gap-3 p-3 bg-white rounded-xl">
+                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="h-3 bg-gray-800 rounded w-30 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-18"></div>
+                        </div>
+                        <button class="w-14 h-8 bg-gray-800 rounded-full relative transition-colors" onclick="toggleAbsent(this)" aria-label="Marcar ausente">
+                            <span class="absolute right-1 top-1 w-6 h-6 bg-white rounded-full transition-transform"></span>
+                        </button>
+                    </div>
+                    <!-- Jugador 7: Ausente (con nota) -->
+                    <div class="flex items-center gap-3 p-3 bg-white rounded-xl">
+                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="h-3 bg-gray-800 rounded w-26 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-20"></div>
+                            <div class="h-2 bg-gray-400 rounded w-28 mt-1"></div>
+                        </div>
+                        <button class="w-14 h-8 bg-gray-300 rounded-full relative transition-colors" onclick="toggleAbsent(this)" aria-label="Marcar presente">
+                            <span class="absolute right-1 top-1 w-6 h-6 bg-white rounded-full transition-transform translate-x-[-24px]"></span>
+                        </button>
+                    </div>
+                    <!-- Jugador 8: Presente -->
+                    <div class="flex items-center gap-3 p-3 bg-white rounded-xl">
+                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="h-3 bg-gray-800 rounded w-22 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-24"></div>
+                        </div>
+                        <button class="w-14 h-8 bg-gray-800 rounded-full relative transition-colors" onclick="toggleAbsent(this)" aria-label="Marcar ausente">
+                            <span class="absolute right-1 top-1 w-6 h-6 bg-white rounded-full transition-transform"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- SECCION: ACCIONES DEL GESTOR (Sistema 7)                       -->
+            <!-- VISTA GESTOR / ASISTENTE — Solo visible con permisos           -->
+            <!-- Botones: Aplazar, Reagendar (solo POSTPONED), Cargar resultado -->
+            <!-- (solo SCHEDULED/IN_PROGRESS), Marcar Walkover, Asignar arbitro -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-6">
+                <div class="h-4 bg-gray-800 rounded w-40 mb-4"></div>
+                <div class="space-y-3">
+                    <button class="w-full bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-2xl p-4 flex items-center gap-4 transition-colors" onclick="openPostponeModal()">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
+                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-32 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-48"></div>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                    <button class="w-full bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-2xl p-4 flex items-center gap-4 transition-colors" onclick="openRescheduleModal()">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
+                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-24 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-40"></div>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                    <button class="w-full bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-2xl p-4 flex items-center gap-4 transition-colors" onclick="openResultModal()">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
+                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-32 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-44"></div>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                    <button class="w-full bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-2xl p-4 flex items-center gap-4 transition-colors" onclick="openWalkoverModal()">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
+                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-28 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-48"></div>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                    <button class="w-full bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-2xl p-4 flex items-center gap-4 transition-colors" onclick="openAssignRefereeModal()">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
+                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-28 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-36"></div>
+                        </div>
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- SECCION: PANEL DE CARGA DE RESULTADOS (Sistema 7 / Sistema 10) -->
+            <!-- VISTA GESTOR — NO mostrar si ya tiene resultado cargado        -->
+            <!-- Formulario: homeScore, awayScore, selector ganador, toggle     -->
+            <!-- Walkover, tabla MatchPlayerStat, notes, externalLinks.         -->
+            <!-- Nota: Al guardar, el sistema recalcula PlayerStats, TeamStats, -->
+            <!-- TournamentStanding y notifica a capitanes (Sistema 11).        -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-6">
+                <div class="h-4 bg-gray-800 rounded w-48 mb-4"></div>
+                <div class="bg-gray-100 rounded-2xl p-5 space-y-5">
+                    <!-- Scores -->
+                    <div class="flex items-center gap-4">
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-400 rounded w-20 mb-2"></div>
+                            <div class="w-full h-14 bg-white rounded-xl border-2 border-gray-200 flex items-center justify-center hover:border-gray-300 focus-within:border-gray-400 transition-colors">
+                                <div class="h-6 bg-gray-300 rounded w-8"></div>
+                            </div>
+                        </div>
+                        <div class="h-4 bg-gray-400 rounded w-4"></div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-400 rounded w-20 mb-2"></div>
+                            <div class="w-full h-14 bg-white rounded-xl border-2 border-gray-200 flex items-center justify-center hover:border-gray-300 focus-within:border-gray-400 transition-colors">
+                                <div class="h-6 bg-gray-300 rounded w-8"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selector de ganador / empate -->
+                    <div>
+                        <div class="h-3 bg-gray-400 rounded w-24 mb-2"></div>
+                        <div class="w-full h-14 bg-white rounded-xl border-2 border-gray-200 flex items-center px-4 hover:border-gray-300 focus-within:border-gray-400 transition-colors">
+                            <div class="h-3 bg-gray-300 rounded w-40"></div>
+                        </div>
+                    </div>
+
+                    <!-- Toggle Walkover -->
+                    <div class="flex items-center justify-between p-3 bg-white rounded-xl">
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-24 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-48"></div>
+                        </div>
+                        <button class="w-14 h-8 bg-gray-300 rounded-full relative transition-colors" onclick="toggleWalkoverResult(this)" id="walkover-result-toggle">
+                            <span class="absolute right-1 top-1 w-6 h-6 bg-white rounded-full transition-transform translate-x-[-24px]"></span>
+                        </button>
+                    </div>
+
+                    <!-- Tabla de estadisticas individuales (MatchPlayerStat) -->
+                    <div id="stats-table-container">
+                        <div class="h-3 bg-gray-800 rounded w-40 mb-3"></div>
+                        <div class="overflow-x-auto">
+                            <div class="min-w-[600px]">
+                                <!-- Header -->
+                                <div class="grid grid-cols-[1fr_60px_60px_60px_60px_60px_60px] gap-2 mb-2">
+                                    <div class="h-3 bg-gray-600 rounded"></div>
+                                    <div class="h-3 bg-gray-600 rounded text-center"></div>
+                                    <div class="h-3 bg-gray-600 rounded text-center"></div>
+                                    <div class="h-3 bg-gray-600 rounded text-center"></div>
+                                    <div class="h-3 bg-gray-600 rounded text-center"></div>
+                                    <div class="h-3 bg-gray-600 rounded text-center"></div>
+                                    <div class="h-3 bg-gray-600 rounded text-center"></div>
+                                </div>
+                                <!-- Fila 1 -->
+                                <div class="grid grid-cols-[1fr_60px_60px_60px_60px_60px_60px] gap-2 mb-1">
+                                    <div class="h-10 bg-white rounded-xl flex items-center px-3">
+                                        <div class="h-3 bg-gray-300 rounded w-24"></div>
+                                    </div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                </div>
+                                <!-- Fila 2 -->
+                                <div class="grid grid-cols-[1fr_60px_60px_60px_60px_60px_60px] gap-2 mb-1">
+                                    <div class="h-10 bg-white rounded-xl flex items-center px-3">
+                                        <div class="h-3 bg-gray-300 rounded w-20"></div>
+                                    </div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                </div>
+                                <!-- Fila 3 -->
+                                <div class="grid grid-cols-[1fr_60px_60px_60px_60px_60px_60px] gap-2 mb-1">
+                                    <div class="h-10 bg-white rounded-xl flex items-center px-3">
+                                        <div class="h-3 bg-gray-300 rounded w-28"></div>
+                                    </div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                </div>
+                                <!-- Fila 4 -->
+                                <div class="grid grid-cols-[1fr_60px_60px_60px_60px_60px_60px] gap-2 mb-1">
+                                    <div class="h-10 bg-white rounded-xl flex items-center px-3">
+                                        <div class="h-3 bg-gray-300 rounded w-22"></div>
+                                    </div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                </div>
+                                <!-- Fila 5 -->
+                                <div class="grid grid-cols-[1fr_60px_60px_60px_60px_60px_60px] gap-2">
+                                    <div class="h-10 bg-white rounded-xl flex items-center px-3">
+                                        <div class="h-3 bg-gray-300 rounded w-26"></div>
+                                    </div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                    <div class="h-10 bg-white rounded-xl flex items-center justify-center"><div class="h-3 bg-gray-300 rounded w-4"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campo notes (textarea, max 2000 chars) -->
+                    <div class="space-y-2">
+                        <div class="h-3 bg-gray-400 rounded w-16"></div>
+                        <div class="w-full h-24 bg-white rounded-xl border-2 border-gray-200 p-3 hover:border-gray-300 focus-within:border-gray-400 transition-colors">
+                            <div class="h-3 bg-gray-300 rounded w-full mb-1"></div>
+                            <div class="h-3 bg-gray-300 rounded w-3/4 mb-1"></div>
+                            <div class="h-3 bg-gray-300 rounded w-1/2"></div>
+                        </div>
+                    </div>
+
+                    <!-- Campo externalLinks (textarea, un link por linea) -->
+                    <div class="space-y-2">
+                        <div class="h-3 bg-gray-400 rounded w-28"></div>
+                        <div class="w-full h-20 bg-white rounded-xl border-2 border-gray-200 p-3 hover:border-gray-300 focus-within:border-gray-400 transition-colors">
+                            <div class="h-3 bg-gray-300 rounded w-full mb-1"></div>
+                            <div class="h-3 bg-gray-300 rounded w-2/3"></div>
+                        </div>
+                    </div>
+
+                    <button class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="saveResult()">
+                        <div class="h-4 bg-gray-400 rounded w-32 mx-auto"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- SECCION: ESTADISTICAS DEL PARTIDO YA CARGADO — VISTA PUBLICA   -->
+            <!-- Sistema 7 / Sistema 10 — Solo si FINISHED o WALKOVER           -->
+            <!-- Tabla comparativa: Goles, Tarjetas, Faltas (totales por equipo) -->
+            <!-- Lista goleadores (goals > 0). Lista jugadores con tarjetas.    -->
+            <!-- NO mostrar stats individuales si es WALKOVER.                  -->
+            <!-- ============================================================ -->
+            <div class="px-6 mb-6">
+                <div class="h-4 bg-gray-800 rounded w-40 mb-4"></div>
+
+                <!-- Tabla comparativa -->
+                <div class="bg-gray-100 rounded-2xl p-5 space-y-4 mb-6">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 flex-1">
+                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
+                            <div class="h-3 bg-gray-800 rounded w-20"></div>
+                        </div>
+                        <div class="flex items-center gap-4 px-4">
+                            <div class="h-4 bg-gray-800 rounded w-6"></div>
+                            <div class="h-3 bg-gray-300 rounded w-4"></div>
+                            <div class="h-4 bg-gray-800 rounded w-6"></div>
+                        </div>
+                        <div class="flex items-center gap-2 flex-1 justify-end">
+                            <div class="h-3 bg-gray-800 rounded w-20"></div>
+                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 flex-1">
+                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
+                            <div class="h-3 bg-gray-800 rounded w-20"></div>
+                        </div>
+                        <div class="flex items-center gap-4 px-4">
+                            <div class="h-4 bg-gray-800 rounded w-6"></div>
+                            <div class="h-3 bg-gray-300 rounded w-4"></div>
+                            <div class="h-4 bg-gray-800 rounded w-6"></div>
+                        </div>
+                        <div class="flex items-center gap-2 flex-1 justify-end">
+                            <div class="h-3 bg-gray-800 rounded w-20"></div>
+                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2 flex-1">
+                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
+                            <div class="h-3 bg-gray-800 rounded w-20"></div>
+                        </div>
+                        <div class="flex items-center gap-4 px-4">
+                            <div class="h-4 bg-gray-800 rounded w-6"></div>
+                            <div class="h-3 bg-gray-300 rounded w-4"></div>
+                            <div class="h-4 bg-gray-800 rounded w-6"></div>
+                        </div>
+                        <div class="flex items-center gap-2 flex-1 justify-end">
+                            <div class="h-3 bg-gray-800 rounded w-20"></div>
+                            <div class="w-6 h-6 bg-gray-200 rounded"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Goleadores del partido -->
+                <div class="mb-6">
+                    <div class="h-4 bg-gray-800 rounded w-32 mb-4"></div>
+                    <div class="space-y-3">
+                        <a href="perfil_jugador.html" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer block">
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                                <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="h-3 bg-gray-800 rounded w-28 mb-1"></div>
+                                <div class="h-2 bg-gray-300 rounded w-20"></div>
+                            </div>
+                            <div class="h-4 bg-gray-800 rounded w-4"></div>
+                        </a>
+                        <a href="perfil_jugador.html" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer block">
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                                <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="h-3 bg-gray-800 rounded w-24 mb-1"></div>
+                                <div class="h-2 bg-gray-300 rounded w-20"></div>
+                            </div>
+                            <div class="h-4 bg-gray-800 rounded w-4"></div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Jugadores con tarjetas -->
+                <div>
+                    <div class="h-4 bg-gray-800 rounded w-40 mb-4"></div>
+                    <div class="space-y-3">
+                        <a href="perfil_jugador.html" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer block">
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                                <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="h-3 bg-gray-800 rounded w-26 mb-1"></div>
+                                <div class="h-2 bg-gray-300 rounded w-20"></div>
+                            </div>
+                            <div class="w-6 h-8 bg-gray-300 rounded"></div>
+                        </a>
+                        <a href="perfil_jugador.html" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer block">
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                                <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="h-3 bg-gray-800 rounded w-24 mb-1"></div>
+                                <div class="h-2 bg-gray-300 rounded w-20"></div>
+                            </div>
+                            <div class="w-6 h-8 bg-gray-800 rounded"></div>
+                        </a>
+                    </div>
                 </div>
             </div>
 
         </main>
 
         <!-- ============================================================ -->
-        <!-- NAVBAR INFERIOR                                                -->
+        <!-- NAVBAR INFERIOR — VISTA PUBLICA / CAPITAN / JUGADOR / GESTOR -->
+        <!-- Inicio (Mapa), Equipo, Partidos (activo), Perfil.             -->
+        <!-- Campana de notificaciones con badge de no leidas.              -->
         <!-- ============================================================ -->
-        <nav class="absolute bottom-0 w-full z-50 bg-white border-t border-gray-200" style="padding-bottom: env(safe-area-inset-bottom);">
-            <div class="grid grid-cols-4 h-16">
+        <nav class="absolute bottom-0 w-full z-50 bg-white border-t border-gray-200 pb-[env(safe-area-inset-bottom)]">
+            <div class="grid grid-cols-5 h-16">
                 <a href="hub_mapa_principal.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Inicio">
                     <div class="w-6 h-6 bg-gray-300 rounded"></div>
                     <div class="h-2 bg-gray-300 rounded w-10"></div>
@@ -376,11 +684,16 @@
                     <div class="w-6 h-6 bg-gray-300 rounded-full"></div>
                     <div class="h-2 bg-gray-300 rounded w-10"></div>
                 </a>
+                <button class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px] relative" aria-label="Notificaciones" onclick="showNotifications()">
+                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
+                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                    <span class="absolute top-1 right-3 w-4 h-4 bg-gray-800 text-white text-[8px] font-bold rounded-full flex items-center justify-center">2</span>
+                </button>
             </div>
         </nav>
 
         <!-- ============================================================ -->
-        <!-- TOAST DE NOTIFICACIÓN                                          -->
+        <!-- TOAST DE NOTIFICACION                                          -->
         <!-- ============================================================ -->
         <div id="toast" class="absolute top-20 left-4 right-4 z-[70] pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
             <div class="bg-gray-800 text-white px-4 py-3 rounded-2xl shadow-lg flex items-center gap-3">
@@ -395,29 +708,36 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- MODAL DE OPCIONES DEL PARTIDO                                  -->
+        <!-- MODAL BOTTOM-SHEET: Opciones del partido (gestor)              -->
+        <!-- Aplazar, Cargar resultado, Asignar arbitro, Marcar walkover    -->
         <!-- ============================================================ -->
         <div id="options-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
-            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300">
+            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300" id="options-modal-content">
                 <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
                 <div class="space-y-3">
-                    <button class="w-full bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors" onclick="shareMatch()">
+                    <button class="w-full bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors" onclick="openPostponeModal(); closeOptionsModal();">
                         <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
                             <div class="w-5 h-5 bg-gray-300 rounded"></div>
                         </div>
                         <div class="h-3 bg-gray-800 rounded w-32"></div>
                     </button>
-                    <button class="w-full bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors" onclick="reportMatch()">
-                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
-                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
-                        </div>
-                        <div class="h-3 bg-gray-800 rounded w-40"></div>
-                    </button>
-                    <button class="w-full bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors" onclick="downloadStats()">
+                    <button class="w-full bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors" onclick="openResultModal(); closeOptionsModal();">
                         <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
                             <div class="w-5 h-5 bg-gray-300 rounded"></div>
                         </div>
                         <div class="h-3 bg-gray-800 rounded w-36"></div>
+                    </button>
+                    <button class="w-full bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors" onclick="openAssignRefereeModal(); closeOptionsModal();">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
+                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
+                        </div>
+                        <div class="h-3 bg-gray-800 rounded w-28"></div>
+                    </button>
+                    <button class="w-full bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors" onclick="openWalkoverModal(); closeOptionsModal();">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center">
+                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
+                        </div>
+                        <div class="h-3 bg-gray-800 rounded w-28"></div>
                     </button>
                 </div>
                 <button class="w-full mt-4 bg-gray-200 text-gray-700 py-4 rounded-2xl font-medium hover:bg-gray-300 active:bg-gray-400 transition-colors min-h-[56px]" onclick="closeOptionsModal()">
@@ -426,115 +746,396 @@
             </div>
         </div>
 
+        <!-- ============================================================ -->
+        <!-- MODAL BOTTOM-SHEET: Aplazamiento — textarea motivo obligatorio -->
+        <!-- Sistema 7 — Match.status = POSTPONED, postponeReason           -->
+        <!-- ============================================================ -->
+        <div id="postpone-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300" id="postpone-modal-content">
+                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
+                <div class="h-4 bg-gray-800 rounded w-48 mb-2 mx-auto"></div>
+                <div class="h-3 bg-gray-300 rounded w-64 mb-6 mx-auto"></div>
+                <form class="space-y-4 mb-6" onsubmit="event.preventDefault(); confirmPostpone();">
+                    <div class="space-y-2">
+                        <div class="h-3 bg-gray-400 rounded w-20"></div>
+                        <div class="w-full h-32 bg-gray-100 rounded-xl border-2 border-gray-200 p-4 hover:border-gray-300 focus-within:border-gray-400 transition-colors">
+                            <div class="h-3 bg-gray-300 rounded w-full mb-1"></div>
+                            <div class="h-3 bg-gray-300 rounded w-3/4 mb-1"></div>
+                            <div class="h-3 bg-gray-300 rounded w-1/2"></div>
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]">
+                        <div class="h-4 bg-gray-400 rounded w-24 mx-auto"></div>
+                    </button>
+                </form>
+                <button class="w-full bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="closePostponeModal()">
+                    <div class="h-4 bg-gray-400 rounded w-16 mx-auto"></div>
+                </button>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- MODAL BOTTOM-SHEET: Reagendar — lista de franjas AVAILABLE     -->
+        <!-- Sistema 7 — Solo si POSTPONED. Seleccion manual de franja.     -->
+        <!-- ============================================================ -->
+        <div id="reschedule-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300" id="reschedule-modal-content">
+                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
+                <div class="h-4 bg-gray-800 rounded w-40 mb-2 mx-auto"></div>
+                <div class="h-3 bg-gray-300 rounded w-64 mb-6 mx-auto"></div>
+                <div class="space-y-2 mb-6 max-h-[50vh] overflow-y-auto">
+                    <button class="w-full bg-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-300 transition-colors text-left">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-32 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-24"></div>
+                        </div>
+                        <div class="bg-gray-800 text-white text-xs px-2.5 py-1 rounded-full">
+                            <div class="h-2 bg-gray-400 rounded w-12"></div>
+                        </div>
+                    </button>
+                    <button class="w-full bg-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-300 transition-colors text-left">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-28 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-24"></div>
+                        </div>
+                        <div class="bg-gray-800 text-white text-xs px-2.5 py-1 rounded-full">
+                            <div class="h-2 bg-gray-400 rounded w-12"></div>
+                        </div>
+                    </button>
+                    <button class="w-full bg-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-300 transition-colors text-left">
+                        <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-300 rounded"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-30 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-24"></div>
+                        </div>
+                        <div class="bg-gray-800 text-white text-xs px-2.5 py-1 rounded-full">
+                            <div class="h-2 bg-gray-400 rounded w-12"></div>
+                        </div>
+                    </button>
+                </div>
+                <button class="w-full bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="closeRescheduleModal()">
+                    <div class="h-4 bg-gray-400 rounded w-16 mx-auto"></div>
+                </button>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- MODAL BOTTOM-SHEET: Walkover — selector de equipo ausente      -->
+        <!-- Checkbox: "No se cargaran estadisticas individuales"           -->
+        <!-- Sistema 7 — Match.status = WALKOVER                          -->
+        <!-- ============================================================ -->
+        <div id="walkover-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300" id="walkover-modal-content">
+                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
+                <div class="h-4 bg-gray-800 rounded w-48 mb-2 mx-auto"></div>
+                <div class="h-3 bg-gray-300 rounded w-64 mb-6 mx-auto"></div>
+                <form class="space-y-4 mb-6" onsubmit="event.preventDefault(); confirmWalkover();">
+                    <div class="space-y-2">
+                        <div class="h-3 bg-gray-400 rounded w-24"></div>
+                        <div class="space-y-2">
+                            <label class="flex items-center gap-3 bg-gray-100 rounded-xl p-4 cursor-pointer hover:bg-gray-200 transition-colors">
+                                <div class="w-5 h-5 bg-gray-300 rounded-full border-2 border-gray-300"></div>
+                                <div class="flex-1">
+                                    <div class="h-3 bg-gray-800 rounded w-24 mb-1"></div>
+                                    <div class="h-2 bg-gray-300 rounded w-16"></div>
+                                </div>
+                            </label>
+                            <label class="flex items-center gap-3 bg-gray-100 rounded-xl p-4 cursor-pointer hover:bg-gray-200 transition-colors">
+                                <div class="w-5 h-5 bg-gray-300 rounded-full border-2 border-gray-300"></div>
+                                <div class="flex-1">
+                                    <div class="h-3 bg-gray-800 rounded w-24 mb-1"></div>
+                                    <div class="h-2 bg-gray-300 rounded w-16"></div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                    <label class="flex items-center gap-3 cursor-pointer">
+                        <div class="w-5 h-5 bg-gray-300 rounded border-2 border-gray-300"></div>
+                        <div class="h-3 bg-gray-600 rounded w-56"></div>
+                    </label>
+                    <button type="submit" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]">
+                        <div class="h-4 bg-gray-400 rounded w-24 mx-auto"></div>
+                    </button>
+                </form>
+                <button class="w-full bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="closeWalkoverModal()">
+                    <div class="h-4 bg-gray-400 rounded w-16 mx-auto"></div>
+                </button>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- MODAL BOTTOM-SHEET: Asignar arbitro — selector directorio pasivo -->
+        <!-- Sistema 7 — Match.referee (directorio pasivo)                  -->
+        <!-- ============================================================ -->
+        <div id="referee-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300" id="referee-modal-content">
+                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
+                <div class="h-4 bg-gray-800 rounded w-40 mb-2 mx-auto"></div>
+                <div class="h-3 bg-gray-300 rounded w-64 mb-6 mx-auto"></div>
+                <div class="space-y-2 mb-6 max-h-[50vh] overflow-y-auto">
+                    <button class="w-full bg-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-300 transition-colors text-left">
+                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-28 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-32"></div>
+                        </div>
+                    </button>
+                    <button class="w-full bg-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-300 transition-colors text-left">
+                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-24 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-28"></div>
+                        </div>
+                    </button>
+                    <button class="w-full bg-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-300 transition-colors text-left">
+                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                            <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
+                        </div>
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-30 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-32"></div>
+                        </div>
+                    </button>
+                </div>
+                <button class="w-full bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="closeRefereeModal()">
+                    <div class="h-4 bg-gray-400 rounded w-16 mx-auto"></div>
+                </button>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- MODAL BOTTOM-SHEET: Resultado cargado — confirmacion con resumen -->
+        <!-- Sistema 7 / Sistema 10                                         -->
+        <!-- ============================================================ -->
+        <div id="result-confirm-modal" class="absolute inset-0 z-[90] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300" id="result-confirm-content">
+                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
+                <div class="h-4 bg-gray-800 rounded w-48 mb-2 mx-auto"></div>
+                <div class="h-3 bg-gray-300 rounded w-64 mb-6 mx-auto"></div>
+                <div class="bg-gray-100 rounded-2xl p-5 mb-6 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <div class="h-3 bg-gray-600 rounded w-20"></div>
+                        <div class="h-4 bg-gray-800 rounded w-8"></div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <div class="h-3 bg-gray-600 rounded w-20"></div>
+                        <div class="h-4 bg-gray-800 rounded w-8"></div>
+                    </div>
+                    <div class="h-px bg-gray-200"></div>
+                    <div class="flex items-center justify-between">
+                        <div class="h-3 bg-gray-600 rounded w-24"></div>
+                        <div class="h-3 bg-gray-800 rounded w-16"></div>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button class="flex-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="closeResultConfirmModal()">
+                        <div class="h-4 bg-gray-400 rounded w-16 mx-auto"></div>
+                    </button>
+                    <button class="flex-1 bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="confirmResultSave()">
+                        <div class="h-4 bg-gray-400 rounded w-24 mx-auto"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <!-- ============================================================ -->
-    <!-- SCRIPT: Lógica de Interacción                                  -->
+    <!-- SCRIPT: Logica de Interaccion                                  -->
     <!-- ============================================================ -->
     <script>
-        // ============================================================
-        // CARGA INICIAL
-        // ============================================================
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 const appLoading = document.getElementById('app-loading');
                 const mainContent = document.getElementById('main-content');
-                
                 appLoading.style.opacity = '0';
                 mainContent.style.opacity = '1';
-                
                 setTimeout(() => {
                     appLoading.style.display = 'none';
-                    showToast('Partido cargado', 'Resultado final: 3 - 2');
+                    showToast('Partido cargado', 'Octavos de Final — Programado');
                 }, 500);
             }, 1000);
         });
 
-        // ============================================================
-        // MODAL DE OPCIONES
-        // ============================================================
-        function showMatchOptions() {
-            const modal = document.getElementById('options-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.style.opacity = '1';
-                modal.querySelector('div').style.transform = 'translateY(0)';
-            }, 10);
-            if (navigator.vibrate) navigator.vibrate(50);
-        }
-
-        function closeOptionsModal() {
-            const modal = document.getElementById('options-modal');
-            modal.style.opacity = '0';
-            modal.querySelector('div').style.transform = 'translateY(100%)';
-            setTimeout(() => modal.classList.add('hidden'), 300);
-        }
-
-        function shareMatch() {
-            closeOptionsModal();
-            if (navigator.share) {
-                navigator.share({
-                    title: 'Los Leones vs Los Tigres',
-                    text: 'Mira el resultado de este partidazo',
-                    url: window.location.href
-                }).catch(() => {
-                    showToast('Compartido', 'Enlace copiado al portapapeles');
-                });
-            } else {
-                showToast('Compartido', 'Enlace copiado al portapapeles');
-            }
-        }
-
-        function reportMatch() {
-            closeOptionsModal();
-            showToast('Reporte enviado', 'Gracias por tu feedback');
-        }
-
-        function downloadStats() {
-            closeOptionsModal();
-            showToast('Descargando', 'Estadísticas del partido...');
-        }
-
-        // ============================================================
-        // DETALLES
-        // ============================================================
-        function showStatCompare(stat) {
-            const labels = {
-                'goles': '3-2 en goles',
-                'tarjetas': '2-1 en tarjetas',
-                'faltas': '8-6 en faltas'
-            };
-            showToast('Comparativa', labels[stat]);
-        }
-
-        // ============================================================
-        // SISTEMA DE TOAST
-        // ============================================================
-        let toastTimeout;
         function showToast(title, subtitle) {
             const toast = document.getElementById('toast');
             const toastTitle = document.getElementById('toast-title');
             const toastSubtitle = document.getElementById('toast-subtitle');
-            
-            clearTimeout(toastTimeout);
-            
+            clearTimeout(window.toastTimeout);
             toastTitle.style.width = Math.min(title.length * 8, 200) + 'px';
             toastSubtitle.style.width = Math.min(subtitle.length * 6, 150) + 'px';
-            
             toast.style.opacity = '0.95';
             toast.style.transform = 'translateY(0)';
-            
-            toastTimeout = setTimeout(() => {
+            window.toastTimeout = setTimeout(() => {
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateY(-8px)';
             }, 3000);
         }
 
-        // ============================================================
-        // TECLADO (Escape para cerrar modal)
-        // ============================================================
+        function toggleAbsent(btn) {
+            const span = btn.querySelector('span');
+            if (btn.classList.contains('bg-gray-800')) {
+                btn.classList.remove('bg-gray-800');
+                btn.classList.add('bg-gray-300');
+                span.style.transform = 'translateX(-24px)';
+                showToast('Jugador ausente', 'Marcado como ausente (informativo)');
+            } else {
+                btn.classList.add('bg-gray-800');
+                btn.classList.remove('bg-gray-300');
+                span.style.transform = 'translateX(0)';
+                showToast('Jugador presente', 'Marcado como presente');
+            }
+        }
+
+        function toggleWalkoverResult(btn) {
+            const span = btn.querySelector('span');
+            const statsTable = document.getElementById('stats-table-container');
+            if (btn.classList.contains('bg-gray-300')) {
+                btn.classList.remove('bg-gray-300');
+                btn.classList.add('bg-gray-800');
+                span.style.transform = 'translateX(0)';
+                if (statsTable) statsTable.classList.add('hidden');
+                showToast('Walkover activado', 'Stats individuales ocultadas');
+            } else {
+                btn.classList.add('bg-gray-300');
+                btn.classList.remove('bg-gray-800');
+                span.style.transform = 'translateX(-24px)';
+                if (statsTable) statsTable.classList.remove('hidden');
+                showToast('Walkover desactivado', 'Stats individuales visibles');
+            }
+        }
+
+        function saveResult() {
+            openModal('result-confirm-modal', 'result-confirm-content');
+        }
+
+        function confirmResultSave() {
+            closeModal('result-confirm-modal', 'result-confirm-content');
+            setTimeout(() => {
+                showToast('Resultado guardado', 'PlayerStats, TeamStats y TournamentStanding recalculados. Notificacion enviada a capitanes.');
+            }, 300);
+        }
+
+        function closeResultConfirmModal() {
+            closeModal('result-confirm-modal', 'result-confirm-content');
+        }
+
+        function openPostponeModal() {
+            openModal('postpone-modal', 'postpone-modal-content');
+        }
+
+        function closePostponeModal() {
+            closeModal('postpone-modal', 'postpone-modal-content');
+        }
+
+        function confirmPostpone() {
+            closeModal('postpone-modal', 'postpone-modal-content');
+            showToast('Partido aplazado', 'Motivo registrado. Estado cambiado a POSTPONED');
+        }
+
+        function openRescheduleModal() {
+            openModal('reschedule-modal', 'reschedule-modal-content');
+        }
+
+        function closeRescheduleModal() {
+            closeModal('reschedule-modal', 'reschedule-modal-content');
+        }
+
+        function openWalkoverModal() {
+            openModal('walkover-modal', 'walkover-modal-content');
+        }
+
+        function closeWalkoverModal() {
+            closeModal('walkover-modal', 'walkover-modal-content');
+        }
+
+        function confirmWalkover() {
+            closeModal('walkover-modal', 'walkover-modal-content');
+            showToast('Walkover confirmado', 'Equipo ausente registrado. Sin estadisticas individuales.');
+        }
+
+        function openAssignRefereeModal() {
+            openModal('referee-modal', 'referee-modal-content');
+        }
+
+        function closeRefereeModal() {
+            closeModal('referee-modal', 'referee-modal-content');
+        }
+
+        function showMatchOptions() {
+            openModal('options-modal', 'options-modal-content');
+        }
+
+        function closeOptionsModal() {
+            closeModal('options-modal', 'options-modal-content');
+        }
+
+        function showNotifications() {
+            showToast('Notificaciones', '2 notificaciones no leidas');
+        }
+
+        function openModal(backdropId, contentId) {
+            const modal = document.getElementById(backdropId);
+            const content = document.getElementById(contentId);
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                content.style.transform = 'translateY(0)';
+            }, 10);
+        }
+
+        function closeModal(backdropId, contentId) {
+            const modal = document.getElementById(backdropId);
+            const content = document.getElementById(contentId);
+            modal.style.opacity = '0';
+            content.style.transform = 'translateY(100%)';
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function setupSwipeModal(backdropId, contentId, closeFn) {
+            let touchStartY = 0;
+            const content = document.getElementById(contentId);
+            if (content) {
+                content.addEventListener('touchstart', (e) => {
+                    touchStartY = e.touches[0].clientY;
+                }, { passive: true });
+                content.addEventListener('touchend', (e) => {
+                    const touchEndY = e.changedTouches[0].clientY;
+                    if (touchEndY - touchStartY > 80) {
+                        closeFn();
+                    }
+                }, { passive: true });
+            }
+        }
+
+        setupSwipeModal('options-modal', 'options-modal-content', closeOptionsModal);
+        setupSwipeModal('postpone-modal', 'postpone-modal-content', closePostponeModal);
+        setupSwipeModal('reschedule-modal', 'reschedule-modal-content', closeRescheduleModal);
+        setupSwipeModal('walkover-modal', 'walkover-modal-content', closeWalkoverModal);
+        setupSwipeModal('referee-modal', 'referee-modal-content', closeRefereeModal);
+        setupSwipeModal('result-confirm-modal', 'result-confirm-content', closeResultConfirmModal);
+
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeOptionsModal();
+            if (e.key === 'Escape') {
+                closeOptionsModal();
+                closePostponeModal();
+                closeRescheduleModal();
+                closeWalkoverModal();
+                closeRefereeModal();
+                closeResultConfirmModal();
+            }
         });
     </script>
 

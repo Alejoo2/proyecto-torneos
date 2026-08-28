@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Perfil del Jugador — Wireframe Low-Fidelity</title>
+    <title>Mi Perfil — Wireframe Low-Fidelity</title>
     <script src="https://cdn.tailwindcss.com"></script>
+<base target="_blank">
 </head>
 <body class="bg-gray-950 min-h-[100dvh] flex items-center justify-center">
 
     <!-- ============================================================ -->
-    <!-- APP SHELL: El "Móvil"                                          -->
+    <!-- APP SHELL                                                      -->
     <!-- ============================================================ -->
     <div class="w-full max-w-lg min-h-[100dvh] bg-white md:min-h-[90vh] md:my-[5vh] md:rounded-[2rem] md:border-[10px] md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col relative">
 
@@ -34,7 +35,7 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- HEADER: Sticky con botón de retroceso y título                 -->
+        <!-- HEADER: Sticky con flecha atrás + título + campana             -->
         <!-- ============================================================ -->
         <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
             <div class="flex items-center justify-between px-4 py-3">
@@ -44,13 +45,13 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                         </svg>
                     </a>
-                    <div class="h-4 bg-gray-800 rounded w-32"></div>
+                    <h1 class="text-lg font-semibold text-gray-800">Mi Perfil</h1>
                 </div>
-                <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px]" aria-label="Configuración" onclick="showSettings()">
+                <button id="notif-btn" class="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px]" aria-label="Notificaciones" onclick="showSettings()">
                     <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
                     </svg>
+                    <span id="notif-badge" class="absolute top-1 right-1 w-5 h-5 bg-gray-800 text-white text-[10px] font-bold rounded-full flex items-center justify-center hidden">0</span>
                 </button>
             </div>
         </header>
@@ -61,306 +62,170 @@
         <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden pb-24 opacity-0 transition-opacity duration-500">
 
             <!-- ============================================================ -->
-            <!-- PERFIL HEADER: Avatar + Nombre + Equipo                        -->
+            <!-- PERFIL HEADER: Avatar + Nombre + Bio + Equipos                 -->
             <!-- ============================================================ -->
             <div class="px-6 pt-6 pb-4 flex flex-col items-center">
-                <!-- Avatar grande con estado online -->
+                <!-- Avatar -->
                 <div class="relative mb-4">
-                    <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center border-4 border-gray-100">
+                    <div id="profile-avatar" class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center border-4 border-gray-100">
                         <div class="w-12 h-12 bg-gray-300 rounded-full"></div>
                     </div>
-                    <!-- Indicador online -->
-                    <div class="absolute bottom-1 right-1 w-6 h-6 bg-gray-400 rounded-full border-3 border-white"></div>
                 </div>
-                <!-- Nombre del jugador -->
-                <div class="h-5 bg-gray-800 rounded w-48 mb-2"></div>
-                <!-- Username / Posición -->
-                <div class="h-3 bg-gray-300 rounded w-32 mb-4"></div>
-                <!-- Badge de equipo actual -->
-                <a href="detalle_equipo_card_maestra.html" class="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer">
-                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
-                    <div class="h-3 bg-gray-600 rounded w-24"></div>
-                </a>
+                <!-- Nombre -->
+                <h2 id="profile-name" class="text-xl font-bold text-gray-800 mb-1">Juan Pérez</h2>
+                <!-- Bio -->
+                <p id="profile-bio" class="text-sm text-gray-500 text-center max-w-[280px] line-clamp-2 mb-4 cursor-pointer" onclick="toggleBio()">
+                    Jugador apasionado del microfútbol. Siempre listo para el próximo torneo.
+                </p>
+                <!-- Lista de equipos (horizontal scroll) -->
+                <div id="teams-list" class="flex items-center gap-2 overflow-x-auto w-full justify-center pb-1">
+                    <!-- Renderizado por JS -->
+                </div>
             </div>
 
             <!-- ============================================================ -->
-            <!-- SISTEMA DE PESTAÑAS (Tabs)                                     -->
+            <!-- SISTEMA DE PESTAÑAS (3 tabs)                                   -->
             <!-- ============================================================ -->
             <div class="px-6 mb-6">
                 <div class="bg-gray-100 rounded-2xl p-1.5 flex">
-                    <!-- Tab 1: Stats (Activo) -->
                     <button id="tab-btn-stats" class="flex-1 bg-gray-800 text-white py-3 rounded-xl text-sm font-medium transition-all min-h-[44px]" onclick="switchTab('stats')">
-                        <div class="h-3 bg-gray-400 rounded w-20 mx-auto"></div>
+                        Estadísticas
                     </button>
-                    <!-- Tab 2: Perfil -->
                     <button id="tab-btn-profile" class="flex-1 text-gray-500 py-3 rounded-xl text-sm font-medium hover:text-gray-700 transition-all min-h-[44px]" onclick="switchTab('profile')">
-                        <div class="h-3 bg-gray-300 rounded w-16 mx-auto"></div>
+                        Editar Perfil
                     </button>
-                    <!-- Tab 3: Horario -->
                     <button id="tab-btn-schedule" class="flex-1 text-gray-500 py-3 rounded-xl text-sm font-medium hover:text-gray-700 transition-all min-h-[44px]" onclick="switchTab('schedule')">
-                        <div class="h-3 bg-gray-300 rounded w-20 mx-auto"></div>
+                        Disponibilidad
                     </button>
                 </div>
             </div>
 
             <!-- ============================================================ -->
-            <!-- TAB 1: ESTADÍSTICAS Y SANCIONES (Visible por defecto)          -->
+            <!-- TAB 1: ESTADÍSTICAS (Activo por defecto)                       -->
             <!-- ============================================================ -->
             <div id="tab-stats" class="px-6 space-y-6">
 
-                <!-- Stats Grid Principal -->
+                <!-- Stats Grid (4 cards) -->
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-gray-100 rounded-2xl p-5 text-center hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer" onclick="showStatDetail('partidos')">
-                        <div class="h-3 bg-gray-300 rounded w-12 mx-auto mb-2"></div>
-                        <div class="h-8 bg-gray-800 rounded w-16 mx-auto mb-1"></div>
-                        <div class="h-2 bg-gray-300 rounded w-20 mx-auto"></div>
+                    <div class="bg-gray-100 rounded-2xl p-5 text-center hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer min-h-[120px]" onclick="showStatDetail('matchesWithStats')">
+                        <div class="text-3xl font-bold text-gray-800 mb-1" id="stat-matches">8</div>
+                        <div class="text-xs text-gray-500">Partidos con estadísticas</div>
                     </div>
-                    <div class="bg-gray-100 rounded-2xl p-5 text-center hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer" onclick="showStatDetail('goles')">
-                        <div class="h-3 bg-gray-300 rounded w-12 mx-auto mb-2"></div>
-                        <div class="h-8 bg-gray-800 rounded w-16 mx-auto mb-1"></div>
-                        <div class="h-2 bg-gray-300 rounded w-20 mx-auto"></div>
+                    <div class="bg-gray-100 rounded-2xl p-5 text-center hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer min-h-[120px]" onclick="showStatDetail('avgGoalsLast10')">
+                        <div class="text-3xl font-bold text-gray-800 mb-1" id="stat-goals">1.5</div>
+                        <div class="text-xs text-gray-500">Promedio goles últ. 10</div>
                     </div>
-                    <div class="bg-gray-100 rounded-2xl p-5 text-center hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer" onclick="showStatDetail('asistencias')">
-                        <div class="h-3 bg-gray-300 rounded w-12 mx-auto mb-2"></div>
-                        <div class="h-8 bg-gray-800 rounded w-16 mx-auto mb-1"></div>
-                        <div class="h-2 bg-gray-300 rounded w-20 mx-auto"></div>
+                    <div class="bg-gray-100 rounded-2xl p-5 text-center hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer min-h-[120px] relative group" onclick="showStatDetail('fairPlay')">
+                        <div class="text-3xl font-bold text-gray-800 mb-1" id="stat-fairplay">1.1</div>
+                        <div class="text-xs text-gray-500">Puntaje Fair Play</div>
+                        <div class="text-[10px] text-gray-400 mt-1">(menor = mejor)</div>
+                        <!-- Tooltip -->
+                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 bg-gray-800 text-white text-xs rounded-xl p-3 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg">
+                            <p class="font-medium mb-1">Fórmula Fair Play:</p>
+                            <p class="text-gray-300">(A×1 + R×3 + Az×0.5 + F×0.25) / partidos</p>
+                        </div>
                     </div>
-                    <div class="bg-gray-100 rounded-2xl p-5 text-center hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer" onclick="showStatDetail('rating')">
-                        <div class="h-3 bg-gray-300 rounded w-12 mx-auto mb-2"></div>
-                        <div class="h-8 bg-gray-800 rounded w-16 mx-auto mb-1"></div>
-                        <div class="h-2 bg-gray-300 rounded w-20 mx-auto"></div>
+                    <div class="bg-gray-100 rounded-2xl p-5 text-center hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer min-h-[120px]" onclick="showStatDetail('cards')">
+                        <div class="text-3xl font-bold text-gray-800 mb-1" id="stat-cards">3</div>
+                        <div class="text-xs text-gray-500">Tarjetas últ. 10 partidos</div>
                     </div>
                 </div>
 
-                <!-- Gráfico de Rendimiento (Placeholder) -->
+                <!-- Historial de Partidos con Stats -->
                 <div>
-                    <div class="h-4 bg-gray-800 rounded w-32 mb-4"></div>
-                    <div class="bg-gray-100 rounded-2xl p-6 h-48 flex items-end justify-around gap-2">
-                        <div class="w-8 bg-gray-300 rounded-t-lg hover:bg-gray-400 transition-colors cursor-pointer" style="height: 60%" onclick="showBarDetail('Sem 1', '60%')"></div>
-                        <div class="w-8 bg-gray-400 rounded-t-lg hover:bg-gray-500 transition-colors cursor-pointer" style="height: 80%" onclick="showBarDetail('Sem 2', '80%')"></div>
-                        <div class="w-8 bg-gray-300 rounded-t-lg hover:bg-gray-400 transition-colors cursor-pointer" style="height: 45%" onclick="showBarDetail('Sem 3', '45%')"></div>
-                        <div class="w-8 bg-gray-500 rounded-t-lg hover:bg-gray-600 transition-colors cursor-pointer" style="height: 90%" onclick="showBarDetail('Sem 4', '90%')"></div>
-                        <div class="w-8 bg-gray-300 rounded-t-lg hover:bg-gray-400 transition-colors cursor-pointer" style="height: 70%" onclick="showBarDetail('Sem 5', '70%')"></div>
-                        <div class="w-8 bg-gray-300 rounded-t-lg hover:bg-gray-400 transition-colors cursor-pointer" style="height: 55%" onclick="showBarDetail('Sem 6', '55%')"></div>
-                        <div class="w-8 bg-gray-400 rounded-t-lg hover:bg-gray-500 transition-colors cursor-pointer" style="height: 75%" onclick="showBarDetail('Sem 7', '75%')"></div>
-                    </div>
-                </div>
-
-                <!-- Sección: Sanciones -->
-                <div>
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="h-4 bg-gray-800 rounded w-24"></div>
-                        <div class="h-3 bg-gray-400 rounded w-16"></div>
-                    </div>
-
-                    <!-- Tarjetas acumuladas -->
-                    <div class="bg-gray-100 rounded-2xl p-5 mb-4">
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="h-3 bg-gray-600 rounded w-32"></div>
-                            <div class="h-3 bg-gray-400 rounded w-12"></div>
-                        </div>
-                        <div class="flex gap-3">
-                            <div class="w-10 h-14 bg-gray-300 rounded-lg"></div>
-                            <div class="w-10 h-14 bg-gray-300 rounded-lg"></div>
-                            <div class="w-10 h-14 bg-gray-200 rounded-lg border-2 border-dashed border-gray-300"></div>
-                            <div class="w-10 h-14 bg-gray-200 rounded-lg border-2 border-dashed border-gray-300"></div>
-                            <div class="w-10 h-14 bg-gray-200 rounded-lg border-2 border-dashed border-gray-300"></div>
-                        </div>
-                    </div>
-
-                    <!-- Suspensiones activas -->
-                    <div class="bg-gray-100 rounded-2xl p-5">
-                        <div class="h-3 bg-gray-600 rounded w-40 mb-3"></div>
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                                <div class="w-5 h-5 bg-gray-400 rounded"></div>
-                            </div>
-                            <div class="flex-1">
-                                <div class="h-3 bg-gray-800 rounded w-48 mb-1"></div>
-                                <div class="h-2 bg-gray-300 rounded w-32"></div>
-                            </div>
-                            <div class="bg-gray-800 text-white px-3 py-1 rounded-full">
-                                <div class="h-2 bg-gray-400 rounded w-12"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Historial de Partidos Recientes -->
-                <div>
-                    <div class="h-4 bg-gray-800 rounded w-40 mb-4"></div>
-                    <div class="space-y-3">
-                        <a href="detalle_partido_vs.html" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer block">
-                            <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
-                                <div class="w-6 h-6 bg-gray-300 rounded"></div>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="h-3 bg-gray-800 rounded w-40 mb-1"></div>
-                                <div class="h-2 bg-gray-300 rounded w-24"></div>
-                            </div>
-                            <div class="h-5 bg-gray-800 rounded w-16"></div>
-                        </a>
-                        <a href="detalle_partido_vs.html" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer block">
-                            <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
-                                <div class="w-6 h-6 bg-gray-300 rounded"></div>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="h-3 bg-gray-800 rounded w-36 mb-1"></div>
-                                <div class="h-2 bg-gray-300 rounded w-24"></div>
-                            </div>
-                            <div class="h-5 bg-gray-800 rounded w-16"></div>
-                        </a>
-                        <a href="detalle_partido_vs.html" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer block">
-                            <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
-                                <div class="w-6 h-6 bg-gray-300 rounded"></div>
-                            </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="h-3 bg-gray-800 rounded w-44 mb-1"></div>
-                                <div class="h-2 bg-gray-300 rounded w-24"></div>
-                            </div>
-                            <div class="h-5 bg-gray-800 rounded w-16"></div>
-                        </a>
+                    <h3 class="text-sm font-semibold text-gray-800 mb-4">Historial de Partidos</h3>
+                    <div id="matches-list" class="space-y-3">
+                        <!-- Renderizado por JS -->
                     </div>
                 </div>
             </div>
 
             <!-- ============================================================ -->
-            <!-- TAB 2: EDICIÓN DE PERFIL (Oculto por defecto)                  -->
+            <!-- TAB 2: EDITAR PERFIL (Oculto por defecto)                      -->
             <!-- ============================================================ -->
             <div id="tab-profile" class="px-6 space-y-6 hidden">
-                <!-- Avatar editable -->
-                <div class="flex flex-col items-center">
-                    <div class="relative group cursor-pointer" onclick="changeAvatar()">
-                        <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center border-4 border-gray-100 group-hover:bg-gray-300 transition-colors">
-                            <div class="w-12 h-12 bg-gray-300 rounded-full group-hover:bg-gray-400 transition-colors"></div>
-                        </div>
-                        <button class="absolute bottom-0 right-0 w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center shadow-lg hover:bg-gray-700 active:bg-gray-900 transition-colors">
-                            <div class="w-4 h-4 bg-gray-400 rounded"></div>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Formulario -->
                 <form id="profile-form" class="space-y-4" onsubmit="handleProfileSave(event)">
-                    <!-- Nombre completo -->
+                    <!-- displayName -->
                     <div class="space-y-2">
-                        <div class="h-3 bg-gray-400 rounded w-28"></div>
+                        <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Nombre</label>
                         <div class="w-full h-14 bg-gray-100 rounded-xl border-2 border-gray-200 flex items-center px-4 focus-within:border-gray-400 transition-colors">
-                            <input type="text" value="Juan Pérez" class="w-full bg-transparent outline-none text-gray-800 placeholder-gray-400">
+                            <input type="text" id="input-displayName" value="Juan Pérez" maxlength="50" required class="w-full bg-transparent outline-none text-gray-800 placeholder-gray-400 text-sm">
                         </div>
                     </div>
 
-                    <!-- Nombre de usuario -->
+                    <!-- phone -->
                     <div class="space-y-2">
-                        <div class="h-3 bg-gray-400 rounded w-32"></div>
+                        <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Teléfono</label>
                         <div class="w-full h-14 bg-gray-100 rounded-xl border-2 border-gray-200 flex items-center px-4 focus-within:border-gray-400 transition-colors">
-                            <input type="text" value="@juanp" class="w-full bg-transparent outline-none text-gray-800 placeholder-gray-400">
+                            <input type="tel" id="input-phone" value="+57 300 123 4567" maxlength="20" class="w-full bg-transparent outline-none text-gray-800 placeholder-gray-400 text-sm">
                         </div>
                     </div>
 
-                    <!-- Posición -->
+                    <!-- bio -->
                     <div class="space-y-2">
-                        <div class="h-3 bg-gray-400 rounded w-20"></div>
-                        <div class="w-full h-14 bg-gray-100 rounded-xl border-2 border-gray-200 flex items-center px-4 focus-within:border-gray-400 transition-colors">
-                            <select class="w-full bg-transparent outline-none text-gray-800 appearance-none cursor-pointer">
-                                <option>Delantero</option>
-                                <option>Mediocampista</option>
-                                <option>Defensa</option>
-                                <option>Portero</option>
-                            </select>
+                        <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Biografía</label>
+                        <div class="w-full bg-gray-100 rounded-xl border-2 border-gray-200 p-4 focus-within:border-gray-400 transition-colors">
+                            <textarea id="input-bio" maxlength="500" rows="3" class="w-full bg-transparent outline-none resize-none text-gray-800 placeholder-gray-400 text-sm">Jugador apasionado del microfútbol. Siempre listo para el próximo torneo.</textarea>
                         </div>
                     </div>
 
-                    <!-- Número de camiseta -->
+                    <!-- birthDate -->
                     <div class="space-y-2">
-                        <div class="h-3 bg-gray-400 rounded w-36"></div>
+                        <label class="text-xs font-medium text-gray-500 uppercase tracking-wide">Fecha de nacimiento</label>
                         <div class="w-full h-14 bg-gray-100 rounded-xl border-2 border-gray-200 flex items-center px-4 focus-within:border-gray-400 transition-colors">
-                            <input type="number" value="10" min="1" max="99" class="w-full bg-transparent outline-none text-gray-800 placeholder-gray-400">
-                        </div>
-                    </div>
-
-                    <!-- Biografía -->
-                    <div class="space-y-2">
-                        <div class="h-3 bg-gray-400 rounded w-20"></div>
-                        <div class="w-full h-32 bg-gray-100 rounded-xl border-2 border-gray-200 p-4 focus-within:border-gray-400 transition-colors">
-                            <textarea class="w-full h-full bg-transparent outline-none resize-none text-gray-800 placeholder-gray-400">Jugador apasionado del fútbol sala. Siempre listo para el próximo torneo.</textarea>
+                            <input type="date" id="input-birthDate" value="1995-03-15" class="w-full bg-transparent outline-none text-gray-800 placeholder-gray-400 text-sm">
                         </div>
                     </div>
 
                     <!-- Botón Guardar -->
                     <button type="submit" id="profile-submit" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px] relative overflow-hidden mt-6">
-                        <div class="h-4 bg-gray-400 rounded w-24 mx-auto"></div>
+                        <span id="profile-submit-text">Guardar cambios</span>
                         <span class="absolute inset-0 bg-white/20 scale-0 rounded-2xl transition-transform duration-300" id="profile-ripple"></span>
                     </button>
                 </form>
             </div>
 
             <!-- ============================================================ -->
-            <!-- TAB 3: DISPONIBILIDAD DE HORARIOS (Oculto por defecto)         -->
+            <!-- TAB 3: DISPONIBILIDAD HORARIA (Oculto por defecto)             -->
             <!-- ============================================================ -->
             <div id="tab-schedule" class="px-6 hidden">
-                <!-- Header con título y botón guardar -->
-                <div class="flex items-center justify-between mb-4">
-                    <div class="h-4 bg-gray-800 rounded w-40"></div>
-                    <button id="save-schedule-btn" class="bg-gray-800 text-white px-4 py-2 rounded-xl hover:bg-gray-700 active:bg-gray-900 transition-colors min-h-[44px]" onclick="saveSchedule()">
-                        <div class="h-3 bg-gray-400 rounded w-16"></div>
-                    </button>
+                <!-- Header -->
+                <div class="mb-4">
+                    <h3 class="text-sm font-semibold text-gray-800 mb-1">Mi Disponibilidad</h3>
+                    <p class="text-xs text-gray-500">Toca para marcar cuando NO puedes jugar. Todo lo demás está disponible.</p>
                 </div>
 
-                <!-- Instrucciones -->
-                <div class="h-3 bg-gray-300 rounded w-full mb-2"></div>
-                <div class="h-3 bg-gray-300 rounded w-2/3 mb-6"></div>
-
-                <!-- Contador de slots seleccionados -->
-                <div class="bg-gray-100 rounded-2xl p-4 mb-4 flex items-center justify-between">
-                    <div class="h-3 bg-gray-600 rounded w-32"></div>
-                    <div class="bg-gray-800 text-white px-3 py-1 rounded-full text-sm font-medium">
-                        <span id="slot-counter">0</span> slots
+                <!-- Matriz 7×12 -->
+                <div class="bg-gray-100 rounded-2xl p-3 overflow-x-auto">
+                    <div id="schedule-grid" class="min-w-[520px]">
+                        <!-- Header de días -->
+                        <div class="grid grid-cols-8 gap-1 mb-1">
+                            <div class="h-8"></div>
+                            <div class="h-8 flex items-center justify-center text-[10px] font-medium text-gray-500">Dom</div>
+                            <div class="h-8 flex items-center justify-center text-[10px] font-medium text-gray-500">Lun</div>
+                            <div class="h-8 flex items-center justify-center text-[10px] font-medium text-gray-500">Mar</div>
+                            <div class="h-8 flex items-center justify-center text-[10px] font-medium text-gray-500">Mié</div>
+                            <div class="h-8 flex items-center justify-center text-[10px] font-medium text-gray-500">Jue</div>
+                            <div class="h-8 flex items-center justify-center text-[10px] font-medium text-gray-500">Vie</div>
+                            <div class="h-8 flex items-center justify-center text-[10px] font-medium text-gray-500">Sáb</div>
+                        </div>
+                        <!-- Filas generadas por JS -->
                     </div>
-                </div>
-
-                <!-- Grid de disponibilidad -->
-                <div class="bg-gray-100 rounded-2xl p-4 overflow-x-auto">
-                    <!-- Header de días -->
-                    <div class="grid grid-cols-8 gap-1 mb-2 min-w-[500px]">
-                        <div class="h-8"></div>
-                        <div class="h-8 bg-gray-200 rounded-lg flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-6"></div></div>
-                        <div class="h-8 bg-gray-200 rounded-lg flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-8"></div></div>
-                        <div class="h-8 bg-gray-200 rounded-lg flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-8"></div></div>
-                        <div class="h-8 bg-gray-200 rounded-lg flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-10"></div></div>
-                        <div class="h-8 bg-gray-200 rounded-lg flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-6"></div></div>
-                        <div class="h-8 bg-gray-200 rounded-lg flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-8"></div></div>
-                        <div class="h-8 bg-gray-200 rounded-lg flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-8"></div></div>
-                    </div>
-
-                    <!-- Filas de horarios generadas por JS -->
-                    <div id="schedule-grid"></div>
                 </div>
 
                 <!-- Leyenda -->
-                <div class="flex items-center justify-center gap-6 mt-4">
-                    <div class="flex items-center gap-2">
-                        <div class="w-4 h-4 bg-gray-300 rounded"></div>
-                        <div class="h-2 bg-gray-400 rounded w-16"></div>
+                <div class="flex items-center justify-center gap-4 mt-4 flex-wrap">
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-3 h-3 bg-green-100 rounded border border-green-200"></div>
+                        <span class="text-[10px] text-gray-500">Disponible</span>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <div class="w-4 h-4 bg-white border-2 border-gray-200 rounded"></div>
-                        <div class="h-2 bg-gray-400 rounded w-20"></div>
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-3 h-3 bg-gray-300 rounded border border-gray-400"></div>
+                        <span class="text-[10px] text-gray-500">No disponible</span>
                     </div>
-                </div>
-            </div>
-
-            <!-- ============================================================ -->
-            <!-- NOTIFICACIÓN CONTEXTUAL INFERIOR                               -->
-            <!-- ============================================================ -->
-            <div class="px-6 mt-6 mb-8">
-                <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
-                        <div class="w-5 h-5 bg-gray-400 rounded"></div>
-                    </div>
-                    <div class="flex-1">
-                        <div class="h-3 bg-gray-600 rounded w-48 mb-1"></div>
-                        <div class="h-2 bg-gray-300 rounded w-32"></div>
+                    <div class="flex items-center gap-1.5">
+                        <div class="w-3 h-3 bg-yellow-100 rounded border border-yellow-300"></div>
+                        <span class="text-[10px] text-gray-500">Conflicto (partido)</span>
                     </div>
                 </div>
             </div>
@@ -373,20 +238,28 @@
         <nav class="absolute bottom-0 w-full z-50 bg-white border-t border-gray-200" style="padding-bottom: env(safe-area-inset-bottom);">
             <div class="grid grid-cols-4 h-16">
                 <a href="hub_mapa_principal.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Inicio">
-                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
-                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+                    </svg>
+                    <span class="text-[10px]">Inicio</span>
                 </a>
-                <a href="detalle_equipo_card_maestra.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Equipo">
-                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
-                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                <a href="lista_equipos.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Equipo">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <span class="text-[10px]">Equipo</span>
                 </a>
-                <a href="detalle_torneo.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Torneos">
-                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
-                    <div class="h-2 bg-gray-300 rounded w-10"></div>
+                <a href="lista_torneos.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Torneos">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                    </svg>
+                    <span class="text-[10px]">Torneos</span>
                 </a>
                 <button class="flex flex-col items-center justify-center gap-1 text-gray-800 min-h-[44px]" aria-label="Perfil">
-                    <div class="w-6 h-6 bg-gray-800 rounded-full"></div>
-                    <div class="h-2 bg-gray-800 rounded w-10"></div>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                    </svg>
+                    <span class="text-[10px] font-medium">Perfil</span>
                 </button>
             </div>
         </nav>
@@ -397,17 +270,19 @@
         <div id="toast" class="absolute top-20 left-4 right-4 z-[70] pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
             <div class="bg-gray-800 text-white px-4 py-3 rounded-2xl shadow-lg flex items-center gap-3">
                 <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center shrink-0">
-                    <div class="w-4 h-4 bg-gray-400 rounded"></div>
+                    <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
                 </div>
-                <div class="flex-1">
-                    <div class="h-3 bg-gray-400 rounded w-3/4 mb-1" id="toast-title"></div>
-                    <div class="h-2 bg-gray-500 rounded w-1/2" id="toast-subtitle"></div>
+                <div class="flex-1 min-w-0">
+                    <p id="toast-title" class="text-sm font-medium truncate"></p>
+                    <p id="toast-subtitle" class="text-xs text-gray-400 truncate"></p>
                 </div>
             </div>
         </div>
 
         <!-- ============================================================ -->
-        <!-- OVERLAY DE CARGA PARA GUARDAR                                  -->
+        <!-- OVERLAY DE CARGA                                               -->
         <!-- ============================================================ -->
         <div id="save-loading" class="absolute inset-0 z-[60] bg-white/90 backdrop-blur-sm flex flex-col items-center justify-center gap-4 hidden">
             <div class="w-16 h-16 bg-gray-200 rounded-2xl animate-pulse"></div>
@@ -421,32 +296,177 @@
     <!-- ============================================================ -->
     <script>
         // ============================================================
+        // ESTADO SIMULADO DEL JUGADOR
+        // ============================================================
+        const mockPlayer = {
+            profile: {
+                displayName: "Juan Pérez",
+                phone: "+57 300 123 4567",
+                bio: "Jugador apasionado del microfútbol. Siempre listo para el próximo torneo.",
+                birthDate: "1995-03-15",
+                image: null
+            },
+            teams: [
+                { id: "t1", name: "Los Pibes", abbreviation: "LSP", primaryColor: "#FF5733", isCaptain: true },
+                { id: "t2", name: "FC Central", abbreviation: "FCC", primaryColor: "#33FF57", isCaptain: false }
+            ],
+            stats: {
+                matchesWithStats: 8,
+                totalGoals: 12,
+                avgGoalsLast10: 1.5,
+                totalBlueCardsLast10: 1,
+                totalYellowCardsLast10: 2,
+                totalRedCardsLast10: 0,
+                totalFoulsLast10: 5,
+                fairPlayScore: 1.125
+            },
+            availability: {},
+            matches: [
+                { id: "m1", tournament: "Copa Barrial 2026", phase: "Octavos", date: "2026-08-20", hasStats: true },
+                { id: "m2", tournament: "Copa Barrial 2026", phase: "Cuartos", date: "2026-08-27", hasStats: false },
+                { id: "m3", tournament: "Liga de Verano", phase: "Jornada 5", date: "2026-08-15", hasStats: true },
+                { id: "m4", tournament: "Liga de Verano", phase: "Jornada 4", date: "2026-08-08", hasStats: true },
+                { id: "m5", tournament: "Copa Barrial 2026", phase: "Fase de grupos", date: "2026-07-30", hasStats: true }
+            ]
+        };
+
+        // Generar availability (84 slots: 12 horas × 7 días)
+        // Estados: AVAILABLE (default), UNAVAILABLE (toggle por usuario), CONFLICT (partido programado)
+        const scheduleState = {};
+        const conflicts = new Set(); // slots con partido programado
+
+        function initAvailability() {
+            for (let h = 0; h < 12; h++) {
+                for (let d = 0; d < 7; d++) {
+                    const key = `${h}-${d}`;
+                    // Simular algunos UNAVAILABLE aleatorios
+                    if (Math.random() < 0.15) {
+                        scheduleState[key] = 'UNAVAILABLE';
+                    } else {
+                        scheduleState[key] = 'AVAILABLE';
+                    }
+                }
+            }
+            // Simular algunos CONFLICTS (partidos en franjas específicas)
+            // Ej: Sábado 14-16h (h=7, d=6), Domingo 18-20h (h=9, d=0)
+            conflicts.add('7-6');
+            conflicts.add('9-0');
+            conflicts.add('5-3');
+            conflicts.add('8-5');
+        }
+
+        // ============================================================
         // ESTADO GLOBAL
         // ============================================================
         let currentTab = 'stats';
-        let selectedSlots = 0;
-        const scheduleState = {};
+        let bioExpanded = false;
 
         // ============================================================
         // CARGA INICIAL
         // ============================================================
         document.addEventListener('DOMContentLoaded', () => {
-            // Generar grid de horarios
+            initAvailability();
+            renderTeams();
+            renderStats();
+            renderMatches();
             generateScheduleGrid();
-            
-            // Mostrar skeleton por 1s
+            startNotificationPolling();
+
+            // Skeleton fade out a los 800ms
             setTimeout(() => {
                 const appLoading = document.getElementById('app-loading');
                 const mainContent = document.getElementById('main-content');
-                
                 appLoading.style.opacity = '0';
                 mainContent.style.opacity = '1';
-                
-                setTimeout(() => {
-                    appLoading.style.display = 'none';
-                }, 500);
-            }, 1000);
+                setTimeout(() => { appLoading.style.display = 'none'; }, 500);
+            }, 800);
         });
+
+        // ============================================================
+        // RENDER: Equipos
+        // ============================================================
+        function renderTeams() {
+            const container = document.getElementById('teams-list');
+            const teams = mockPlayer.teams;
+
+            if (teams.length === 0) {
+                container.innerHTML = '<span class="text-sm text-gray-400">Sin equipo</span>';
+                return;
+            }
+
+            const visibleTeams = teams.slice(0, 3);
+            const remaining = teams.length - 3;
+
+            let html = visibleTeams.map(t => `
+                <a href="detalle_equipo.html?id=${t.id}" class="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full hover:bg-gray-200 active:bg-gray-300 transition-colors shrink-0">
+                    <div class="w-4 h-4 rounded-full" style="background-color: ${t.primaryColor}"></div>
+                    <span class="text-xs font-medium text-gray-700">${t.abbreviation}</span>
+                    ${t.isCaptain ? '<span class="text-xs">⭐</span>' : ''}
+                </a>
+            `).join('');
+
+            if (remaining > 0) {
+                html += `<span class="flex items-center gap-1.5 bg-gray-100 px-3 py-1.5 rounded-full shrink-0 text-xs font-medium text-gray-500">+${remaining}</span>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        // ============================================================
+        // RENDER: Stats
+        // ============================================================
+        function renderStats() {
+            document.getElementById('stat-matches').textContent = mockPlayer.stats.matchesWithStats;
+            document.getElementById('stat-goals').textContent = mockPlayer.stats.avgGoalsLast10;
+            document.getElementById('stat-fairplay').textContent = mockPlayer.stats.fairPlayScore.toFixed(3);
+            const cards = mockPlayer.stats.totalYellowCardsLast10 + mockPlayer.stats.totalRedCardsLast10 + mockPlayer.stats.totalBlueCardsLast10;
+            document.getElementById('stat-cards').textContent = cards;
+        }
+
+        // ============================================================
+        // RENDER: Historial de Partidos
+        // ============================================================
+        function renderMatches() {
+            const container = document.getElementById('matches-list');
+            const matches = mockPlayer.matches.slice(0, 10);
+
+            if (matches.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-gray-50 rounded-2xl p-6 text-center">
+                        <p class="text-sm text-gray-400">Aún no tienes partidos con estadísticas cargadas</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = matches.map(m => `
+                <a href="detalle_partido_vs.html?matchId=${m.id}" class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer block">
+                    <div class="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center shrink-0">
+                        <div class="w-4 h-4 bg-gray-300 rounded"></div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-800 truncate">${m.tournament} — ${m.phase}</p>
+                        <p class="text-xs text-gray-400">${m.date}</p>
+                    </div>
+                    <span class="text-[10px] font-medium px-2 py-1 rounded-full ${m.hasStats ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500'}">
+                        ${m.hasStats ? 'Stats cargadas' : 'Sin stats'}
+                    </span>
+                </a>
+            `).join('');
+        }
+
+        // ============================================================
+        // BIO: Toggle expand
+        // ============================================================
+        function toggleBio() {
+            const bioEl = document.getElementById('profile-bio');
+            bioExpanded = !bioExpanded;
+            if (bioExpanded) {
+                bioEl.classList.remove('line-clamp-2');
+            } else {
+                bioEl.classList.add('line-clamp-2');
+            }
+        }
 
         // ============================================================
         // NAVEGACIÓN DE TABS
@@ -454,122 +474,103 @@
         function switchTab(tab) {
             if (tab === currentTab) return;
             currentTab = tab;
-            
-            // Resetear tabs
+
             const tabs = ['stats', 'profile', 'schedule'];
             tabs.forEach(t => {
                 const btn = document.getElementById(`tab-btn-${t}`);
                 const content = document.getElementById(`tab-${t}`);
-                
+
                 if (t === tab) {
                     btn.classList.remove('text-gray-500');
                     btn.classList.add('bg-gray-800', 'text-white');
-                    btn.querySelector('div').classList.remove('bg-gray-300');
-                    btn.querySelector('div').classList.add('bg-gray-400');
                     content.classList.remove('hidden');
-                    // Animación de entrada
                     content.style.opacity = '0';
                     content.style.transform = 'translateY(10px)';
-                    setTimeout(() => {
+                    requestAnimationFrame(() => {
+                        content.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
                         content.style.opacity = '1';
                         content.style.transform = 'translateY(0)';
-                    }, 50);
+                    });
                 } else {
                     btn.classList.remove('bg-gray-800', 'text-white');
                     btn.classList.add('text-gray-500');
-                    btn.querySelector('div').classList.remove('bg-gray-400');
-                    btn.querySelector('div').classList.add('bg-gray-300');
                     content.classList.add('hidden');
                 }
             });
-            
+
             if (navigator.vibrate) navigator.vibrate(30);
         }
 
         // ============================================================
-        // GENERAR GRID DE HORARIOS
+        // GENERAR GRID DE HORARIOS (7×12)
         // ============================================================
         function generateScheduleGrid() {
             const grid = document.getElementById('schedule-grid');
-            const hours = ['00:00', '02:00', '04:00', '06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'];
-            
-            hours.forEach((hour, idx) => {
+            const hours = ['00-02', '02-04', '04-06', '06-08', '08-10', '10-12', '12-14', '14-16', '16-18', '18-20', '20-22', '22-00'];
+
+            hours.forEach((hourLabel, h) => {
                 const row = document.createElement('div');
-                row.className = 'grid grid-cols-8 gap-1 mb-1 min-w-[500px]';
-                
+                row.className = 'grid grid-cols-8 gap-1 mb-1';
+
                 // Celda de hora
                 const hourCell = document.createElement('div');
-                hourCell.className = 'h-10 bg-gray-200 rounded-lg flex items-center justify-center';
-                hourCell.innerHTML = `<div class="h-2 bg-gray-400 rounded w-10"></div>`;
+                hourCell.className = 'h-10 flex items-center justify-center text-[10px] text-gray-400 font-mono';
+                hourCell.textContent = hourLabel;
                 row.appendChild(hourCell);
-                
+
                 // 7 días
-                for (let day = 0; day < 7; day++) {
+                for (let d = 0; d < 7; d++) {
+                    const key = `${h}-${d}`;
                     const cell = document.createElement('div');
-                    const key = `${idx}-${day}`;
-                    const isAvailable = Math.random() > 0.5;
-                    scheduleState[key] = isAvailable;
-                    
-                    cell.className = `h-10 rounded-lg cursor-pointer transition-all duration-200 min-w-[44px] min-h-[44px] ${
-                        isAvailable 
-                            ? 'bg-gray-300 hover:bg-gray-400 active:bg-gray-500' 
-                            : 'bg-white border-2 border-gray-200 hover:bg-gray-50 active:bg-gray-100'
-                    }`;
+                    const isConflict = conflicts.has(key);
+                    const state = isConflict ? 'CONFLICT' : scheduleState[key];
+
+                    let bgClass = 'bg-green-100';
+                    if (state === 'UNAVAILABLE') bgClass = 'bg-gray-300';
+                    if (state === 'CONFLICT') bgClass = 'bg-yellow-100';
+
+                    cell.className = `h-10 rounded-lg transition-all duration-200 min-w-[44px] min-h-[44px] ${bgClass} ${isConflict ? 'cursor-not-allowed opacity-80' : 'cursor-pointer hover:opacity-80 active:opacity-60'}`;
                     cell.dataset.key = key;
-                    cell.onclick = () => toggleSlot(cell, key);
+                    cell.dataset.state = state;
+
+                    if (!isConflict) {
+                        cell.onclick = () => toggleSlot(cell, key);
+                    }
+
                     row.appendChild(cell);
                 }
-                
+
                 grid.appendChild(row);
             });
-            
-            updateSlotCounter();
         }
 
         // ============================================================
-        // TOGGLE SLOT DE HORARIO (Optimistic UI)
+        // TOGGLE SLOT (Optimistic UI)
         // ============================================================
         function toggleSlot(cell, key) {
-            const isAvailable = !scheduleState[key];
-            scheduleState[key] = isAvailable;
-            
-            // Feedback táctil inmediato
+            const currentState = scheduleState[key];
+            const newState = currentState === 'AVAILABLE' ? 'UNAVAILABLE' : 'AVAILABLE';
+
+            // Optimistic: cambio inmediato
+            scheduleState[key] = newState;
+            cell.classList.remove('bg-green-100', 'bg-gray-300');
+            cell.classList.add(newState === 'AVAILABLE' ? 'bg-green-100' : 'bg-gray-300');
+            cell.dataset.state = newState;
+
             if (navigator.vibrate) navigator.vibrate(20);
-            
-            // Cambio visual instantáneo
-            if (isAvailable) {
-                cell.classList.remove('bg-white', 'border-2', 'border-gray-200');
-                cell.classList.add('bg-gray-300');
-            } else {
-                cell.classList.remove('bg-gray-300');
-                cell.classList.add('bg-white', 'border-2', 'border-gray-200');
-            }
-            
-            updateSlotCounter();
-        }
 
-        // ============================================================
-        // CONTADOR DE SLOTS
-        // ============================================================
-        function updateSlotCounter() {
-            selectedSlots = Object.values(scheduleState).filter(v => v).length;
-            document.getElementById('slot-counter').textContent = selectedSlots;
-        }
-
-        // ============================================================
-        // GUARDAR HORARIO
-        // ============================================================
-        function saveSchedule() {
-            const btn = document.getElementById('save-schedule-btn');
-            const overlay = document.getElementById('save-loading');
-            
-            // Mostrar carga
-            overlay.classList.remove('hidden');
-            
+            // Simular mutación en background
             setTimeout(() => {
-                overlay.classList.add('hidden');
-                showToast('Horario guardado', `${selectedSlots} slots de disponibilidad actualizados`);
-            }, 1500);
+                // 95% éxito, 5% fallo simulado
+                if (Math.random() < 0.05) {
+                    // Revert
+                    scheduleState[key] = currentState;
+                    cell.classList.remove('bg-green-100', 'bg-gray-300');
+                    cell.classList.add(currentState === 'AVAILABLE' ? 'bg-green-100' : 'bg-gray-300');
+                    cell.dataset.state = currentState;
+                    showToast('Error', 'No se pudo actualizar la disponibilidad');
+                }
+            }, 300);
         }
 
         // ============================================================
@@ -578,16 +579,24 @@
         function handleProfileSave(e) {
             e.preventDefault();
             const overlay = document.getElementById('save-loading');
-            
-            // Ripple effect
             const ripple = document.getElementById('profile-ripple');
+
+            // Ripple effect
             ripple.style.transform = 'scale(1)';
             setTimeout(() => ripple.style.transform = 'scale(0)', 300);
-            
+
             overlay.classList.remove('hidden');
-            
+
             setTimeout(() => {
                 overlay.classList.add('hidden');
+                // Actualizar datos simulados
+                mockPlayer.profile.displayName = document.getElementById('input-displayName').value;
+                mockPlayer.profile.phone = document.getElementById('input-phone').value;
+                mockPlayer.profile.bio = document.getElementById('input-bio').value;
+                mockPlayer.profile.birthDate = document.getElementById('input-birthDate').value;
+                // Actualizar UI
+                document.getElementById('profile-name').textContent = mockPlayer.profile.displayName;
+                document.getElementById('profile-bio').textContent = mockPlayer.profile.bio;
                 showToast('Perfil actualizado', 'Tus cambios se han guardado correctamente');
             }, 1500);
         }
@@ -597,23 +606,34 @@
         // ============================================================
         function showStatDetail(stat) {
             const labels = {
-                'partidos': '24 partidos jugados',
-                'goles': '18 goles anotados',
-                'asistencias': '12 asistencias',
-                'rating': '4.2 de 5.0 estrellas'
+                'matchesWithStats': ['Partidos con estadísticas', 'Total de partidos donde se cargaron tus stats'],
+                'avgGoalsLast10': ['Promedio de goles', 'Promedio de goles en tus últimos 10 partidos con stats'],
+                'fairPlay': ['Puntaje Fair Play', 'Fórmula: (A×1 + R×3 + Az×0.5 + F×0.25) / partidos. Menor = mejor.'],
+                'cards': ['Tarjetas acumuladas', 'Suma de tarjetas amarillas, rojas y azules en últimos 10 partidos']
             };
-            showToast('Estadística', labels[stat]);
-        }
-
-        function showBarDetail(week, value) {
-            showToast(`Semana ${week}`, `Rendimiento: ${value}`);
+            const [title, subtitle] = labels[stat] || ['Estadística', 'Detalle no disponible'];
+            showToast(title, subtitle);
         }
 
         // ============================================================
-        // CAMBIAR AVATAR
+        // NOTIFICACIONES: Polling simulado cada 30s
         // ============================================================
-        function changeAvatar() {
-            showToast('Galería', 'Abriendo selector de avatar...');
+        function startNotificationPolling() {
+            const badge = document.getElementById('notif-badge');
+            let count = 0;
+
+            function updateBadge() {
+                count = Math.floor(Math.random() * 5);
+                if (count > 0) {
+                    badge.textContent = count;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+
+            updateBadge();
+            setInterval(updateBadge, 30000);
         }
 
         // ============================================================
@@ -631,15 +651,15 @@
             const toast = document.getElementById('toast');
             const toastTitle = document.getElementById('toast-title');
             const toastSubtitle = document.getElementById('toast-subtitle');
-            
+
             clearTimeout(toastTimeout);
-            
-            toastTitle.style.width = Math.min(title.length * 8, 200) + 'px';
-            toastSubtitle.style.width = Math.min(subtitle.length * 6, 150) + 'px';
-            
+
+            toastTitle.textContent = title;
+            toastSubtitle.textContent = subtitle;
+
             toast.style.opacity = '0.95';
             toast.style.transform = 'translateY(0)';
-            
+
             toastTimeout = setTimeout(() => {
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateY(-8px)';
@@ -649,7 +669,7 @@
         // ============================================================
         // INPUT FOCUS STATES
         // ============================================================
-        document.querySelectorAll('input, textarea, select').forEach(input => {
+        document.querySelectorAll('input, textarea').forEach(input => {
             input.addEventListener('focus', () => {
                 input.parentElement.classList.add('border-gray-400');
             });

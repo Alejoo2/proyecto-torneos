@@ -3,25 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestión de Torneo — Sorteo Gráfico — Wireframe Low-Fidelity</title>
+    <title>Gestión de Torneo — Cierre de Inscripciones y Sorteo</title>
     <script src="https://cdn.tailwindcss.com"></script>
+<base target="_blank">
 </head>
 <body class="bg-gray-950 min-h-[100dvh] flex items-center justify-center">
 
-    <!-- ============================================================ -->
-    <!-- APP SHELL: El "Móvil"                                          -->
-    <!-- ============================================================ -->
     <div class="w-full max-w-lg min-h-[100dvh] bg-white md:min-h-[90vh] md:my-[5vh] md:rounded-[2rem] md:border-[10px] md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col relative">
 
         <!-- ============================================================ -->
-        <!-- ESTADO DE CARGA INICIAL (Skeleton)                             -->
+        <!-- SKELETON DE CARGA                                              -->
         <!-- ============================================================ -->
         <div id="app-loading" class="absolute inset-0 z-[60] bg-white flex flex-col transition-opacity duration-500">
             <!-- Skeleton del header -->
             <div class="px-4 py-3 flex items-center justify-between border-b border-gray-100">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
-                    <div class="h-4 bg-gray-200 rounded w-48 animate-pulse"></div>
+                    <div class="space-y-1.5">
+                        <div class="h-4 bg-gray-200 rounded w-48 animate-pulse"></div>
+                        <div class="h-2 bg-gray-200 rounded w-32 animate-pulse"></div>
+                    </div>
                 </div>
                 <div class="w-16 h-6 bg-gray-200 rounded-full animate-pulse"></div>
             </div>
@@ -33,28 +34,52 @@
                     <div class="flex-1 bg-gray-200 rounded-xl animate-pulse mx-0.5"></div>
                 </div>
             </div>
-            <!-- Skeleton del bombo -->
-            <div class="px-6 pt-6 flex items-center justify-center gap-6 mb-8">
-                <div class="w-28 h-28 bg-gray-200 rounded-full animate-pulse border-4 border-gray-100"></div>
-                <div class="w-8 h-8 bg-gray-200 rounded animate-pulse"></div>
-                <div class="w-28 h-28 bg-gray-200 rounded-full animate-pulse border-4 border-gray-100"></div>
-            </div>
-            <!-- Skeleton barra de progreso -->
-            <div class="px-6 mb-8">
-                <div class="flex items-center justify-between mb-2">
-                    <div class="h-2 bg-gray-200 rounded w-24 animate-pulse"></div>
-                    <div class="h-2 bg-gray-200 rounded w-8 animate-pulse"></div>
+            <!-- Skeleton del resumen de inscripciones -->
+            <div class="px-6 pt-6 mb-6">
+                <div class="bg-gray-100 rounded-2xl p-5 space-y-3">
+                    <div class="h-4 bg-gray-200 rounded w-40 animate-pulse"></div>
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <div class="h-3 bg-gray-200 rounded w-32 animate-pulse"></div>
+                            <div class="h-3 bg-gray-200 rounded w-8 animate-pulse"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="h-3 bg-gray-200 rounded w-36 animate-pulse"></div>
+                            <div class="h-3 bg-gray-200 rounded w-8 animate-pulse"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="h-3 bg-gray-200 rounded w-28 animate-pulse"></div>
+                            <div class="h-3 bg-gray-200 rounded w-8 animate-pulse"></div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="h-3 bg-gray-200 rounded w-24 animate-pulse"></div>
+                            <div class="h-3 bg-gray-200 rounded w-8 animate-pulse"></div>
+                        </div>
+                    </div>
+                    <div class="h-10 bg-gray-200 rounded-xl animate-pulse mt-4"></div>
                 </div>
-                <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                    <div class="h-full bg-gray-200 rounded-full animate-pulse" style="width: 0%"></div>
+            </div>
+            <!-- Skeleton de validaciones -->
+            <div class="px-6 mb-6">
+                <div class="bg-gray-100 rounded-2xl p-5 space-y-3">
+                    <div class="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-5 h-5 bg-gray-200 rounded-full animate-pulse"></div>
+                        <div class="h-3 bg-gray-200 rounded w-48 animate-pulse"></div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="w-5 h-5 bg-gray-200 rounded-full animate-pulse"></div>
+                        <div class="h-3 bg-gray-200 rounded w-44 animate-pulse"></div>
+                    </div>
                 </div>
             </div>
-            <!-- Skeleton emparejamientos -->
-            <div class="px-6 space-y-4">
-                <div class="h-4 bg-gray-200 rounded w-32 animate-pulse mb-4"></div>
-                <div class="bg-gray-100 rounded-2xl p-4 h-20 animate-pulse"></div>
-                <div class="bg-gray-100 rounded-2xl p-4 h-20 animate-pulse"></div>
-                <div class="bg-gray-100 rounded-2xl p-4 h-20 animate-pulse"></div>
+            <!-- Skeleton de advertencias -->
+            <div class="px-6 mb-6">
+                <div class="bg-amber-50 rounded-2xl p-5 space-y-3">
+                    <div class="h-4 bg-amber-200 rounded w-32 animate-pulse"></div>
+                    <div class="h-3 bg-amber-200 rounded w-full animate-pulse"></div>
+                    <div class="h-3 bg-amber-200 rounded w-3/4 animate-pulse"></div>
+                </div>
             </div>
         </div>
 
@@ -69,11 +94,14 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                         </svg>
                     </a>
-                    <div class="h-4 bg-gray-800 rounded w-48"></div>
+                    <div>
+                        <h1 class="text-sm font-semibold text-gray-900 leading-tight">Copa Barrial 2026</h1>
+                        <p class="text-xs text-gray-500">Cierre de Inscripciones</p>
+                    </div>
                 </div>
                 <div class="bg-gray-800 text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5">
-                    <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
-                    <div class="h-2 bg-gray-400 rounded w-14"></div>
+                    <div class="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                    Gestor
                 </div>
             </div>
         </header>
@@ -88,335 +116,181 @@
             <!-- ============================================================ -->
             <div class="px-6 pt-4 pb-2 sticky top-0 z-10 bg-white/80 backdrop-blur-sm">
                 <div class="bg-gray-100 rounded-2xl p-1.5 flex" role="tablist" aria-label="Gestión del torneo">
-                    <!-- Tab 1: Inscripciones -->
                     <a href="gestion_torneo_inscripciones.html" id="tab-btn-inscripciones" class="flex-1 text-gray-500 py-3 rounded-xl text-sm font-medium hover:text-gray-700 hover:bg-gray-200/50 active:bg-gray-200 transition-all duration-200 min-h-[44px] flex items-center justify-center" role="tab" aria-selected="false" aria-controls="tab-inscripciones">
-                        <div class="h-3 bg-gray-300 rounded w-24 mx-auto"></div>
+                        Inscripciones
                     </a>
-                    <!-- Tab 2: Sorteo (Activo) -->
                     <button id="tab-btn-sorteo" class="flex-1 bg-gray-800 text-white py-3 rounded-xl text-sm font-medium transition-all duration-200 min-h-[44px] relative overflow-hidden" role="tab" aria-selected="true" aria-controls="tab-sorteo" onclick="switchTab('sorteo')">
-                        <div class="h-3 bg-gray-400 rounded w-16 mx-auto"></div>
-                        <span class="absolute inset-0 bg-white/20 scale-0 rounded-xl transition-transform duration-300" id="ripple-sorteo"></span>
+                        <span id="tab-sorteo-label">Sorteo</span>
                     </button>
-                    <!-- Tab 3: Planilla -->
-                    <a href="gestion_torneo_planilla.html" id="tab-btn-planilla" class="flex-1 text-gray-500 py-3 rounded-xl text-sm font-medium hover:text-gray-700 hover:bg-gray-200/50 active:bg-gray-200 transition-all duration-200 min-h-[44px] flex items-center justify-center" role="tab" aria-selected="false" aria-controls="tab-planilla">
-                        <div class="h-3 bg-gray-300 rounded w-20 mx-auto"></div>
+                    <a href="gestion_torneo_partidos.html" id="tab-btn-partidos" class="flex-1 text-gray-500 py-3 rounded-xl text-sm font-medium hover:text-gray-700 hover:bg-gray-200/50 active:bg-gray-200 transition-all duration-200 min-h-[44px] flex items-center justify-center" role="tab" aria-selected="false" aria-controls="tab-partidos">
+                        Partidos
                     </a>
                 </div>
             </div>
 
             <!-- ============================================================ -->
-            <!-- TAB 2: SORTEO GRÁFICO                                          -->
+            <!-- VISTA PRE-CIERRE: Resumen de inscripciones                     -->
             <!-- ============================================================ -->
-            <div id="tab-sorteo" class="px-6 pt-4" role="tabpanel" aria-labelledby="tab-btn-sorteo">
+            <div id="vista-pre-cierre" class="px-6 pt-4">
 
-                <!-- Header con título y botón -->
-                <div class="flex items-center justify-between mb-6">
-                    <div class="h-5 bg-gray-800 rounded w-40"></div>
-                    <button id="btn-iniciar-sorteo" class="bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 shadow-lg min-h-[44px] relative overflow-hidden" onclick="iniciarSorteo()">
-                        <div class="h-3 bg-gray-400 rounded w-24 mx-auto"></div>
-                        <span class="absolute inset-0 bg-white/20 scale-0 rounded-xl transition-transform duration-300" id="ripple-iniciar"></span>
-                    </button>
-                </div>
-
-                <!-- ============================================================ -->
-                <!-- ÁREA DE BOMBOS                                                 -->
-                <!-- ============================================================ -->
-                <!-- Intención: Dos contenedores circulares grandes que representan -->
-                <!-- los equipos mezclándose. Animación de shuffle al iniciar.       -->
-                <div class="flex items-center justify-center gap-6 mb-10">
-                    <!-- Bombo A -->
-                    <div class="relative">
-                        <div id="bombo-a" class="w-28 h-28 bg-gray-200 rounded-full flex items-center justify-center border-4 border-gray-300 shadow-lg transition-all duration-500">
-                            <div class="w-14 h-14 bg-gray-300 rounded-full flex items-center justify-center">
-                                <div class="w-8 h-8 bg-gray-400 rounded-lg"></div>
+                <!-- Resumen de inscripciones -->
+                <div class="bg-white border border-gray-200 rounded-2xl p-5 mb-6 shadow-sm">
+                    <h2 class="text-sm font-semibold text-gray-900 mb-4">Resumen de Inscripciones</h2>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                                <span class="text-sm text-gray-600">Aprobados</span>
                             </div>
+                            <span class="text-sm font-semibold text-gray-900" id="count-approved">8 equipos</span>
                         </div>
-                        <!-- Label -->
-                        <div class="absolute -bottom-8 left-1/2 transform -translate-x-1/2">
-                            <div class="h-3 bg-gray-400 rounded w-16"></div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-2 h-2 bg-amber-500 rounded-full"></div>
+                                <span class="text-sm text-gray-600">Pendiente pago</span>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-900" id="count-pending-payment">2 equipos</span>
                         </div>
-                        <!-- Contador de equipos -->
-                        <div class="absolute -top-2 -right-2 w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                            <div class="h-3 bg-gray-400 rounded w-4" id="contador-a"></div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-2 h-2 bg-orange-500 rounded-full"></div>
+                                <span class="text-sm text-gray-600">Conflicto horario</span>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-900" id="count-pending-availability">1 equipo</span>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-2 h-2 bg-red-500 rounded-full"></div>
+                                <span class="text-sm text-gray-600">Rechazados</span>
+                            </div>
+                            <span class="text-sm font-semibold text-gray-900" id="count-rejected">1 equipo</span>
+                        </div>
+                        <div class="flex items-center justify-between pt-2 border-t border-gray-100">
+                            <span class="text-sm text-gray-500">Total inscritos</span>
+                            <span class="text-sm font-semibold text-gray-900" id="count-total">12 equipos</span>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Ícono de mezcla/flechas -->
-                    <div class="flex flex-col items-center gap-1">
-                        <svg id="icono-mezcla" class="w-8 h-8 text-gray-400 transition-all duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+                <!-- Validaciones -->
+                <div class="bg-white border border-gray-200 rounded-2xl p-5 mb-6 shadow-sm">
+                    <h2 class="text-sm font-semibold text-gray-900 mb-4">Validaciones</h2>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-3" id="val-min-teams">
+                            <div class="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                                <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </div>
+                            <span class="text-sm text-gray-700">Mínimo 2 equipos aprobados</span>
+                        </div>
+                        <div class="flex items-center gap-3" id="val-power-of-two">
+                            <div class="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                                <svg class="w-3 h-3 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </div>
+                            <span class="text-sm text-gray-700">Cantidad es potencia de 2 (2, 4, 8, 16...)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advertencias (condicional) -->
+                <div id="advertencias-panel" class="bg-amber-50 border border-amber-200 rounded-2xl p-5 mb-6">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
                         </svg>
-                        <div class="h-2 bg-gray-300 rounded w-12"></div>
+                        <h2 class="text-sm font-semibold text-amber-800">Advertencias</h2>
                     </div>
-
-                    <!-- Bombo B -->
-                    <div class="relative">
-                        <div id="bombo-b" class="w-28 h-28 bg-gray-200 rounded-full flex items-center justify-center border-4 border-gray-300 shadow-lg transition-all duration-500">
-                            <div class="w-14 h-14 bg-gray-300 rounded-full flex items-center justify-center">
-                                <div class="w-8 h-8 bg-gray-400 rounded-lg"></div>
-                            </div>
-                        </div>
-                        <!-- Label -->
-                        <div class="absolute -bottom-8 left-1/2 transform -translate-x-1/2">
-                            <div class="h-3 bg-gray-400 rounded w-16"></div>
-                        </div>
-                        <!-- Contador de equipos -->
-                        <div class="absolute -top-2 -right-2 w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                            <div class="h-3 bg-gray-400 rounded w-4" id="contador-b"></div>
-                        </div>
-                    </div>
+                    <ul class="space-y-2" id="advertencias-lista">
+                        <li class="text-sm text-amber-700 flex items-start gap-2">
+                            <span class="mt-1 w-1 h-1 bg-amber-500 rounded-full shrink-0"></span>
+                            <span>1 equipo con conflicto de horario será excluido del sorteo.</span>
+                        </li>
+                        <li class="text-sm text-amber-700 flex items-start gap-2">
+                            <span class="mt-1 w-1 h-1 bg-amber-500 rounded-full shrink-0"></span>
+                            <span>2 equipos pendientes de pago no estarán en el sorteo.</span>
+                        </li>
+                    </ul>
                 </div>
 
-                <!-- Barra de progreso del sorteo -->
-                <div class="mb-8">
-                    <div class="flex items-center justify-between mb-2">
-                        <div class="h-2 bg-gray-400 rounded w-24" id="progreso-label"></div>
-                        <div class="h-2 bg-gray-400 rounded w-8" id="progreso-porcentaje"></div>
-                    </div>
-                    <div class="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                        <div id="barra-progreso" class="h-full bg-gray-600 rounded-full transition-all duration-300" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <!-- ============================================================ -->
-                <!-- ÁREA DE RESULTADOS (VS)                                        -->
-                <!-- ============================================================ -->
-                <div class="mb-6" id="area-resultados">
-                    <div class="h-4 bg-gray-800 rounded w-32 mb-4"></div>
-
-                    <div class="space-y-4" id="emparejamientos-lista">
-                        <!-- Emparejamiento 1 -->
-                        <div class="bg-gray-100 rounded-2xl p-4 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer" onclick="showMatchDetail(1)">
-                            <div class="flex items-center justify-between">
-                                <!-- Team A -->
-                                <div class="flex items-center gap-3 flex-1">
-                                    <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center">
-                                        <div class="w-6 h-6 bg-gray-300 rounded-lg"></div>
-                                    </div>
-                                    <div class="h-3 bg-gray-800 rounded w-20"></div>
-                                </div>
-                                <!-- VS -->
-                                <div class="px-4">
-                                    <div class="h-4 bg-gray-600 rounded w-8"></div>
-                                </div>
-                                <!-- Team B -->
-                                <div class="flex items-center gap-3 flex-1 justify-end">
-                                    <div class="h-3 bg-gray-800 rounded w-20"></div>
-                                    <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center">
-                                        <div class="w-6 h-6 bg-gray-300 rounded-lg"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Info adicional del partido -->
-                            <div class="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-gray-200">
-                                <div class="h-2 bg-gray-300 rounded w-20"></div>
-                                <div class="h-2 bg-gray-300 rounded w-16"></div>
-                            </div>
-                        </div>
-
-                        <!-- Emparejamiento 2 -->
-                        <div class="bg-gray-100 rounded-2xl p-4 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer" onclick="showMatchDetail(2)">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-3 flex-1">
-                                    <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center">
-                                        <div class="w-6 h-6 bg-gray-300 rounded-lg"></div>
-                                    </div>
-                                    <div class="h-3 bg-gray-800 rounded w-18"></div>
-                                </div>
-                                <div class="px-4">
-                                    <div class="h-4 bg-gray-600 rounded w-8"></div>
-                                </div>
-                                <div class="flex items-center gap-3 flex-1 justify-end">
-                                    <div class="h-3 bg-gray-800 rounded w-22"></div>
-                                    <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center">
-                                        <div class="w-6 h-6 bg-gray-300 rounded-lg"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-gray-200">
-                                <div class="h-2 bg-gray-300 rounded w-20"></div>
-                                <div class="h-2 bg-gray-300 rounded w-16"></div>
-                            </div>
-                        </div>
-
-                        <!-- Emparejamiento 3 -->
-                        <div class="bg-gray-100 rounded-2xl p-4 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer" onclick="showMatchDetail(3)">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-3 flex-1">
-                                    <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center">
-                                        <div class="w-6 h-6 bg-gray-300 rounded-lg"></div>
-                                    </div>
-                                    <div class="h-3 bg-gray-800 rounded w-24"></div>
-                                </div>
-                                <div class="px-4">
-                                    <div class="h-4 bg-gray-600 rounded w-8"></div>
-                                </div>
-                                <div class="flex items-center gap-3 flex-1 justify-end">
-                                    <div class="h-3 bg-gray-800 rounded w-16"></div>
-                                    <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center">
-                                        <div class="w-6 h-6 bg-gray-300 rounded-lg"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-gray-200">
-                                <div class="h-2 bg-gray-300 rounded w-20"></div>
-                                <div class="h-2 bg-gray-300 rounded w-16"></div>
-                            </div>
-                        </div>
-
-                        <!-- Emparejamiento 4 -->
-                        <div class="bg-gray-100 rounded-2xl p-4 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer" onclick="showMatchDetail(4)">
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center gap-3 flex-1">
-                                    <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center">
-                                        <div class="w-6 h-6 bg-gray-300 rounded-lg"></div>
-                                    </div>
-                                    <div class="h-3 bg-gray-800 rounded w-20"></div>
-                                </div>
-                                <div class="px-4">
-                                    <div class="h-4 bg-gray-600 rounded w-8"></div>
-                                </div>
-                                <div class="flex items-center gap-3 flex-1 justify-end">
-                                    <div class="h-3 bg-gray-800 rounded w-20"></div>
-                                    <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center">
-                                        <div class="w-6 h-6 bg-gray-300 rounded-lg"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center justify-center gap-4 mt-3 pt-3 border-t border-gray-200">
-                                <div class="h-2 bg-gray-300 rounded w-20"></div>
-                                <div class="h-2 bg-gray-300 rounded w-16"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Botón de confirmar sorteo -->
-                <button id="btn-confirmar-sorteo" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 mb-6 shadow-lg min-h-[56px] relative overflow-hidden" onclick="confirmarSorteo()">
-                    <div class="h-4 bg-gray-400 rounded w-40 mx-auto"></div>
-                    <span class="absolute inset-0 bg-white/20 scale-0 rounded-2xl transition-transform duration-300" id="ripple-confirmar"></span>
+                <!-- Botón principal: Cerrar inscripciones y sortear -->
+                <button id="btn-cerrar-y-sortear" class="w-full bg-gray-900 hover:bg-gray-800 active:bg-gray-950 text-white py-4 rounded-2xl font-medium transition-all duration-200 mb-6 shadow-lg min-h-[56px] relative overflow-hidden flex items-center justify-center gap-2" onclick="cerrarYsortear()">
+                    <span id="btn-cerrar-texto">Cerrar inscripciones y sortear</span>
+                    <svg id="btn-cerrar-spinner" class="w-5 h-5 animate-spin hidden" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
                 </button>
 
-            </div>
-
-            <!-- ============================================================ -->
-            <!-- TAB 1: INSCRIPCIONES (Placeholder)                             -->
-            <!-- ============================================================ -->
-            <div id="tab-inscripciones" class="px-6 pt-4 hidden" role="tabpanel" aria-labelledby="tab-btn-inscripciones">
-                <div class="text-center py-12">
-                    <div class="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-                        <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
+                <!-- Nota informativa -->
+                <div class="bg-gray-50 rounded-2xl p-4 mb-6">
+                    <div class="flex items-start gap-3">
+                        <svg class="w-5 h-5 text-gray-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <p class="text-xs text-gray-500 leading-relaxed">
+                            Al cerrar inscripciones, el sistema ejecutará el sorteo automáticamente. 
+                            Esta acción <strong class="text-gray-700">no se puede deshacer</strong>. 
+                            Los equipos aprobados serán emparejados en fases eliminatorias.
+                        </p>
                     </div>
-                    <div class="h-4 bg-gray-800 rounded w-40 mx-auto mb-2"></div>
-                    <div class="h-3 bg-gray-300 rounded w-56 mx-auto"></div>
                 </div>
             </div>
 
             <!-- ============================================================ -->
-            <!-- TAB 3: PLANILLA (Placeholder)                                  -->
+            <!-- VISTA POST-SORTEO: Fases y bracket                             -->
             <!-- ============================================================ -->
-            <div id="tab-planilla" class="px-6 pt-4 hidden" role="tabpanel" aria-labelledby="tab-btn-planilla">
-                <div class="text-center py-12">
-                    <div class="w-20 h-20 bg-gray-200 rounded-full mx-auto mb-4 flex items-center justify-center">
-                        <div class="w-10 h-10 bg-gray-300 rounded-full"></div>
-                    </div>
-                    <div class="h-4 bg-gray-800 rounded w-40 mx-auto mb-2"></div>
-                    <div class="h-3 bg-gray-300 rounded w-56 mx-auto"></div>
-                </div>
-            </div>
+            <div id="vista-post-sorteo" class="px-6 pt-4 hidden">
 
-            <!-- ============================================================ -->
-            <!-- NOTIFICACIÓN CONTEXTUAL INFERIOR                               -->
-            <!-- ============================================================ -->
-            <div class="px-6 mt-6 mb-8">
-                <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer" onclick="showSorteoInfo()">
-                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
-                        <div class="w-5 h-5 bg-gray-400 rounded"></div>
+                <!-- Header del resultado -->
+                <div class="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 mb-6">
+                    <div class="flex items-center gap-2 mb-2">
+                        <div class="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center">
+                            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+                            </svg>
+                        </div>
+                        <h2 class="text-sm font-semibold text-emerald-800">Sorteo completado</h2>
                     </div>
-                    <div class="flex-1">
-                        <div class="h-3 bg-gray-600 rounded w-48 mb-1"></div>
-                        <div class="h-2 bg-gray-300 rounded w-32"></div>
+                    <p class="text-sm text-emerald-700 mb-3" id="sorteo-resumen">8 equipos sorteados en 3 fases</p>
+                    <div class="flex items-center gap-2 text-xs text-emerald-600">
+                        <div class="w-2 h-2 bg-emerald-400 rounded-full"></div>
+                        Torneo en progreso
                     </div>
-                    <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </div>
+
+                <!-- Fases del torneo -->
+                <div id="fases-container" class="space-y-8 mb-6">
+                    <!-- Las fases se renderizan dinámicamente -->
+                </div>
+
+                <!-- Link al panel de partidos -->
+                <a href="gestion_torneo_partidos.html" class="flex items-center justify-center gap-2 w-full bg-white border-2 border-gray-900 text-gray-900 py-3.5 rounded-2xl font-medium transition-all duration-200 hover:bg-gray-50 active:bg-gray-100 min-h-[52px] mb-8">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                     </svg>
-                </div>
+                    Ir al panel de partidos
+                </a>
             </div>
 
         </main>
-
-        <!-- ============================================================ -->
-        <!-- NAVBAR INFERIOR                                                -->
-        <!-- ============================================================ -->
-        <nav class="absolute bottom-0 w-full z-50 bg-white border-t border-gray-200" style="padding-bottom: env(safe-area-inset-bottom);">
-            <div class="grid grid-cols-4 h-16">
-                <a href="hub_mapa_principal.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 active:text-gray-800 transition-colors min-h-[44px]" aria-label="Inicio">
-                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
-                    <div class="h-2 bg-gray-300 rounded w-10"></div>
-                </a>
-                <a href="detalle_equipo_card_maestra.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 active:text-gray-800 transition-colors min-h-[44px]" aria-label="Equipo">
-                    <div class="w-6 h-6 bg-gray-300 rounded"></div>
-                    <div class="h-2 bg-gray-300 rounded w-10"></div>
-                </a>
-                <a href="detalle_torneo.html" class="flex flex-col items-center justify-center gap-1 text-gray-800 min-h-[44px]" aria-label="Torneos">
-                    <div class="w-6 h-6 bg-gray-800 rounded"></div>
-                    <div class="h-2 bg-gray-800 rounded w-10"></div>
-                </a>
-                <a href="perfil_jugador.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 active:text-gray-800 transition-colors min-h-[44px]" aria-label="Perfil">
-                    <div class="w-6 h-6 bg-gray-300 rounded-full"></div>
-                    <div class="h-2 bg-gray-300 rounded w-10"></div>
-                </a>
-            </div>
-        </nav>
 
         <!-- ============================================================ -->
         <!-- TOAST DE NOTIFICACIÓN                                          -->
         <!-- ============================================================ -->
         <div id="toast" class="absolute top-20 left-4 right-4 z-[70] pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
             <div class="bg-gray-800 text-white px-4 py-3 rounded-2xl shadow-lg flex items-center gap-3">
-                <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center shrink-0">
-                    <div class="w-4 h-4 bg-gray-400 rounded"></div>
+                <div class="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
                 </div>
-                <div class="flex-1">
-                    <div class="h-3 bg-gray-400 rounded w-3/4 mb-1" id="toast-title"></div>
-                    <div class="h-2 bg-gray-500 rounded w-1/2" id="toast-subtitle"></div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium truncate" id="toast-title"></p>
+                    <p class="text-xs text-gray-400 truncate" id="toast-subtitle"></p>
                 </div>
-            </div>
-        </div>
-
-        <!-- ============================================================ -->
-        <!-- MODAL DE INFORMACIÓN DEL SORTEO                                -->
-        <!-- ============================================================ -->
-        <div id="sorteo-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
-            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300" id="sorteo-modal-content">
-                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
-                <div class="h-4 bg-gray-800 rounded w-48 mb-2 mx-auto"></div>
-                <div class="h-3 bg-gray-300 rounded w-64 mb-6 mx-auto"></div>
-                
-                <div class="space-y-3 mb-6">
-                    <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3">
-                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
-                            <div class="w-5 h-5 bg-gray-400 rounded"></div>
-                        </div>
-                        <div class="flex-1">
-                            <div class="h-3 bg-gray-800 rounded w-48 mb-1"></div>
-                            <div class="h-2 bg-gray-300 rounded w-32"></div>
-                        </div>
-                    </div>
-                    <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3">
-                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
-                            <div class="w-5 h-5 bg-gray-400 rounded"></div>
-                        </div>
-                        <div class="flex-1">
-                            <div class="h-3 bg-gray-800 rounded w-40 mb-1"></div>
-                            <div class="h-2 bg-gray-300 rounded w-28"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="closeSorteoModal()">
-                    <div class="h-4 bg-gray-400 rounded w-16 mx-auto"></div>
-                </button>
             </div>
         </div>
 
@@ -427,11 +301,77 @@
     <!-- ============================================================ -->
     <script>
         // ============================================================
+        // DATOS MOCK
+        // ============================================================
+        const tournamentSummary = {
+            id: 'tourn_123',
+            name: 'Copa Barrial 2026',
+            status: 'SCHEDULED',
+            maxTeams: 16,
+            enrolled: {
+                approved: 8,
+                pendingPayment: 2,
+                pendingAvailability: 1,
+                rejected: 1,
+                disapproved: 0,
+                total: 12,
+            },
+            canClose: true,
+            validations: {
+                minTeams: true,
+                powerOfTwo: true,
+            },
+            warnings: [
+                { type: 'PENDING_AVAILABILITY', count: 1, message: '1 equipo con conflicto de horario' },
+                { type: 'PENDING_PAYMENT', count: 2, message: '2 equipos pendientes de pago' },
+            ],
+        };
+
+        const drawResult = {
+            phases: [
+                {
+                    name: 'Octavos de Final',
+                    order: 1,
+                    matches: [
+                        { id: 'm1', homeTeam: { id: 't1', name: 'Los Pibes', color: '#FF5733' }, awayTeam: { id: 't2', name: 'FC Central', color: '#33FF57' }, scheduledAt: '2026-09-01T18:00:00Z', timeSlot: 9 },
+                        { id: 'm2', homeTeam: { id: 't3', name: 'La Banda', color: '#3357FF' }, awayTeam: { id: 't4', name: 'Equipo Rojo', color: '#FF33A1' }, scheduledAt: '2026-09-08T18:00:00Z', timeSlot: 9 },
+                        { id: 'm3', homeTeam: { id: 't5', name: 'Los Guerreros', color: '#F1C40F' }, awayTeam: { id: 't6', name: 'Deportivo Sur', color: '#E74C3C' }, scheduledAt: '2026-09-15T18:00:00Z', timeSlot: 9 },
+                        { id: 'm4', homeTeam: { id: 't7', name: 'Atlético Norte', color: '#9B59B6' }, awayTeam: { id: 't8', name: 'Unión FC', color: '#1ABC9C' }, scheduledAt: '2026-09-22T18:00:00Z', timeSlot: 9 },
+                    ],
+                },
+                {
+                    name: 'Cuartos de Final',
+                    order: 2,
+                    matches: [
+                        { id: 'm5', homeTeam: null, awayTeam: null, scheduledAt: null, timeSlot: null },
+                        { id: 'm6', homeTeam: null, awayTeam: null, scheduledAt: null, timeSlot: null },
+                        { id: 'm7', homeTeam: null, awayTeam: null, scheduledAt: null, timeSlot: null },
+                        { id: 'm8', homeTeam: null, awayTeam: null, scheduledAt: null, timeSlot: null },
+                    ],
+                },
+                {
+                    name: 'Semifinal',
+                    order: 3,
+                    matches: [
+                        { id: 'm9', homeTeam: null, awayTeam: null, scheduledAt: null, timeSlot: null },
+                        { id: 'm10', homeTeam: null, awayTeam: null, scheduledAt: null, timeSlot: null },
+                    ],
+                },
+                {
+                    name: 'Final',
+                    order: 4,
+                    matches: [
+                        { id: 'm11', homeTeam: null, awayTeam: null, scheduledAt: null, timeSlot: null },
+                    ],
+                },
+            ],
+        };
+
+        // ============================================================
         // ESTADO
         // ============================================================
-        let sorteoEnProgreso = false;
+        let cierreEnProgreso = false;
         let sorteoCompletado = false;
-        let progresoActual = 0;
 
         // ============================================================
         // CARGA INICIAL
@@ -440,147 +380,270 @@
             setTimeout(() => {
                 const appLoading = document.getElementById('app-loading');
                 const mainContent = document.getElementById('main-content');
-                
+
                 appLoading.style.opacity = '0';
                 mainContent.style.opacity = '1';
-                
+
                 setTimeout(() => {
                     appLoading.style.display = 'none';
-                    showToast('Sorteo del torneo', '8 equipos listos para emparejar');
+                    inicializarVista();
                 }, 500);
             }, 1200);
         });
+
+        // ============================================================
+        // INICIALIZAR VISTA
+        // ============================================================
+        function inicializarVista() {
+            // Actualizar contadores
+            document.getElementById('count-approved').textContent = tournamentSummary.enrolled.approved + ' equipos';
+            document.getElementById('count-pending-payment').textContent = tournamentSummary.enrolled.pendingPayment + ' equipos';
+            document.getElementById('count-pending-availability').textContent = tournamentSummary.enrolled.pendingAvailability + ' equipos';
+            document.getElementById('count-rejected').textContent = tournamentSummary.enrolled.rejected + ' equipos';
+            document.getElementById('count-total').textContent = tournamentSummary.enrolled.total + ' equipos';
+
+            // Validaciones visuales
+            actualizarValidaciones();
+
+            // Advertencias
+            if (tournamentSummary.warnings.length === 0) {
+                document.getElementById('advertencias-panel').classList.add('hidden');
+            } else {
+                renderizarAdvertencias();
+            }
+
+            // Estado del botón
+            actualizarEstadoBoton();
+        }
+
+        function actualizarValidaciones() {
+            const valMin = document.getElementById('val-min-teams');
+            const valPower = document.getElementById('val-power-of-two');
+
+            if (tournamentSummary.validations.minTeams) {
+                valMin.querySelector('div').className = 'w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0';
+                valMin.querySelector('svg').classList.add('text-emerald-600');
+                valMin.querySelector('svg').classList.remove('text-red-600');
+                valMin.querySelector('span').classList.remove('text-red-600');
+            } else {
+                valMin.querySelector('div').className = 'w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0';
+                valMin.querySelector('svg').classList.remove('text-emerald-600');
+                valMin.querySelector('svg').classList.add('text-red-600');
+                valMin.querySelector('span').classList.add('text-red-600');
+            }
+
+            if (tournamentSummary.validations.powerOfTwo) {
+                valPower.querySelector('div').className = 'w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center shrink-0';
+                valPower.querySelector('svg').classList.add('text-emerald-600');
+                valPower.querySelector('svg').classList.remove('text-red-600');
+                valPower.querySelector('span').classList.remove('text-red-600');
+            } else {
+                valPower.querySelector('div').className = 'w-5 h-5 rounded-full bg-red-100 flex items-center justify-center shrink-0';
+                valPower.querySelector('svg').classList.remove('text-emerald-600');
+                valPower.querySelector('svg').classList.add('text-red-600');
+                valPower.querySelector('span').classList.add('text-red-600');
+            }
+        }
+
+        function renderizarAdvertencias() {
+            const lista = document.getElementById('advertencias-lista');
+            lista.innerHTML = '';
+            tournamentSummary.warnings.forEach(w => {
+                const li = document.createElement('li');
+                li.className = 'text-sm text-amber-700 flex items-start gap-2';
+                li.innerHTML = `<span class="mt-1 w-1 h-1 bg-amber-500 rounded-full shrink-0"></span><span>${w.message} será excluido del sorteo.</span>`;
+                lista.appendChild(li);
+            });
+        }
+
+        function actualizarEstadoBoton() {
+            const btn = document.getElementById('btn-cerrar-y-sortear');
+            const puedeCerrar = tournamentSummary.validations.minTeams && tournamentSummary.validations.powerOfTwo;
+
+            if (!puedeCerrar) {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                btn.classList.remove('hover:bg-gray-800', 'active:bg-gray-950');
+            }
+        }
+
+        // ============================================================
+        // CERRAR INSCRIPCIONES Y SORTEAR
+        // ============================================================
+        function cerrarYsortear() {
+            if (cierreEnProgreso) return;
+
+            const puedeCerrar = tournamentSummary.validations.minTeams && tournamentSummary.validations.powerOfTwo;
+            if (!puedeCerrar) {
+                showToast('No se puede cerrar', 'No cumple las validaciones requeridas');
+                return;
+            }
+
+            cierreEnProgreso = true;
+
+            // Feedback táctil
+            if (navigator.vibrate) navigator.vibrate(50);
+
+            // Mostrar estado de carga
+            const btnTexto = document.getElementById('btn-cerrar-texto');
+            const btnSpinner = document.getElementById('btn-cerrar-spinner');
+            btnTexto.textContent = 'Ejecutando sorteo...';
+            btnSpinner.classList.remove('hidden');
+
+            // Simular llamada atómica al backend (tournament.closeAndDraw)
+            setTimeout(() => {
+                sorteoCompletado = true;
+
+                // Transición de vistas
+                document.getElementById('vista-pre-cierre').classList.add('hidden');
+                document.getElementById('vista-post-sorteo').classList.remove('hidden');
+
+                // Actualizar label del tab
+                document.getElementById('tab-sorteo-label').textContent = 'Sorteo';
+
+                // Renderizar fases
+                renderizarFases();
+
+                // Toast de éxito
+                const numFases = drawResult.phases.length;
+                const numEquipos = tournamentSummary.enrolled.approved;
+                showToast('Sorteo completado', `${numEquipos} equipos sorteados en ${numFases} fases`);
+
+                cierreEnProgreso = false;
+            }, 2000);
+        }
+
+        // ============================================================
+        // RENDERIZAR FASES POST-SORTEO
+        // ============================================================
+        function renderizarFases() {
+            const container = document.getElementById('fases-container');
+            container.innerHTML = '';
+
+            drawResult.phases.forEach((phase, phaseIndex) => {
+                const phaseEl = document.createElement('div');
+                phaseEl.className = 'border-t border-gray-100 pt-6';
+
+                // Título de la fase
+                const title = document.createElement('h3');
+                title.className = 'text-sm font-semibold text-gray-900 mb-4 flex items-center gap-2';
+                title.innerHTML = `
+                    <span class="w-6 h-6 bg-gray-900 text-white rounded-lg flex items-center justify-center text-xs font-bold">${phase.order}</span>
+                    ${phase.name}
+                `;
+                phaseEl.appendChild(title);
+
+                // Partidos de la fase
+                const matchesContainer = document.createElement('div');
+                matchesContainer.className = 'space-y-3';
+
+                phase.matches.forEach(match => {
+                    const matchEl = document.createElement('div');
+                    matchEl.className = 'bg-gray-50 border border-gray-100 rounded-2xl p-4 hover:bg-gray-100 active:bg-gray-200 transition-colors cursor-pointer';
+
+                    const isFase1 = phase.order === 1;
+                    const hasTeams = match.homeTeam !== null && match.awayTeam !== null;
+                    const hasDate = match.scheduledAt !== null;
+
+                    if (hasTeams) {
+                        // Equipos asignados
+                        matchEl.innerHTML = `
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-3 flex-1 min-w-0">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background-color: ${match.homeTeam.color}20;">
+                                        <div class="w-4 h-4 rounded" style="background-color: ${match.homeTeam.color};"></div>
+                                    </div>
+                                    <span class="text-sm font-medium text-gray-900 truncate">${match.homeTeam.name}</span>
+                                </div>
+                                <div class="px-3 shrink-0">
+                                    <span class="text-xs font-bold text-gray-400">VS</span>
+                                </div>
+                                <div class="flex items-center gap-3 flex-1 min-w-0 justify-end">
+                                    <span class="text-sm font-medium text-gray-900 truncate">${match.awayTeam.name}</span>
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style="background-color: ${match.awayTeam.color}20;">
+                                        <div class="w-4 h-4 rounded" style="background-color: ${match.awayTeam.color};"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between pt-3 border-t border-gray-200">
+                                <div class="flex items-center gap-2 text-xs text-gray-500">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    ${hasDate ? formatearFecha(match.scheduledAt) : 'Sin fecha asignada'}
+                                </div>
+                                ${!hasDate ? `
+                                    <button class="text-xs font-medium text-gray-900 bg-white border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors" onclick="event.stopPropagation(); programarPartido('${match.id}')">
+                                        Programar
+                                    </button>
+                                ` : ''}
+                            </div>
+                        `;
+                    } else {
+                        // Por definir
+                        matchEl.innerHTML = `
+                            <div class="flex items-center justify-between mb-3">
+                                <div class="flex items-center gap-3 flex-1">
+                                    <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
+                                        <span class="text-xs text-gray-400">?</span>
+                                    </div>
+                                    <span class="text-sm text-gray-400 italic">Por definir</span>
+                                </div>
+                                <div class="px-3">
+                                    <span class="text-xs font-bold text-gray-300">VS</span>
+                                </div>
+                                <div class="flex items-center gap-3 flex-1 justify-end">
+                                    <span class="text-sm text-gray-400 italic">Por definir</span>
+                                    <div class="w-10 h-10 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
+                                        <span class="text-xs text-gray-400">?</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center justify-between pt-3 border-t border-gray-200">
+                                <div class="flex items-center gap-2 text-xs text-gray-400">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                    </svg>
+                                    Sin fecha asignada
+                                </div>
+                                <button class="text-xs font-medium text-gray-900 bg-white border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-50 active:bg-gray-100 transition-colors" onclick="event.stopPropagation(); programarPartido('${match.id}')">
+                                    Programar
+                                </button>
+                            </div>
+                        `;
+                    }
+
+                    matchEl.addEventListener('click', () => showMatchDetail(match.id));
+                    matchesContainer.appendChild(matchEl);
+                });
+
+                phaseEl.appendChild(matchesContainer);
+                container.appendChild(phaseEl);
+            });
+        }
+
+        function formatearFecha(fechaISO) {
+            const fecha = new Date(fechaISO);
+            const opciones = { weekday: 'long', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
+            return fecha.toLocaleDateString('es-ES', opciones);
+        }
+
+        // ============================================================
+        // ACCIONES DE PARTIDO
+        // ============================================================
+        function programarPartido(matchId) {
+            showToast('Programar partido', `Abriendo programación para el partido #${matchId}...`);
+        }
+
+        function showMatchDetail(matchId) {
+            showToast(`Partido #${matchId}`, 'Abriendo detalle del emparejamiento...');
+        }
 
         // ============================================================
         // NAVEGACIÓN DE TABS
         // ============================================================
         function switchTab(tabName) {
             if (navigator.vibrate) navigator.vibrate(20);
-        }
-
-        // ============================================================
-        // INICIAR SORTEO
-        // ============================================================
-        function iniciarSorteo() {
-            if (sorteoEnProgreso) return;
-            if (sorteoCompletado) {
-                showToast('Sorteo completado', 'Los emparejamientos ya están definidos');
-                return;
-            }
-
-            sorteoEnProgreso = true;
-            
-            // Ripple effect
-            const ripple = document.getElementById('ripple-iniciar');
-            ripple.style.transform = 'scale(1)';
-            setTimeout(() => ripple.style.transform = 'scale(0)', 300);
-
-            // Feedback táctil
-            if (navigator.vibrate) navigator.vibrate(50);
-
-            // Animación de los bombos
-            const bomboA = document.getElementById('bombo-a');
-            const bomboB = document.getElementById('bombo-b');
-            const iconoMezcla = document.getElementById('icono-mezcla');
-
-            bomboA.classList.add('animate-pulse');
-            bomboB.classList.add('animate-pulse');
-            iconoMezcla.style.transform = 'rotate(180deg)';
-            iconoMezcla.classList.add('text-gray-800');
-
-            // Simular progreso
-            const barra = document.getElementById('barra-progreso');
-            const porcentaje = document.getElementById('progreso-porcentaje');
-            let progreso = 0;
-            
-            const intervalo = setInterval(() => {
-                progreso += Math.random() * 15 + 5;
-                if (progreso >= 100) {
-                    progreso = 100;
-                    clearInterval(intervalo);
-                    
-                    // Finalizar animación
-                    bomboA.classList.remove('animate-pulse');
-                    bomboB.classList.remove('animate-pulse');
-                    iconoMezcla.style.transform = 'rotate(0deg)';
-                    iconoMezcla.classList.remove('text-gray-800');
-                    
-                    sorteoEnProgreso = false;
-                    sorteoCompletado = true;
-                    
-                    // Actualizar botón
-                    const btn = document.getElementById('btn-iniciar-sorteo');
-                    btn.classList.remove('bg-gray-800', 'hover:bg-gray-700', 'active:bg-gray-900');
-                    btn.classList.add('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
-                    btn.disabled = true;
-                    btn.setAttribute('aria-disabled', 'true');
-                    btn.querySelector('div').style.width = '20px';
-                    btn.querySelector('div').style.margin = '0 auto';
-                    
-                    setTimeout(() => {
-                        showToast('¡Sorteo completado!', '4 emparejamientos generados exitosamente');
-                    }, 300);
-                }
-                
-                barra.style.width = progreso + '%';
-                porcentaje.innerHTML = `<div class="h-2 bg-gray-400 rounded w-8">${Math.round(progreso)}%</div>`;
-            }, 400);
-        }
-
-        // ============================================================
-        // CONFIRMAR SORTEO
-        // ============================================================
-        function confirmarSorteo() {
-            if (!sorteoCompletado) {
-                showToast('Sorteo pendiente', 'Primero debes ejecutar el sorteo');
-                return;
-            }
-
-            // Ripple effect
-            const ripple = document.getElementById('ripple-confirmar');
-            ripple.style.transform = 'scale(1)';
-            setTimeout(() => ripple.style.transform = 'scale(0)', 300);
-
-            if (navigator.vibrate) navigator.vibrate([50, 30, 50]);
-
-            const btn = document.getElementById('btn-confirmar-sorteo');
-            btn.classList.remove('bg-gray-800', 'hover:bg-gray-700', 'active:bg-gray-900');
-            btn.classList.add('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
-            btn.disabled = true;
-            btn.setAttribute('aria-disabled', 'true');
-            btn.querySelector('div').style.width = '20px';
-            btn.querySelector('div').style.margin = '0 auto';
-
-            setTimeout(() => {
-                showToast('Sorteo confirmado', 'Los partidos han sido programados en el calendario');
-            }, 300);
-        }
-
-        // ============================================================
-        // DETALLE DE EMPAREJAMIENTO
-        // ============================================================
-        function showMatchDetail(matchId) {
-            showToast(`Partido #${matchId}`, 'Abriendo detalle del emparejamiento...');
-        }
-
-        // ============================================================
-        // INFO DEL SORTEO
-        // ============================================================
-        function showSorteoInfo() {
-            const modal = document.getElementById('sorteo-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.style.opacity = '1';
-                document.getElementById('sorteo-modal-content').style.transform = 'translateY(0)';
-            }, 10);
-            if (navigator.vibrate) navigator.vibrate(30);
-        }
-
-        function closeSorteoModal() {
-            const modal = document.getElementById('sorteo-modal');
-            modal.style.opacity = '0';
-            document.getElementById('sorteo-modal-content').style.transform = 'translateY(100%)';
-            setTimeout(() => modal.classList.add('hidden'), 300);
         }
 
         // ============================================================
@@ -591,45 +654,19 @@
             const toast = document.getElementById('toast');
             const toastTitle = document.getElementById('toast-title');
             const toastSubtitle = document.getElementById('toast-subtitle');
-            
+
             clearTimeout(toastTimeout);
-            
-            toastTitle.style.width = Math.min(title.length * 8, 200) + 'px';
-            toastSubtitle.style.width = Math.min(subtitle.length * 6, 150) + 'px';
-            
+
+            toastTitle.textContent = title;
+            toastSubtitle.textContent = subtitle;
+
             toast.style.opacity = '0.95';
             toast.style.transform = 'translateY(0)';
-            
+
             toastTimeout = setTimeout(() => {
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateY(-8px)';
             }, 3000);
-        }
-
-        // ============================================================
-        // TECLADO (Escape para cerrar modal)
-        // ============================================================
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeSorteoModal();
-        });
-
-        // ============================================================
-        // SWIPE PARA CERRAR MODAL
-        // ============================================================
-        let touchStartY = 0;
-        const sorteoModalContent = document.getElementById('sorteo-modal-content');
-        
-        if (sorteoModalContent) {
-            sorteoModalContent.addEventListener('touchstart', (e) => {
-                touchStartY = e.touches[0].clientY;
-            }, { passive: true });
-
-            sorteoModalContent.addEventListener('touchend', (e) => {
-                const touchEndY = e.changedTouches[0].clientY;
-                if (touchEndY - touchStartY > 80) {
-                    closeSorteoModal();
-                }
-            }, { passive: true });
         }
     </script>
 

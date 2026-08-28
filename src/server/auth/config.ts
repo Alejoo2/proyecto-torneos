@@ -1,6 +1,7 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
+import GoogleProvider from "next-auth/providers/google";
 
 import { db } from "torneos/server/db";
 
@@ -30,18 +31,19 @@ declare module "next-auth" {
  *
  * @see https://next-auth.js.org/configuration/options
  */
+
 export const authConfig = {
   providers: [
     DiscordProvider,
-    /**
-     * ...add more providers here.
-     *
-     * Most other providers require a bit more work than the Discord provider. For example, the
-     * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
-     * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
-     *
-     * @see https://next-auth.js.org/providers/github
-     */
+    GoogleProvider({ // <-- AGREGAR ESTO
+      authorization: {
+        params: {
+          prompt: "consent", // Fuerza a Google a pedir consentimiento siempre
+          access_type: "offline",
+          response_type: "code",
+        },
+      },
+    }),
   ],
   adapter: PrismaAdapter(db),
   callbacks: {
@@ -53,4 +55,46 @@ export const authConfig = {
       },
     }),
   },
+    // 👇 AQUÍ ESTÁ LA MAGIA DEL RBAC 👇
+  events: {
+    createUser: async ({ user }) => {
+      // 1. Buscamos el rol 'player' que sembramos anteriormente
+      const playerRole = await db.role.findUnique({
+        where: { name: "player" },
+      });
+
+      if (!playerRole) {
+        console.error("Error crítico: El rol 'player' no existe en la BD.");
+        return; 
+      }
+
+      // 2. Usamos una transacción para crear Profile, Player y asignar el rol al mismo tiempo
+      // Si una falla, todas fallan (integridad de datos)
+      await db.$transaction(async (tx) => {
+        // Crear el perfil
+        const profile = await tx.profile.create({
+          data: {
+            userId: user.id,
+            displayName: user.name ?? "Jugador Anónimo",
+          },
+        });
+
+        // Crear la entidad Player
+        await tx.player.create({
+          data: {
+            profileId: profile.id,
+          },
+        });
+
+        // Asignar el rol de jugador
+        await tx.roleAssignment.create({
+          data: {
+            profileId: profile.id,
+            roleId: playerRole.id,
+          },
+        });
+      });
+    },
+  },
+  // 👆 FIN DE LA MAGIA 👆
 } satisfies NextAuthConfig;

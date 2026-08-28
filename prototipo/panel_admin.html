@@ -3,54 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Panel de Admin — Wireframe Low-Fidelity</title>
+    <title>Panel de Administracion — Wireframe Low-Fidelity</title>
     <script src="https://cdn.tailwindcss.com"></script>
+<base target="_blank">
 </head>
 <body class="bg-gray-950 min-h-[100dvh] flex items-center justify-center">
 
     <!-- ============================================================ -->
-    <!-- APP SHELL: El "Móvil"                                          -->
+    <!-- APP SHELL: Mobile-first, max-w-lg, fondo blanco                -->
     <!-- ============================================================ -->
-    <!-- Intención: Admin NO usa navbar de jugador. Pantalla dedicada.   -->
     <div class="w-full max-w-lg min-h-[100dvh] bg-white md:min-h-[90vh] md:my-[5vh] md:rounded-[2rem] md:border-[10px] md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col relative">
 
         <!-- ============================================================ -->
         <!-- ESTADO DE CARGA INICIAL (Skeleton)                             -->
         <!-- ============================================================ -->
         <div id="app-loading" class="absolute inset-0 z-[60] bg-white flex flex-col transition-opacity duration-500">
-            <!-- Skeleton del header -->
             <div class="px-4 py-3 flex items-center justify-between border-b border-gray-100">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
                     <div class="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
                 </div>
-                <div class="w-14 h-6 bg-gray-200 rounded-full animate-pulse"></div>
-            </div>
-            <!-- Skeleton sección gestores -->
-            <div class="px-6 pt-6">
-                <div class="h-5 bg-gray-200 rounded w-32 animate-pulse mb-6"></div>
-                <div class="bg-gray-100 rounded-2xl p-5 h-48 animate-pulse mb-6"></div>
-                <div class="space-y-3">
-                    <div class="bg-gray-100 rounded-2xl p-4 h-16 animate-pulse"></div>
-                    <div class="bg-gray-100 rounded-2xl p-4 h-16 animate-pulse"></div>
-                    <div class="bg-gray-100 rounded-2xl p-4 h-16 animate-pulse"></div>
+                <div class="flex items-center gap-2">
+                    <div class="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
+                    <div class="w-14 h-6 bg-gray-200 rounded-full animate-pulse"></div>
                 </div>
             </div>
-            <!-- Skeleton divisor -->
+            <div class="px-6 pt-6">
+                <div class="h-5 bg-gray-200 rounded w-32 animate-pulse mb-6"></div>
+                <div class="bg-gray-100 rounded-2xl p-5 h-14 animate-pulse mb-4"></div>
+                <div class="bg-gray-100 rounded-2xl p-5 h-32 animate-pulse mb-6"></div>
+                <div class="space-y-3">
+                    <div class="bg-gray-100 rounded-2xl p-4 h-20 animate-pulse"></div>
+                    <div class="bg-gray-100 rounded-2xl p-4 h-20 animate-pulse"></div>
+                </div>
+            </div>
             <div class="h-px bg-gray-200 mx-6 my-8 animate-pulse"></div>
-            <!-- Skeleton sección canchas -->
             <div class="px-6">
                 <div class="h-5 bg-gray-200 rounded w-24 animate-pulse mb-6"></div>
                 <div class="bg-gray-200 rounded-2xl h-14 animate-pulse mb-6"></div>
                 <div class="space-y-3">
-                    <div class="bg-gray-100 rounded-2xl p-4 h-24 animate-pulse"></div>
-                    <div class="bg-gray-100 rounded-2xl p-4 h-24 animate-pulse"></div>
+                    <div class="bg-gray-100 rounded-2xl p-4 h-28 animate-pulse"></div>
+                    <div class="bg-gray-100 rounded-2xl p-4 h-28 animate-pulse"></div>
                 </div>
             </div>
         </div>
 
         <!-- ============================================================ -->
-        <!-- HEADER: Sticky con badge de rol Admin                          -->
+        <!-- HEADER: Sticky — VISTA ADMIN (Sistema 1 / Sistema 5 / Sistema 11) -->
         <!-- ============================================================ -->
         <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
             <div class="flex items-center justify-between px-4 py-3">
@@ -60,11 +59,19 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                         </svg>
                     </a>
-                    <div class="h-4 bg-gray-800 rounded w-32"></div>
+                    <div class="h-4 bg-gray-800 rounded w-36"></div>
                 </div>
-                <div class="bg-gray-800 text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5">
-                    <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
-                    <div class="h-2 bg-gray-400 rounded w-10"></div>
+                <div class="flex items-center gap-2">
+                    <button class="relative w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px]" aria-label="Notificaciones" onclick="showAdminNotifications()">
+                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        <span class="absolute top-1 right-1 w-5 h-5 bg-gray-800 text-white text-[10px] font-bold rounded-full flex items-center justify-center">3</span>
+                    </button>
+                    <div class="bg-gray-800 text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5">
+                        <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                        <div class="h-2 bg-gray-400 rounded w-8"></div>
+                    </div>
                 </div>
             </div>
         </header>
@@ -75,263 +82,237 @@
         <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden pb-8 opacity-0 transition-opacity duration-500">
 
             <!-- ============================================================ -->
-            <!-- SECCIÓN 1: GESTORES                                            -->
+            <!-- SECCION 1: GESTORES (Sistema 1 — RoleAssignment / Manager)     -->
+            <!-- VISTA ADMIN                                                    -->
             <!-- ============================================================ -->
             <div class="px-6 pt-6 mb-8">
                 <div class="h-5 bg-gray-800 rounded w-32 mb-6"></div>
 
-                <!-- Formulario: Crear Gestor -->
-                <div class="bg-gray-100 rounded-2xl p-5 mb-6">
-                    <div class="h-4 bg-gray-800 rounded w-40 mb-4"></div>
-
-                    <form class="space-y-4" onsubmit="event.preventDefault(); crearGestor();">
-                        <!-- Nombre -->
-                        <div class="space-y-2">
-                            <div class="h-3 bg-gray-400 rounded w-16"></div>
-                            <div class="w-full h-14 bg-white rounded-xl border-2 border-gray-200 flex items-center px-4 hover:border-gray-300 focus-within:border-gray-400 transition-colors">
-                                <div class="h-3 bg-gray-300 rounded w-32"></div>
+                <!-- Buscador de usuarios existentes (perfiles ya registrados via OAuth) -->
+                <div class="bg-gray-100 rounded-2xl p-4 mb-4">
+                    <div class="h-3 bg-gray-800 rounded w-48 mb-3"></div>
+                    <div class="w-full h-14 bg-white rounded-xl border-2 border-gray-200 flex items-center px-4 hover:border-gray-300 focus-within:border-gray-400 transition-colors">
+                        <div class="w-5 h-5 bg-gray-300 rounded mr-3"></div>
+                        <div class="h-3 bg-gray-300 rounded w-40"></div>
+                    </div>
+                    <div class="mt-3 space-y-2 hidden" id="search-results">
+                        <button class="w-full bg-white rounded-xl p-3 flex items-center gap-3 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left" onclick="selectUserForManager(1)">
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                                <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
                             </div>
-                        </div>
-                        <!-- Email -->
-                        <div class="space-y-2">
-                            <div class="h-3 bg-gray-400 rounded w-12"></div>
-                            <div class="w-full h-14 bg-white rounded-xl border-2 border-gray-200 flex items-center px-4 hover:border-gray-300 focus-within:border-gray-400 transition-colors">
-                                <div class="h-3 bg-gray-300 rounded w-40"></div>
-                            </div>
-                        </div>
-                        <!-- Contraseña -->
-                        <div class="space-y-2">
-                            <div class="h-3 bg-gray-400 rounded w-24"></div>
-                            <div class="w-full h-14 bg-white rounded-xl border-2 border-gray-200 flex items-center px-4 hover:border-gray-300 focus-within:border-gray-400 transition-colors">
-                                <div class="h-3 bg-gray-300 rounded w-28"></div>
-                            </div>
-                        </div>
-                        <!-- Botón Crear -->
-                        <button type="submit" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 mt-2 min-h-[56px] relative overflow-hidden">
-                            <div class="h-4 bg-gray-400 rounded w-28 mx-auto"></div>
-                            <span class="absolute inset-0 bg-white/20 scale-0 rounded-2xl transition-transform duration-300" id="ripple-crear-gestor"></span>
-                        </button>
-                    </form>
-                </div>
-
-                <!-- Lista de Gestores Existentes -->
-                <div>
-                    <div class="h-4 bg-gray-800 rounded w-40 mb-4"></div>
-                    <div class="space-y-3" id="lista-gestores">
-                        <!-- Gestor 1 -->
-                        <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors">
-                            <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
-                                <div class="w-6 h-6 bg-gray-300 rounded-full"></div>
-                            </div>
-                            <div class="flex-1 min-w-0">
+                            <div class="flex-1">
                                 <div class="h-3 bg-gray-800 rounded w-28 mb-1"></div>
                                 <div class="h-2 bg-gray-300 rounded w-40"></div>
                             </div>
-                            <div class="bg-gray-800 text-white text-xs px-3 py-1.5 rounded-full shrink-0 flex items-center gap-1.5">
-                                <div class="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
-                                <div class="h-2 bg-gray-400 rounded w-12"></div>
+                        </button>
+                        <button class="w-full bg-white rounded-xl p-3 flex items-center gap-3 hover:bg-gray-50 active:bg-gray-100 transition-colors text-left" onclick="selectUserForManager(2)">
+                            <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                                <div class="w-5 h-5 bg-gray-300 rounded-full"></div>
                             </div>
-                            <!-- Acciones -->
-                            <div class="flex items-center gap-1 shrink-0">
-                                <button class="w-10 h-10 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl flex items-center justify-center transition-colors shadow-sm min-h-[44px]" onclick="editarGestor(1)" aria-label="Editar gestor">
-                                    <div class="w-5 h-5 bg-gray-300 rounded"></div>
-                                </button>
-                            </div>
-                        </div>
-                        <!-- Gestor 2 -->
-                        <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors">
-                            <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
-                                <div class="w-6 h-6 bg-gray-300 rounded-full"></div>
-                            </div>
-                            <div class="flex-1 min-w-0">
+                            <div class="flex-1">
                                 <div class="h-3 bg-gray-800 rounded w-24 mb-1"></div>
                                 <div class="h-2 bg-gray-300 rounded w-36"></div>
                             </div>
-                            <div class="bg-gray-800 text-white text-xs px-3 py-1.5 rounded-full shrink-0 flex items-center gap-1.5">
-                                <div class="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
-                                <div class="h-2 bg-gray-400 rounded w-12"></div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Panel de configuracion de gestor (se muestra al seleccionar usuario) -->
+                <div id="manager-config-panel" class="bg-gray-100 rounded-2xl p-5 mb-6 hidden">
+                    <div class="h-4 bg-gray-800 rounded w-40 mb-4"></div>
+                    <div class="flex items-center justify-between mb-5">
+                        <div class="flex-1">
+                            <div class="h-3 bg-gray-800 rounded w-36 mb-1"></div>
+                            <div class="h-2 bg-gray-300 rounded w-48"></div>
+                        </div>
+                        <button class="w-14 h-8 bg-gray-800 rounded-full relative transition-colors" onclick="toggleManagerActive(this)" id="manager-active-toggle">
+                            <span class="absolute right-1 top-1 w-6 h-6 bg-white rounded-full transition-transform"></span>
+                        </button>
+                    </div>
+                    <div class="mb-4">
+                        <div class="h-3 bg-gray-800 rounded w-28 mb-3"></div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="flex items-center gap-2 bg-white rounded-xl p-3 cursor-pointer hover:bg-gray-50 transition-colors">
+                                <div class="w-5 h-5 bg-gray-300 rounded border-2 border-gray-300"></div>
+                                <div class="h-3 bg-gray-600 rounded w-28"></div>
+                            </label>
+                            <label class="flex items-center gap-2 bg-white rounded-xl p-3 cursor-pointer hover:bg-gray-50 transition-colors">
+                                <div class="w-5 h-5 bg-gray-300 rounded border-2 border-gray-300"></div>
+                                <div class="h-3 bg-gray-600 rounded w-28"></div>
+                            </label>
+                            <label class="flex items-center gap-2 bg-white rounded-xl p-3 cursor-pointer hover:bg-gray-50 transition-colors">
+                                <div class="w-5 h-5 bg-gray-300 rounded border-2 border-gray-300"></div>
+                                <div class="h-3 bg-gray-600 rounded w-24"></div>
+                            </label>
+                            <label class="flex items-center gap-2 bg-white rounded-xl p-3 cursor-pointer hover:bg-gray-50 transition-colors">
+                                <div class="w-5 h-5 bg-gray-300 rounded border-2 border-gray-300"></div>
+                                <div class="h-3 bg-gray-600 rounded w-24"></div>
+                            </label>
+                            <label class="flex items-center gap-2 bg-white rounded-xl p-3 cursor-pointer hover:bg-gray-50 transition-colors">
+                                <div class="w-5 h-5 bg-gray-300 rounded border-2 border-gray-300"></div>
+                                <div class="h-3 bg-gray-600 rounded w-20"></div>
+                            </label>
+                            <label class="flex items-center gap-2 bg-white rounded-xl p-3 cursor-pointer hover:bg-gray-50 transition-colors">
+                                <div class="w-5 h-5 bg-gray-300 rounded border-2 border-gray-300"></div>
+                                <div class="h-3 bg-gray-600 rounded w-24"></div>
+                            </label>
+                        </div>
+                    </div>
+                    <button class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="saveManagerConfig()">
+                        <div class="h-4 bg-gray-400 rounded w-32 mx-auto"></div>
+                    </button>
+                </div>
+
+                <!-- Lista de gestores activos/inactivos con estado y permisos -->
+                <div>
+                    <div class="h-4 bg-gray-800 rounded w-40 mb-4"></div>
+                    <div class="space-y-3" id="lista-gestores">
+                        <div class="bg-gray-100 rounded-2xl p-4">
+                            <div class="flex items-center gap-4 mb-3">
+                                <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                                    <div class="w-6 h-6 bg-gray-300 rounded-full"></div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="h-3 bg-gray-800 rounded w-28 mb-1"></div>
+                                    <div class="h-2 bg-gray-300 rounded w-40"></div>
+                                </div>
+                                <div class="bg-gray-800 text-white text-xs px-3 py-1.5 rounded-full shrink-0 flex items-center gap-1.5">
+                                    <div class="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                                    <div class="h-2 bg-gray-400 rounded w-10"></div>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-1 shrink-0">
-                                <button class="w-10 h-10 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl flex items-center justify-center transition-colors shadow-sm min-h-[44px]" onclick="editarGestor(2)" aria-label="Editar gestor">
-                                    <div class="w-5 h-5 bg-gray-300 rounded"></div>
-                                </button>
+                            <div class="flex flex-wrap gap-1.5">
+                                <div class="bg-gray-200 px-2 py-1 rounded-lg"><div class="h-2 bg-gray-400 rounded w-20"></div></div>
+                                <div class="bg-gray-200 px-2 py-1 rounded-lg"><div class="h-2 bg-gray-400 rounded w-24"></div></div>
+                                <div class="bg-gray-200 px-2 py-1 rounded-lg"><div class="h-2 bg-gray-400 rounded w-16"></div></div>
                             </div>
                         </div>
-                        <!-- Gestor 3 -->
-                        <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 hover:bg-gray-200 active:bg-gray-300 transition-colors">
-                            <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
-                                <div class="w-6 h-6 bg-gray-300 rounded-full"></div>
+                        <div class="bg-gray-100 rounded-2xl p-4">
+                            <div class="flex items-center gap-4 mb-3">
+                                <div class="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                                    <div class="w-6 h-6 bg-gray-300 rounded-full"></div>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <div class="h-3 bg-gray-800 rounded w-24 mb-1"></div>
+                                    <div class="h-2 bg-gray-300 rounded w-36"></div>
+                                </div>
+                                <div class="bg-gray-300 text-gray-500 text-xs px-3 py-1.5 rounded-full shrink-0 flex items-center gap-1.5">
+                                    <div class="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
+                                    <div class="h-2 bg-gray-400 rounded w-12"></div>
+                                </div>
                             </div>
-                            <div class="flex-1 min-w-0">
-                                <div class="h-3 bg-gray-800 rounded w-32 mb-1"></div>
-                                <div class="h-2 bg-gray-300 rounded w-44"></div>
-                            </div>
-                            <div class="bg-gray-300 text-gray-500 text-xs px-3 py-1.5 rounded-full shrink-0 flex items-center gap-1.5">
-                                <div class="w-1.5 h-1.5 bg-gray-400 rounded-full"></div>
-                                <div class="h-2 bg-gray-400 rounded w-14"></div>
-                            </div>
-                            <div class="flex items-center gap-1 shrink-0">
-                                <button class="w-10 h-10 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl flex items-center justify-center transition-colors shadow-sm min-h-[44px]" onclick="editarGestor(3)" aria-label="Editar gestor">
-                                    <div class="w-5 h-5 bg-gray-300 rounded"></div>
-                                </button>
+                            <div class="flex flex-wrap gap-1.5">
+                                <div class="bg-gray-200 px-2 py-1 rounded-lg"><div class="h-2 bg-gray-400 rounded w-16"></div></div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Divisor -->
             <div class="h-px bg-gray-200 mx-6 mb-8"></div>
 
             <!-- ============================================================ -->
-            <!-- SECCIÓN 2: CANCHAS                                             -->
+            <!-- SECCION 2: CANCHAS / SEDES (Sistema 5 — Court / CourtAvailability) -->
+            <!-- VISTA ADMIN                                                    -->
+            <!-- Nota interna: Al crear cancha, el backend genera automaticamente -->
+            <!-- 168 filas de CourtAvailability (14 dias x 12 franjas horarias).  -->
+            <!-- El admin no las crea manualmente.                              -->
             <!-- ============================================================ -->
             <div class="px-6 mb-8">
                 <div class="h-5 bg-gray-800 rounded w-24 mb-6"></div>
 
-                <!-- Botón Añadir Cancha -->
-                <button class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 mb-6 shadow-lg flex items-center justify-center gap-3 min-h-[56px] relative overflow-hidden" onclick="abrirFormCancha()">
+                <button class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 mb-6 shadow-lg flex items-center justify-center gap-3 min-h-[56px]" onclick="openAddCourtModal()">
                     <div class="w-6 h-6 bg-gray-400 rounded"></div>
-                    <div class="h-4 bg-gray-400 rounded w-32"></div>
-                    <span class="absolute inset-0 bg-white/20 scale-0 rounded-2xl transition-transform duration-300" id="ripple-add-cancha"></span>
+                    <div class="h-4 bg-gray-400 rounded w-28"></div>
                 </button>
 
-                <!-- Lista de Canchas Existentes -->
                 <div class="space-y-3" id="lista-canchas">
-                    <!-- Cancha 1 -->
-                    <div class="bg-gray-100 rounded-2xl p-4 hover:bg-gray-200 active:bg-gray-300 transition-colors">
-                        <div class="flex items-start gap-4">
-                            <a href="detalle_cancha_sede.html" class="w-16 h-16 bg-gray-200 rounded-xl flex items-center justify-center shrink-0 hover:bg-gray-300 active:bg-gray-400 transition-colors min-w-[64px] min-h-[64px]">
+                    <!-- Cancha ENABLED -->
+                    <div class="bg-gray-100 rounded-2xl p-4">
+                        <div class="flex items-start gap-4 mb-3">
+                            <div class="w-16 h-16 bg-gray-200 rounded-xl flex items-center justify-center shrink-0 min-w-[64px] min-h-[64px]">
                                 <div class="w-8 h-8 bg-gray-300 rounded-lg"></div>
-                            </a>
+                            </div>
                             <div class="flex-1 min-w-0">
                                 <div class="h-3 bg-gray-800 rounded w-32 mb-1"></div>
                                 <div class="h-2 bg-gray-300 rounded w-full mb-1"></div>
-                                <div class="h-2 bg-gray-300 rounded w-2/3 mb-3"></div>
+                                <div class="h-2 bg-gray-300 rounded w-2/3 mb-2"></div>
                                 <div class="flex items-center gap-2">
-                                    <div class="bg-gray-200 px-2 py-1 rounded-lg">
-                                        <div class="h-2 bg-gray-400 rounded w-10"></div>
-                                    </div>
-                                    <div class="bg-gray-200 px-2 py-1 rounded-lg">
+                                    <div class="bg-gray-800 text-white text-xs px-2.5 py-1 rounded-full">
                                         <div class="h-2 bg-gray-400 rounded w-12"></div>
                                     </div>
                                 </div>
                             </div>
-                            <!-- Acciones: Editar / Eliminar -->
-                            <div class="flex items-center gap-2 shrink-0">
-                                <button class="w-10 h-10 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl flex items-center justify-center transition-colors shadow-sm min-h-[44px]" onclick="editarCancha(1)" aria-label="Editar cancha">
-                                    <div class="w-5 h-5 bg-gray-300 rounded"></div>
-                                </button>
-                                <button class="w-10 h-10 bg-white hover:bg-red-50 active:bg-red-100 rounded-xl flex items-center justify-center transition-colors shadow-sm min-h-[44px]" onclick="eliminarCancha(1)" aria-label="Eliminar cancha">
-                                    <div class="w-5 h-5 bg-gray-300 rounded"></div>
-                                </button>
-                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button class="flex-1 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl py-3 flex items-center justify-center gap-2 transition-colors shadow-sm min-h-[44px]" onclick="editCourt(1)" aria-label="Editar cancha">
+                                <div class="w-4 h-4 bg-gray-300 rounded"></div>
+                                <div class="h-3 bg-gray-600 rounded w-10"></div>
+                            </button>
+                            <button class="flex-1 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl py-3 flex items-center justify-center gap-2 transition-colors shadow-sm min-h-[44px]" onclick="toggleCourtStatus(1)" aria-label="Deshabilitar cancha">
+                                <div class="w-4 h-4 bg-gray-300 rounded"></div>
+                                <div class="h-3 bg-gray-600 rounded w-14"></div>
+                            </button>
+                            <button class="flex-1 bg-gray-800 hover:bg-gray-700 active:bg-gray-900 rounded-xl py-3 flex items-center justify-center gap-2 transition-colors shadow-sm min-h-[44px]" onclick="openCourtAvailability(1)" aria-label="Ver disponibilidad">
+                                <div class="w-4 h-4 bg-gray-400 rounded"></div>
+                                <div class="h-3 bg-gray-400 rounded w-20"></div>
+                            </button>
                         </div>
                     </div>
 
-                    <!-- Cancha 2 -->
-                    <div class="bg-gray-100 rounded-2xl p-4 hover:bg-gray-200 active:bg-gray-300 transition-colors">
-                        <div class="flex items-start gap-4">
-                            <a href="detalle_cancha_sede.html" class="w-16 h-16 bg-gray-200 rounded-xl flex items-center justify-center shrink-0 hover:bg-gray-300 active:bg-gray-400 transition-colors min-w-[64px] min-h-[64px]">
+                    <!-- Cancha DISABLED -->
+                    <div class="bg-gray-100 rounded-2xl p-4">
+                        <div class="flex items-start gap-4 mb-3">
+                            <div class="w-16 h-16 bg-gray-200 rounded-xl flex items-center justify-center shrink-0 min-w-[64px] min-h-[64px]">
                                 <div class="w-8 h-8 bg-gray-300 rounded-lg"></div>
-                            </a>
+                            </div>
                             <div class="flex-1 min-w-0">
                                 <div class="h-3 bg-gray-800 rounded w-28 mb-1"></div>
                                 <div class="h-2 bg-gray-300 rounded w-full mb-1"></div>
-                                <div class="h-2 bg-gray-300 rounded w-3/4 mb-3"></div>
+                                <div class="h-2 bg-gray-300 rounded w-3/4 mb-2"></div>
                                 <div class="flex items-center gap-2">
-                                    <div class="bg-gray-200 px-2 py-1 rounded-lg">
-                                        <div class="h-2 bg-gray-400 rounded w-12"></div>
-                                    </div>
-                                    <div class="bg-gray-200 px-2 py-1 rounded-lg">
-                                        <div class="h-2 bg-gray-400 rounded w-10"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2 shrink-0">
-                                <button class="w-10 h-10 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl flex items-center justify-center transition-colors shadow-sm min-h-[44px]" onclick="editarCancha(2)" aria-label="Editar cancha">
-                                    <div class="w-5 h-5 bg-gray-300 rounded"></div>
-                                </button>
-                                <button class="w-10 h-10 bg-white hover:bg-red-50 active:bg-red-100 rounded-xl flex items-center justify-center transition-colors shadow-sm min-h-[44px]" onclick="eliminarCancha(2)" aria-label="Eliminar cancha">
-                                    <div class="w-5 h-5 bg-gray-300 rounded"></div>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Cancha 3 -->
-                    <div class="bg-gray-100 rounded-2xl p-4 hover:bg-gray-200 active:bg-gray-300 transition-colors">
-                        <div class="flex items-start gap-4">
-                            <a href="detalle_cancha_sede.html" class="w-16 h-16 bg-gray-200 rounded-xl flex items-center justify-center shrink-0 hover:bg-gray-300 active:bg-gray-400 transition-colors min-w-[64px] min-h-[64px]">
-                                <div class="w-8 h-8 bg-gray-300 rounded-lg"></div>
-                            </a>
-                            <div class="flex-1 min-w-0">
-                                <div class="h-3 bg-gray-800 rounded w-36 mb-1"></div>
-                                <div class="h-2 bg-gray-300 rounded w-full mb-1"></div>
-                                <div class="h-2 bg-gray-300 rounded w-1/2 mb-3"></div>
-                                <div class="flex items-center gap-2">
-                                    <div class="bg-gray-200 px-2 py-1 rounded-lg">
-                                        <div class="h-2 bg-gray-400 rounded w-10"></div>
-                                    </div>
-                                    <div class="bg-gray-200 px-2 py-1 rounded-lg">
+                                    <div class="bg-gray-300 text-gray-500 text-xs px-2.5 py-1 rounded-full">
                                         <div class="h-2 bg-gray-400 rounded w-14"></div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 shrink-0">
-                                <button class="w-10 h-10 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl flex items-center justify-center transition-colors shadow-sm min-h-[44px]" onclick="editarCancha(3)" aria-label="Editar cancha">
-                                    <div class="w-5 h-5 bg-gray-300 rounded"></div>
-                                </button>
-                                <button class="w-10 h-10 bg-white hover:bg-red-50 active:bg-red-100 rounded-xl flex items-center justify-center transition-colors shadow-sm min-h-[44px]" onclick="eliminarCancha(3)" aria-label="Eliminar cancha">
-                                    <div class="w-5 h-5 bg-gray-300 rounded"></div>
-                                </button>
-                            </div>
                         </div>
-                    </div>
-
-                    <!-- Cancha 4 -->
-                    <div class="bg-gray-100 rounded-2xl p-4 hover:bg-gray-200 active:bg-gray-300 transition-colors">
-                        <div class="flex items-start gap-4">
-                            <a href="detalle_cancha_sede.html" class="w-16 h-16 bg-gray-200 rounded-xl flex items-center justify-center shrink-0 hover:bg-gray-300 active:bg-gray-400 transition-colors min-w-[64px] min-h-[64px]">
-                                <div class="w-8 h-8 bg-gray-300 rounded-lg"></div>
-                            </a>
-                            <div class="flex-1 min-w-0">
-                                <div class="h-3 bg-gray-800 rounded w-30 mb-1"></div>
-                                <div class="h-2 bg-gray-300 rounded w-full mb-1"></div>
-                                <div class="h-2 bg-gray-300 rounded w-2/3 mb-3"></div>
-                                <div class="flex items-center gap-2">
-                                    <div class="bg-gray-200 px-2 py-1 rounded-lg">
-                                        <div class="h-2 bg-gray-400 rounded w-12"></div>
-                                    </div>
-                                    <div class="bg-gray-200 px-2 py-1 rounded-lg">
-                                        <div class="h-2 bg-gray-400 rounded w-10"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-2 shrink-0">
-                                <button class="w-10 h-10 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl flex items-center justify-center transition-colors shadow-sm min-h-[44px]" onclick="editarCancha(4)" aria-label="Editar cancha">
-                                    <div class="w-5 h-5 bg-gray-300 rounded"></div>
-                                </button>
-                                <button class="w-10 h-10 bg-white hover:bg-red-50 active:bg-red-100 rounded-xl flex items-center justify-center transition-colors shadow-sm min-h-[44px]" onclick="eliminarCancha(4)" aria-label="Eliminar cancha">
-                                    <div class="w-5 h-5 bg-gray-300 rounded"></div>
-                                </button>
-                            </div>
+                        <div class="flex items-center gap-2">
+                            <button class="flex-1 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl py-3 flex items-center justify-center gap-2 transition-colors shadow-sm min-h-[44px]" onclick="editCourt(2)" aria-label="Editar cancha">
+                                <div class="w-4 h-4 bg-gray-300 rounded"></div>
+                                <div class="h-3 bg-gray-600 rounded w-10"></div>
+                            </button>
+                            <button class="flex-1 bg-white hover:bg-gray-50 active:bg-gray-100 rounded-xl py-3 flex items-center justify-center gap-2 transition-colors shadow-sm min-h-[44px]" onclick="toggleCourtStatus(2)" aria-label="Habilitar cancha">
+                                <div class="w-4 h-4 bg-gray-300 rounded"></div>
+                                <div class="h-3 bg-gray-600 rounded w-12"></div>
+                            </button>
+                            <button class="flex-1 bg-gray-800 hover:bg-gray-700 active:bg-gray-900 rounded-xl py-3 flex items-center justify-center gap-2 transition-colors shadow-sm min-h-[44px]" onclick="openCourtAvailability(2)" aria-label="Ver disponibilidad">
+                                <div class="w-4 h-4 bg-gray-400 rounded"></div>
+                                <div class="h-3 bg-gray-400 rounded w-20"></div>
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
 
+            <div class="h-px bg-gray-200 mx-6 mb-8"></div>
+
             <!-- ============================================================ -->
-            <!-- NOTIFICACIÓN CONTEXTUAL INFERIOR                               -->
+            <!-- SECCION 3: INFO / NOTIFICACIONES DEL SISTEMA (Sistema 11)    -->
+            <!-- VISTA ADMIN — Anuncios de familia SYSTEM (no desactivables)    -->
             <!-- ============================================================ -->
             <div class="px-6 mb-8">
-                <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer" onclick="showAdminInfo()">
+                <div class="h-5 bg-gray-800 rounded w-48 mb-4"></div>
+                <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3 hover:bg-gray-200 active:bg-gray-300 transition-colors cursor-pointer" onclick="showSystemAnnouncements()">
                     <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
                         <div class="w-5 h-5 bg-gray-400 rounded"></div>
                     </div>
                     <div class="flex-1">
-                        <div class="h-3 bg-gray-600 rounded w-48 mb-1"></div>
+                        <div class="h-3 bg-gray-800 rounded w-48 mb-1"></div>
                         <div class="h-2 bg-gray-300 rounded w-32"></div>
+                    </div>
+                    <div class="bg-gray-800 text-white text-xs px-2.5 py-1 rounded-full">
+                        <div class="h-2 bg-gray-400 rounded w-4"></div>
                     </div>
                     <svg class="w-5 h-5 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
@@ -342,11 +323,11 @@
         </main>
 
         <!-- ============================================================ -->
-        <!-- SIN NAVBAR INFERIOR (Admin no usa navegación de jugador)       -->
+        <!-- SIN NAVBAR INFERIOR (Admin no usa navegacion de jugador)       -->
         <!-- ============================================================ -->
 
         <!-- ============================================================ -->
-        <!-- TOAST DE NOTIFICACIÓN                                          -->
+        <!-- TOAST DE NOTIFICACION                                          -->
         <!-- ============================================================ -->
         <div id="toast" class="absolute top-20 left-4 right-4 z-[70] pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
             <div class="bg-gray-800 text-white px-4 py-3 rounded-2xl shadow-lg flex items-center gap-3">
@@ -361,23 +342,23 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- MODAL DE FORMULARIO CANCHA (Crear/Editar)                      -->
+        <!-- MODAL BOTTOM-SHEET: Anadir/Editar Cancha (Sistema 5)         -->
+        <!-- Campos: nombre, direccion, descripcion, inventario             -->
         <!-- ============================================================ -->
-        <div id="cancha-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
-            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300" id="cancha-modal-content">
+        <div id="court-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300" id="court-modal-content">
                 <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
                 <div class="h-4 bg-gray-800 rounded w-48 mb-2 mx-auto"></div>
                 <div class="h-3 bg-gray-300 rounded w-64 mb-6 mx-auto"></div>
-                
-                <form class="space-y-4 mb-6" onsubmit="event.preventDefault(); guardarCancha();">
+                <form class="space-y-4 mb-6" onsubmit="event.preventDefault(); saveCourt();">
                     <div class="space-y-2">
-                        <div class="h-3 bg-gray-400 rounded w-20"></div>
+                        <div class="h-3 bg-gray-400 rounded w-16"></div>
                         <div class="w-full h-14 bg-gray-100 rounded-xl border-2 border-gray-200 flex items-center px-4 hover:border-gray-300 focus-within:border-gray-400 transition-colors">
                             <div class="h-3 bg-gray-300 rounded w-32"></div>
                         </div>
                     </div>
                     <div class="space-y-2">
-                        <div class="h-3 bg-gray-400 rounded w-16"></div>
+                        <div class="h-3 bg-gray-400 rounded w-20"></div>
                         <div class="w-full h-14 bg-gray-100 rounded-xl border-2 border-gray-200 flex items-center px-4 hover:border-gray-300 focus-within:border-gray-400 transition-colors">
                             <div class="h-3 bg-gray-300 rounded w-40"></div>
                         </div>
@@ -385,30 +366,326 @@
                     <div class="space-y-2">
                         <div class="h-3 bg-gray-400 rounded w-24"></div>
                         <div class="w-full h-14 bg-gray-100 rounded-xl border-2 border-gray-200 flex items-center px-4 hover:border-gray-300 focus-within:border-gray-400 transition-colors">
+                            <div class="h-3 bg-gray-300 rounded w-36"></div>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="h-3 bg-gray-400 rounded w-20"></div>
+                        <div class="w-full h-14 bg-gray-100 rounded-xl border-2 border-gray-200 flex items-center px-4 hover:border-gray-300 focus-within:border-gray-400 transition-colors">
                             <div class="h-3 bg-gray-300 rounded w-28"></div>
                         </div>
                     </div>
-                    <button type="submit" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px] relative overflow-hidden">
+                    <button type="submit" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]">
                         <div class="h-4 bg-gray-400 rounded w-24 mx-auto"></div>
-                        <span class="absolute inset-0 bg-white/20 scale-0 rounded-2xl transition-transform duration-300" id="ripple-guardar-cancha"></span>
                     </button>
                 </form>
-
-                <button class="w-full bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="closeCanchaModal()">
+                <button class="w-full bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="closeCourtModal()">
                     <div class="h-4 bg-gray-400 rounded w-16 mx-auto"></div>
                 </button>
             </div>
         </div>
 
         <!-- ============================================================ -->
-        <!-- MODAL DE CONFIRMACIÓN ELIMINAR                                 -->
+        <!-- MODAL BOTTOM-SHEET: Disponibilidad de Cancha (14 dias x 12 franjas) -->
+        <!-- Sistema 5 — CourtAvailability                                  -->
         <!-- ============================================================ -->
-        <div id="eliminar-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
-            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300" id="eliminar-modal-content">
+        <div id="availability-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-t-3xl w-full max-h-[85vh] flex flex-col transform translate-y-full transition-transform duration-300" id="availability-modal-content">
+                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mt-4 mb-4 shrink-0"></div>
+                <div class="px-6 pb-2 shrink-0">
+                    <div class="h-4 bg-gray-800 rounded w-48 mb-2"></div>
+                    <div class="h-3 bg-gray-300 rounded w-64 mb-4"></div>
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-4 h-4 bg-gray-200 rounded border border-gray-300"></div>
+                            <div class="h-2 bg-gray-400 rounded w-16"></div>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-4 h-4 bg-gray-800 rounded border border-gray-600"></div>
+                            <div class="h-2 bg-gray-400 rounded w-16"></div>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <div class="w-4 h-4 bg-gray-200 rounded border border-gray-300 flex items-center justify-center"><span class="text-[10px]">🏆</span></div>
+                            <div class="h-2 bg-gray-400 rounded w-20"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-auto px-6 pb-6">
+                    <div class="min-w-[800px]">
+                        <div class="grid grid-cols-[80px_repeat(14,1fr)] gap-1 mb-1">
+                            <div class="h-8"></div>
+                            <div class="h-8 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-6"></div></div>
+                            <div class="h-8 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-6"></div></div>
+                            <div class="h-8 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-6"></div></div>
+                            <div class="h-8 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-6"></div></div>
+                            <div class="h-8 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-6"></div></div>
+                            <div class="h-8 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-6"></div></div>
+                            <div class="h-8 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-6"></div></div>
+                            <div class="h-8 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-6"></div></div>
+                            <div class="h-8 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-6"></div></div>
+                            <div class="h-8 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-6"></div></div>
+                            <div class="h-8 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-6"></div></div>
+                            <div class="h-8 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-6"></div></div>
+                            <div class="h-8 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-6"></div></div>
+                            <div class="h-8 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-400 rounded w-6"></div></div>
+                        </div>
+
+                        <!-- 00-02 -->
+                        <div class="grid grid-cols-[80px_repeat(14,1fr)] gap-1 mb-1">
+                            <div class="h-10 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-500 rounded w-10"></div></div>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-800 rounded hover:bg-gray-700 transition-colors" onclick="toggleAvailabilityCell(this,true)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors flex items-center justify-center" onclick="toggleAvailabilityCell(this,false,true)"><span class="text-xs">🏆</span></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-800 rounded hover:bg-gray-700 transition-colors" onclick="toggleAvailabilityCell(this,true)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors flex items-center justify-center" onclick="toggleAvailabilityCell(this,false,true)"><span class="text-xs">🏆</span></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-800 rounded hover:bg-gray-700 transition-colors" onclick="toggleAvailabilityCell(this,true)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                        </div>
+                        <!-- 02-04 -->
+                        <div class="grid grid-cols-[80px_repeat(14,1fr)] gap-1 mb-1">
+                            <div class="h-10 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-500 rounded w-10"></div></div>
+                            <button class="h-10 bg-gray-800 rounded hover:bg-gray-700 transition-colors" onclick="toggleAvailabilityCell(this,true)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-800 rounded hover:bg-gray-700 transition-colors" onclick="toggleAvailabilityCell(this,true)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-800 rounded hover:bg-gray-700 transition-colors" onclick="toggleAvailabilityCell(this,true)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                        </div>
+                        <!-- 04-06 -->
+                        <div class="grid grid-cols-[80px_repeat(14,1fr)] gap-1 mb-1">
+                            <div class="h-10 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-500 rounded w-10"></div></div>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-800 rounded hover:bg-gray-700 transition-colors" onclick="toggleAvailabilityCell(this,true)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-800 rounded hover:bg-gray-700 transition-colors" onclick="toggleAvailabilityCell(this,true)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                        </div>
+                        <!-- 06-08 -->
+                        <div class="grid grid-cols-[80px_repeat(14,1fr)] gap-1 mb-1">
+                            <div class="h-10 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-500 rounded w-10"></div></div>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                        </div>
+                        <!-- 08-10 -->
+                        <div class="grid grid-cols-[80px_repeat(14,1fr)] gap-1 mb-1">
+                            <div class="h-10 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-500 rounded w-10"></div></div>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors flex items-center justify-center" onclick="toggleAvailabilityCell(this,false,true)"><span class="text-xs">🏆</span></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                        </div>
+                        <!-- 10-12 -->
+                        <div class="grid grid-cols-[80px_repeat(14,1fr)] gap-1 mb-1">
+                            <div class="h-10 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-500 rounded w-10"></div></div>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                        </div>
+                        <!-- 12-14 -->
+                        <div class="grid grid-cols-[80px_repeat(14,1fr)] gap-1 mb-1">
+                            <div class="h-10 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-500 rounded w-10"></div></div>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                        </div>
+                        <!-- 14-16 -->
+                        <div class="grid grid-cols-[80px_repeat(14,1fr)] gap-1 mb-1">
+                            <div class="h-10 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-500 rounded w-10"></div></div>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                        </div>
+                        <!-- 16-18 -->
+                        <div class="grid grid-cols-[80px_repeat(14,1fr)] gap-1 mb-1">
+                            <div class="h-10 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-500 rounded w-10"></div></div>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                        </div>
+                        <!-- 18-20 -->
+                        <div class="grid grid-cols-[80px_repeat(14,1fr)] gap-1 mb-1">
+                            <div class="h-10 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-500 rounded w-10"></div></div>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                        </div>
+                        <!-- 20-22 -->
+                        <div class="grid grid-cols-[80px_repeat(14,1fr)] gap-1 mb-1">
+                            <div class="h-10 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-500 rounded w-10"></div></div>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                        </div>
+                        <!-- 22-00 -->
+                        <div class="grid grid-cols-[80px_repeat(14,1fr)] gap-1 mb-1">
+                            <div class="h-10 bg-gray-100 rounded flex items-center justify-center"><div class="h-2 bg-gray-500 rounded w-10"></div></div>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                            <button class="h-10 bg-gray-200 rounded hover:bg-gray-300 transition-colors" onclick="toggleAvailabilityCell(this,false)"></button>
+                        </div>
+                    </div>
+                </div>
+                <div class="px-6 pb-6 pt-2 shrink-0">
+                    <button class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="closeAvailabilityModal()">
+                        <div class="h-4 bg-gray-400 rounded w-16 mx-auto"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- MODAL BOTTOM-SHEET: Confirmacion al deshabilitar celda con 🏆 -->
+        <!-- Alerta: "Esta franja tiene torneo programado. ¿Deseas suspender?" -->
+        <!-- ============================================================ -->
+        <div id="availability-confirm-modal" class="absolute inset-0 z-[90] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300" id="availability-confirm-content">
                 <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
-                <div class="h-4 bg-gray-800 rounded w-48 mb-2 mx-auto"></div>
-                <div class="h-3 bg-gray-300 rounded w-64 mb-6 mx-auto"></div>
-                
+                <div class="h-4 bg-gray-800 rounded w-64 mb-2 mx-auto"></div>
+                <div class="h-3 bg-gray-300 rounded w-72 mb-6 mx-auto"></div>
+                <div class="flex gap-3">
+                    <button class="flex-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="closeAvailabilityConfirm()">
+                        <div class="h-4 bg-gray-400 rounded w-16 mx-auto"></div>
+                    </button>
+                    <button class="flex-1 bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="confirmAvailabilityToggle()">
+                        <div class="h-4 bg-gray-400 rounded w-20 mx-auto"></div>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- MODAL BOTTOM-SHEET: Confirmacion al deshabilitar cancha        -->
+        <!-- Nota: Canchas deshabilitadas pasan torneos a SUSPENDED y       -->
+        <!-- notifican a gestores (Sistema 11). NO se eliminan.             -->
+        <!-- ============================================================ -->
+        <div id="disable-court-modal" class="absolute inset-0 z-[90] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
+            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300" id="disable-court-content">
+                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
+                <div class="h-4 bg-gray-800 rounded w-56 mb-2 mx-auto"></div>
+                <div class="h-3 bg-gray-300 rounded w-72 mb-6 mx-auto"></div>
                 <div class="bg-gray-100 rounded-2xl p-4 mb-6 flex items-center gap-3">
                     <div class="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center shrink-0">
                         <div class="w-6 h-6 bg-gray-300 rounded-lg"></div>
@@ -418,251 +695,189 @@
                         <div class="h-2 bg-gray-300 rounded w-40"></div>
                     </div>
                 </div>
-
                 <div class="flex gap-3">
-                    <button class="flex-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="closeEliminarModal()">
-                        <div class="h-4 bg-gray-400 rounded w-20 mx-auto"></div>
+                    <button class="flex-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="closeDisableCourtModal()">
+                        <div class="h-4 bg-gray-400 rounded w-16 mx-auto"></div>
                     </button>
-                    <button class="flex-1 bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="confirmarEliminar()">
+                    <button class="flex-1 bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="confirmDisableCourt()">
                         <div class="h-4 bg-gray-400 rounded w-24 mx-auto"></div>
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- ============================================================ -->
-        <!-- MODAL DE INFO ADMIN                                            -->
-        <!-- ============================================================ -->
-        <div id="info-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
-            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300" id="info-modal-content">
-                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
-                <div class="h-4 bg-gray-800 rounded w-48 mb-2 mx-auto"></div>
-                <div class="h-3 bg-gray-300 rounded w-64 mb-6 mx-auto"></div>
-                
-                <div class="space-y-3 mb-6">
-                    <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3">
-                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
-                            <div class="w-5 h-5 bg-gray-400 rounded"></div>
-                        </div>
-                        <div class="flex-1">
-                            <div class="h-3 bg-gray-800 rounded w-48 mb-1"></div>
-                            <div class="h-2 bg-gray-300 rounded w-32"></div>
-                        </div>
-                    </div>
-                    <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3">
-                        <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
-                            <div class="w-5 h-5 bg-gray-400 rounded"></div>
-                        </div>
-                        <div class="flex-1">
-                            <div class="h-3 bg-gray-800 rounded w-40 mb-1"></div>
-                            <div class="h-2 bg-gray-300 rounded w-28"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <button class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="closeInfoModal()">
-                    <div class="h-4 bg-gray-400 rounded w-16 mx-auto"></div>
-                </button>
-            </div>
-        </div>
-
     </div>
 
     <!-- ============================================================ -->
-    <!-- SCRIPT: Lógica de Interacción                                  -->
+    <!-- SCRIPT: Logica de Interaccion                                  -->
     <!-- ============================================================ -->
     <script>
-        // ============================================================
-        // ESTADO
-        // ============================================================
-        let canchaAEliminar = null;
-        let canchaEnEdicion = null;
+        let courtToDisable = null;
+        let pendingAvailabilityCell = null;
+        let pendingAvailabilityIsTournament = false;
 
-        // ============================================================
-        // CARGA INICIAL
-        // ============================================================
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 const appLoading = document.getElementById('app-loading');
                 const mainContent = document.getElementById('main-content');
-                
                 appLoading.style.opacity = '0';
                 mainContent.style.opacity = '1';
-                
                 setTimeout(() => {
                     appLoading.style.display = 'none';
-                    showToast('Panel de Administración', '3 gestores activos • 4 canchas registradas');
+                    showToast('Panel de Administracion', '2 gestores activos • 2 canchas registradas');
                 }, 500);
             }, 1200);
         });
 
-        // ============================================================
-        // GESTORES
-        // ============================================================
-        function crearGestor() {
-            const ripple = document.getElementById('ripple-crear-gestor');
-            ripple.style.transform = 'scale(1)';
-            setTimeout(() => ripple.style.transform = 'scale(0)', 300);
-
-            if (navigator.vibrate) navigator.vibrate(50);
-
-            setTimeout(() => {
-                showToast('Gestor creado', 'Nuevo gestor registrado exitosamente');
-            }, 300);
-        }
-
-        function editarGestor(id) {
-            if (navigator.vibrate) navigator.vibrate(20);
-            showToast('Editar gestor', `Abriendo editor del gestor #${id}...`);
-        }
-
-        // ============================================================
-        // CANCHAS
-        // ============================================================
-        function abrirFormCancha() {
-            canchaEnEdicion = null;
-            const ripple = document.getElementById('ripple-add-cancha');
-            ripple.style.transform = 'scale(1)';
-            setTimeout(() => ripple.style.transform = 'scale(0)', 300);
-
-            if (navigator.vibrate) navigator.vibrate(30);
-
-            const modal = document.getElementById('cancha-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.style.opacity = '1';
-                document.getElementById('cancha-modal-content').style.transform = 'translateY(0)';
-            }, 10);
-        }
-
-        function editarCancha(id) {
-            canchaEnEdicion = id;
-            if (navigator.vibrate) navigator.vibrate(20);
-
-            const modal = document.getElementById('cancha-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.style.opacity = '1';
-                document.getElementById('cancha-modal-content').style.transform = 'translateY(0)';
-            }, 10);
-        }
-
-        function guardarCancha() {
-            const ripple = document.getElementById('ripple-guardar-cancha');
-            ripple.style.transform = 'scale(1)';
-            setTimeout(() => ripple.style.transform = 'scale(0)', 300);
-
-            closeCanchaModal();
-
-            if (canchaEnEdicion) {
-                showToast('Cancha actualizada', `Cancha #${canchaEnEdicion} modificada exitosamente`);
-            } else {
-                showToast('Cancha creada', 'Nueva cancha registrada en el sistema');
-            }
-            canchaEnEdicion = null;
-        }
-
-        function closeCanchaModal() {
-            const modal = document.getElementById('cancha-modal');
-            modal.style.opacity = '0';
-            document.getElementById('cancha-modal-content').style.transform = 'translateY(100%)';
-            setTimeout(() => modal.classList.add('hidden'), 300);
-        }
-
-        function eliminarCancha(id) {
-            canchaAEliminar = id;
-            if (navigator.vibrate) navigator.vibrate([20, 10, 20]);
-
-            const modal = document.getElementById('eliminar-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.style.opacity = '1';
-                document.getElementById('eliminar-modal-content').style.transform = 'translateY(0)';
-            }, 10);
-        }
-
-        function closeEliminarModal() {
-            const modal = document.getElementById('eliminar-modal');
-            modal.style.opacity = '0';
-            document.getElementById('eliminar-modal-content').style.transform = 'translateY(100%)';
-            setTimeout(() => modal.classList.add('hidden'), 300);
-            canchaAEliminar = null;
-        }
-
-        function confirmarEliminar() {
-            closeEliminarModal();
-            setTimeout(() => {
-                showToast('Cancha eliminada', `Cancha #${canchaAEliminar} removida del sistema`);
-                canchaAEliminar = null;
-            }, 300);
-        }
-
-        // ============================================================
-        // INFO ADMIN
-        // ============================================================
-        function showAdminInfo() {
-            const modal = document.getElementById('info-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.style.opacity = '1';
-                document.getElementById('info-modal-content').style.transform = 'translateY(0)';
-            }, 10);
-            if (navigator.vibrate) navigator.vibrate(30);
-        }
-
-        function closeInfoModal() {
-            const modal = document.getElementById('info-modal');
-            modal.style.opacity = '0';
-            document.getElementById('info-modal-content').style.transform = 'translateY(100%)';
-            setTimeout(() => modal.classList.add('hidden'), 300);
-        }
-
-        // ============================================================
-        // SISTEMA DE TOAST
-        // ============================================================
-        let toastTimeout;
         function showToast(title, subtitle) {
             const toast = document.getElementById('toast');
             const toastTitle = document.getElementById('toast-title');
             const toastSubtitle = document.getElementById('toast-subtitle');
-            
-            clearTimeout(toastTimeout);
-            
+            clearTimeout(window.toastTimeout);
             toastTitle.style.width = Math.min(title.length * 8, 200) + 'px';
             toastSubtitle.style.width = Math.min(subtitle.length * 6, 150) + 'px';
-            
             toast.style.opacity = '0.95';
             toast.style.transform = 'translateY(0)';
-            
-            toastTimeout = setTimeout(() => {
+            window.toastTimeout = setTimeout(() => {
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateY(-8px)';
             }, 3000);
         }
 
-        // ============================================================
-        // TECLADO (Escape para cerrar modales)
-        // ============================================================
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeCanchaModal();
-                closeEliminarModal();
-                closeInfoModal();
-            }
-        });
+        function selectUserForManager(id) {
+            document.getElementById('manager-config-panel').classList.remove('hidden');
+            document.getElementById('search-results').classList.add('hidden');
+            showToast('Usuario seleccionado', 'Configurando permisos de gestor...');
+        }
 
-        // ============================================================
-        // SWIPE PARA CERRAR MODALES
-        // ============================================================
-        function setupSwipeModal(contentId, closeFn) {
+        function toggleManagerActive(btn) {
+            const span = btn.querySelector('span');
+            if (btn.classList.contains('bg-gray-800')) {
+                btn.classList.remove('bg-gray-800');
+                btn.classList.add('bg-gray-300');
+                span.style.transform = 'translateX(-24px)';
+            } else {
+                btn.classList.add('bg-gray-800');
+                btn.classList.remove('bg-gray-300');
+                span.style.transform = 'translateX(0)';
+            }
+        }
+
+        function saveManagerConfig() {
+            showToast('Configuracion guardada', 'Permisos de gestor actualizados');
+            document.getElementById('manager-config-panel').classList.add('hidden');
+        }
+
+        function openAddCourtModal() {
+            openModal('court-modal', 'court-modal-content');
+        }
+
+        function editCourt(id) {
+            openModal('court-modal', 'court-modal-content');
+            showToast('Editar cancha', 'Cargando datos de cancha #' + id);
+        }
+
+        function saveCourt() {
+            closeModal('court-modal', 'court-modal-content');
+            showToast('Cancha guardada', 'Cancha registrada exitosamente');
+        }
+
+        function closeCourtModal() {
+            closeModal('court-modal', 'court-modal-content');
+        }
+
+        function toggleCourtStatus(id) {
+            courtToDisable = id;
+            openModal('disable-court-modal', 'disable-court-content');
+        }
+
+        function closeDisableCourtModal() {
+            closeModal('disable-court-modal', 'disable-court-content');
+            courtToDisable = null;
+        }
+
+        function confirmDisableCourt() {
+            closeModal('disable-court-modal', 'disable-court-content');
+            setTimeout(() => {
+                showToast('Cancha deshabilitada', 'Torneos afectados pasan a SUSPENDED. Notificacion enviada a gestores.');
+                courtToDisable = null;
+            }, 300);
+        }
+
+        function openCourtAvailability(id) {
+            openModal('availability-modal', 'availability-modal-content');
+        }
+
+        function closeAvailabilityModal() {
+            closeModal('availability-modal', 'availability-modal-content');
+        }
+
+        function toggleAvailabilityCell(cell, isCurrentlyUnavailable, hasTournament) {
+            if (hasTournament && !isCurrentlyUnavailable) {
+                pendingAvailabilityCell = cell;
+                pendingAvailabilityIsTournament = true;
+                openModal('availability-confirm-modal', 'availability-confirm-content');
+                return;
+            }
+            if (isCurrentlyUnavailable) {
+                cell.classList.remove('bg-gray-800', 'hover:bg-gray-700');
+                cell.classList.add('bg-gray-200', 'hover:bg-gray-300');
+            } else {
+                cell.classList.remove('bg-gray-200', 'hover:bg-gray-300');
+                cell.classList.add('bg-gray-800', 'hover:bg-gray-700');
+            }
+        }
+
+        function closeAvailabilityConfirm() {
+            closeModal('availability-confirm-modal', 'availability-confirm-content');
+            pendingAvailabilityCell = null;
+            pendingAvailabilityIsTournament = false;
+        }
+
+        function confirmAvailabilityToggle() {
+            closeModal('availability-confirm-modal', 'availability-confirm-content');
+            if (pendingAvailabilityCell) {
+                pendingAvailabilityCell.classList.remove('bg-gray-200', 'hover:bg-gray-300');
+                pendingAvailabilityCell.classList.add('bg-gray-800', 'hover:bg-gray-700');
+                pendingAvailabilityCell = null;
+                pendingAvailabilityIsTournament = false;
+                showToast('Franja deshabilitada', 'Torneo programado suspendido');
+            }
+        }
+
+        function showAdminNotifications() {
+            showToast('Notificaciones', '3 notificaciones no leidas');
+        }
+
+        function showSystemAnnouncements() {
+            showToast('Anuncios del sistema', 'Mostrando anuncios de familia SYSTEM');
+        }
+
+        function openModal(backdropId, contentId) {
+            const modal = document.getElementById(backdropId);
+            const content = document.getElementById(contentId);
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.style.opacity = '1';
+                content.style.transform = 'translateY(0)';
+            }, 10);
+        }
+
+        function closeModal(backdropId, contentId) {
+            const modal = document.getElementById(backdropId);
+            const content = document.getElementById(contentId);
+            modal.style.opacity = '0';
+            content.style.transform = 'translateY(100%)';
+            setTimeout(() => modal.classList.add('hidden'), 300);
+        }
+
+        function setupSwipeModal(backdropId, contentId, closeFn) {
             let touchStartY = 0;
             const content = document.getElementById(contentId);
-            
             if (content) {
                 content.addEventListener('touchstart', (e) => {
                     touchStartY = e.touches[0].clientY;
                 }, { passive: true });
-
                 content.addEventListener('touchend', (e) => {
                     const touchEndY = e.changedTouches[0].clientY;
                     if (touchEndY - touchStartY > 80) {
@@ -672,9 +887,19 @@
             }
         }
 
-        setupSwipeModal('cancha-modal-content', closeCanchaModal);
-        setupSwipeModal('eliminar-modal-content', closeEliminarModal);
-        setupSwipeModal('info-modal-content', closeInfoModal);
+        setupSwipeModal('court-modal', 'court-modal-content', closeCourtModal);
+        setupSwipeModal('availability-modal', 'availability-modal-content', closeAvailabilityModal);
+        setupSwipeModal('availability-confirm-modal', 'availability-confirm-content', closeAvailabilityConfirm);
+        setupSwipeModal('disable-court-modal', 'disable-court-content', closeDisableCourtModal);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeCourtModal();
+                closeAvailabilityModal();
+                closeAvailabilityConfirm();
+                closeDisableCourtModal();
+            }
+        });
     </script>
 
 </body>

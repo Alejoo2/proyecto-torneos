@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Directorio de Reclutamiento — Wireframe Low-Fidelity</title>
+    <title>Directorio de Jugadores — Wireframe Low-Fidelity</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-950 min-h-[100dvh] flex items-center justify-center">
@@ -14,7 +14,7 @@
     <div class="w-full max-w-lg min-h-[100dvh] bg-white md:min-h-[90vh] md:my-[5vh] md:rounded-[2rem] md:border-[10px] md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col relative">
 
         <!-- ============================================================ -->
-        <!-- ESTADO DE CARGA INICIAL (Skeleton)                             -->
+        <!-- ESTADO DE CARGA INICIAL (Skeleton realista)                    -->
         <!-- ============================================================ -->
         <div id="app-loading" class="absolute inset-0 z-[60] bg-white flex flex-col transition-opacity duration-500">
             <!-- Skeleton del header -->
@@ -35,18 +35,74 @@
                 <div class="h-10 bg-gray-200 rounded-full w-24 animate-pulse"></div>
                 <div class="h-10 bg-gray-200 rounded-full w-20 animate-pulse"></div>
             </div>
-            <!-- Skeleton de jugadores -->
+            <!-- Skeleton de jugadores: estructura realista de tarjeta -->
             <div class="px-6 space-y-4">
-                <div class="h-20 bg-gray-200 rounded-2xl animate-pulse"></div>
-                <div class="h-20 bg-gray-200 rounded-2xl animate-pulse"></div>
-                <div class="h-20 bg-gray-800 rounded-2xl animate-pulse"></div>
-                <div class="h-20 bg-gray-200 rounded-2xl animate-pulse"></div>
-                <div class="h-20 bg-gray-200 rounded-2xl animate-pulse"></div>
+                <!-- Tarjeta skeleton: avatar + 2 líneas + botones -->
+                <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 animate-pulse">
+                    <div class="w-14 h-14 bg-gray-200 rounded-full shrink-0"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-3 bg-gray-200 rounded w-32"></div>
+                        <div class="h-2 bg-gray-200 rounded w-48"></div>
+                        <div class="h-2 bg-gray-200 rounded w-16"></div>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <div class="h-9 bg-gray-200 rounded-xl w-20"></div>
+                        <div class="h-9 bg-gray-200 rounded-xl w-16"></div>
+                    </div>
+                </div>
+                <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 animate-pulse">
+                    <div class="w-14 h-14 bg-gray-200 rounded-full shrink-0"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-3 bg-gray-200 rounded w-28"></div>
+                        <div class="h-2 bg-gray-200 rounded w-40"></div>
+                        <div class="h-2 bg-gray-200 rounded w-16"></div>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <div class="h-9 bg-gray-200 rounded-xl w-20"></div>
+                        <div class="h-9 bg-gray-200 rounded-xl w-16"></div>
+                    </div>
+                </div>
+                <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 animate-pulse">
+                    <div class="w-14 h-14 bg-gray-200 rounded-full shrink-0"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-3 bg-gray-200 rounded w-36"></div>
+                        <div class="h-2 bg-gray-200 rounded w-44"></div>
+                        <div class="h-2 bg-gray-200 rounded w-16"></div>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <div class="h-9 bg-gray-200 rounded-xl w-20"></div>
+                        <div class="h-9 bg-gray-200 rounded-xl w-16"></div>
+                    </div>
+                </div>
+                <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 animate-pulse">
+                    <div class="w-14 h-14 bg-gray-200 rounded-full shrink-0"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-3 bg-gray-200 rounded w-30"></div>
+                        <div class="h-2 bg-gray-200 rounded w-52"></div>
+                        <div class="h-2 bg-gray-200 rounded w-16"></div>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <div class="h-9 bg-gray-200 rounded-xl w-20"></div>
+                        <div class="h-9 bg-gray-200 rounded-xl w-16"></div>
+                    </div>
+                </div>
+                <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 animate-pulse">
+                    <div class="w-14 h-14 bg-gray-200 rounded-full shrink-0"></div>
+                    <div class="flex-1 space-y-2">
+                        <div class="h-3 bg-gray-200 rounded w-34"></div>
+                        <div class="h-2 bg-gray-200 rounded w-42"></div>
+                        <div class="h-2 bg-gray-200 rounded w-16"></div>
+                    </div>
+                    <div class="flex gap-2 shrink-0">
+                        <div class="h-9 bg-gray-200 rounded-xl w-20"></div>
+                        <div class="h-9 bg-gray-200 rounded-xl w-16"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- ============================================================ -->
-        <!-- HEADER: Sticky con título y badge de rol                       -->
+        <!-- HEADER: Sticky con título y info del equipo                    -->
         <!-- ============================================================ -->
         <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
             <div class="flex items-center justify-between px-4 py-3">
@@ -56,12 +112,17 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                         </svg>
                     </a>
-                    <div class="h-4 bg-gray-800 rounded w-48"></div>
+                    <div>
+                        <div class="h-4 bg-gray-800 rounded w-48 mb-1"></div>
+                        <div class="h-3 bg-gray-400 rounded w-32"></div>
+                    </div>
                 </div>
-                <!-- Badge: Solo Capitanes -->
-                <div class="bg-gray-800 text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1">
-                    <div class="w-3 h-3 bg-gray-400 rounded-full"></div>
-                    <div class="h-2 bg-gray-400 rounded w-14"></div>
+                <!-- Info del equipo: miembros actuales -->
+                <div class="bg-gray-800 text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5">
+                    <svg class="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+                    </svg>
+                    <span>Los Pibes — 8/15</span>
                 </div>
             </div>
         </header>
@@ -72,7 +133,7 @@
         <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden pb-24 opacity-0 transition-opacity duration-500">
 
             <!-- ============================================================ -->
-            <!-- SEARCH BAR: Buscador de jugadores libres                       -->
+            <!-- SEARCH BAR: Buscador de jugadores                              -->
             <!-- ============================================================ -->
             <div class="px-6 pt-6 pb-4">
                 <div class="bg-gray-100 rounded-2xl flex items-center gap-3 px-4 py-3 focus-within:bg-gray-50 focus-within:ring-2 focus-within:ring-gray-300 transition-all">
@@ -84,7 +145,7 @@
                     <input 
                         type="text" 
                         id="search-input"
-                        placeholder="Buscar jugadores libres..." 
+                        placeholder="Buscar jugadores..." 
                         class="w-full bg-transparent outline-none text-gray-800 placeholder-gray-400 text-base"
                         oninput="handleSearch(this.value)"
                     >
@@ -99,23 +160,57 @@
                     <button id="filter-todos" class="bg-gray-800 text-white px-4 py-2 rounded-full text-sm font-medium shrink-0 hover:bg-gray-700 active:bg-gray-900 transition-colors min-h-[44px] snap-start" onclick="setFilter('todos')">
                         Todos
                     </button>
-                    <button id="filter-delanteros" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-sm font-medium shrink-0 hover:bg-gray-200 active:bg-gray-300 transition-colors min-h-[44px] snap-start" onclick="setFilter('delanteros')">
-                        <div class="h-3 bg-gray-300 rounded w-16"></div>
-                    </button>
-                    <button id="filter-defensas" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-sm font-medium shrink-0 hover:bg-gray-200 active:bg-gray-300 transition-colors min-h-[44px] snap-start" onclick="setFilter('defensas')">
-                        <div class="h-3 bg-gray-300 rounded w-14"></div>
-                    </button>
-                    <button id="filter-mediocampo" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-sm font-medium shrink-0 hover:bg-gray-200 active:bg-gray-300 transition-colors min-h-[44px] snap-start" onclick="setFilter('mediocampo')">
-                        <div class="h-3 bg-gray-300 rounded w-18"></div>
-                    </button>
-                    <button id="filter-porteros" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-sm font-medium shrink-0 hover:bg-gray-200 active:bg-gray-300 transition-colors min-h-[44px] snap-start" onclick="setFilter('porteros')">
-                        <div class="h-3 bg-gray-300 rounded w-12"></div>
+                    <button id="filter-disponibilidad" class="bg-gray-100 text-gray-600 px-4 py-2 rounded-full text-sm font-medium shrink-0 hover:bg-gray-200 active:bg-gray-300 transition-colors min-h-[44px] snap-start flex items-center gap-1.5" onclick="toggleAvailabilityFilter()">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        Disponibilidad
                     </button>
                 </div>
             </div>
 
             <!-- ============================================================ -->
-            <!-- RESULTADOS: Lista de jugadores libres                          -->
+            <!-- PANEL DE FILTRO POR DISPONIBILIDAD (expandible)                -->
+            <!-- ============================================================ -->
+            <div id="availability-panel" class="hidden px-6 pb-4">
+                <div class="bg-gray-50 rounded-2xl p-4 border border-gray-200">
+                    <div class="mb-3">
+                        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Día</label>
+                        <div class="flex gap-1.5 flex-wrap">
+                            <button class="day-btn bg-gray-800 text-white px-3 py-1.5 rounded-lg text-xs font-medium" data-day="lun" onclick="toggleDay(this)">Lun</button>
+                            <button class="day-btn bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200" data-day="mar" onclick="toggleDay(this)">Mar</button>
+                            <button class="day-btn bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200" data-day="mie" onclick="toggleDay(this)">Mié</button>
+                            <button class="day-btn bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200" data-day="jue" onclick="toggleDay(this)">Jue</button>
+                            <button class="day-btn bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200" data-day="vie" onclick="toggleDay(this)">Vie</button>
+                            <button class="day-btn bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200" data-day="sab" onclick="toggleDay(this)">Sáb</button>
+                            <button class="day-btn bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200" data-day="dom" onclick="toggleDay(this)">Dom</button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 block">Franja horaria</label>
+                        <div class="flex gap-1.5 flex-wrap">
+                            <button class="slot-btn bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200" data-slot="00-02" onclick="toggleSlot(this)">00-02h</button>
+                            <button class="slot-btn bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200" data-slot="02-04" onclick="toggleSlot(this)">02-04h</button>
+                            <button class="slot-btn bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200" data-slot="04-06" onclick="toggleSlot(this)">04-06h</button>
+                            <button class="slot-btn bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200" data-slot="06-08" onclick="toggleSlot(this)">06-08h</button>
+                            <button class="slot-btn bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200" data-slot="08-10" onclick="toggleSlot(this)">08-10h</button>
+                            <button class="slot-btn bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200" data-slot="10-12" onclick="toggleSlot(this)">10-12h</button>
+                            <button class="slot-btn bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200" data-slot="12-14" onclick="toggleSlot(this)">12-14h</button>
+                            <button class="slot-btn bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200" data-slot="14-16" onclick="toggleSlot(this)">14-16h</button>
+                            <button class="slot-btn bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200" data-slot="16-18" onclick="toggleSlot(this)">16-18h</button>
+                            <button class="slot-btn bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200" data-slot="18-20" onclick="toggleSlot(this)">18-20h</button>
+                            <button class="slot-btn bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200" data-slot="20-22" onclick="toggleSlot(this)">20-22h</button>
+                            <button class="slot-btn bg-gray-100 text-gray-600 px-3 py-1.5 rounded-lg text-xs font-medium hover:bg-gray-200" data-slot="22-00" onclick="toggleSlot(this)">22-00h</button>
+                        </div>
+                    </div>
+                    <div class="mt-3 flex justify-end">
+                        <button class="text-xs text-gray-500 hover:text-gray-700 font-medium" onclick="clearAvailabilityFilter()">Limpiar filtros</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ============================================================ -->
+            <!-- RESULTADOS: Lista de jugadores                                 -->
             <!-- ============================================================ -->
             <div id="players-list" class="px-6 space-y-4">
                 <!-- Los jugadores se generan dinámicamente por JS -->
@@ -126,7 +221,9 @@
             <!-- ============================================================ -->
             <div id="empty-state" class="hidden px-6 py-12 flex flex-col items-center">
                 <div class="w-24 h-24 bg-gray-200 rounded-full flex items-center justify-center mb-4">
-                    <div class="w-12 h-12 bg-gray-300 rounded-full"></div>
+                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
                 </div>
                 <div class="h-4 bg-gray-800 rounded w-48 mb-2"></div>
                 <div class="h-3 bg-gray-300 rounded w-64"></div>
@@ -135,34 +232,21 @@
                 </button>
             </div>
 
-            <!-- ============================================================ -->
-            <!-- NOTIFICACIÓN CONTEXTUAL INFERIOR                               -->
-            <!-- ============================================================ -->
-            <div class="px-6 mt-6 mb-8">
-                <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
-                        <div class="w-5 h-5 bg-gray-400 rounded"></div>
-                    </div>
-                    <div class="flex-1">
-                        <div class="h-3 bg-gray-600 rounded w-56 mb-1"></div>
-                        <div class="h-2 bg-gray-300 rounded w-40"></div>
-                    </div>
-                </div>
-            </div>
-
         </main>
 
         <!-- ============================================================ -->
-        <!-- NAVBAR INFERIOR                                                -->
+        <!-- NAVBAR INFERIOR: Equipo activo (sub-vista Reclutamiento)     -->
         <!-- ============================================================ -->
-        <nav class="absolute bottom-0 w-full z-50 bg-white border-t border-gray-200" style="padding-bottom: env(safe-area-inset-bottom);">
+        <nav class="absolute bottom-0 w-full z-50 bg-white border-t border-gray-200 pb-[env(safe-area-inset-bottom)]">
             <div class="grid grid-cols-4 h-16">
                 <a href="hub_mapa_principal.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Inicio">
                     <div class="w-6 h-6 bg-gray-300 rounded"></div>
                     <div class="h-2 bg-gray-300 rounded w-10"></div>
                 </a>
                 <button class="flex flex-col items-center justify-center gap-1 text-gray-800 min-h-[44px]" aria-label="Equipo">
-                    <div class="w-6 h-6 bg-gray-800 rounded"></div>
+                    <div class="w-6 h-6 bg-gray-800 rounded relative">
+                        <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </div>
                     <div class="h-2 bg-gray-800 rounded w-10"></div>
                 </button>
                 <a href="detalle_torneo.html" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 transition-colors min-h-[44px]" aria-label="Torneos">
@@ -182,7 +266,9 @@
         <div id="toast" class="absolute top-20 left-4 right-4 z-[70] pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
             <div class="bg-gray-800 text-white px-4 py-3 rounded-2xl shadow-lg flex items-center gap-3">
                 <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center shrink-0">
-                    <div class="w-4 h-4 bg-gray-400 rounded"></div>
+                    <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
                 </div>
                 <div class="flex-1">
                     <div class="h-3 bg-gray-400 rounded w-3/4 mb-1" id="toast-title"></div>
@@ -192,28 +278,50 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- MODAL DE CONFIRMACIÓN DE RECLUTAMIENTO                         -->
+        <!-- MODAL DE CONFIRMACIÓN DE INVITACIÓN                            -->
         <!-- ============================================================ -->
-        <div id="recruit-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
+        <div id="invite-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
             <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300">
                 <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
-                <div class="flex items-center gap-4 mb-6">
-                    <div class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
-                        <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
+                
+                <!-- Avatar y nombre -->
+                <div class="flex items-center gap-4 mb-4">
+                    <div id="modal-avatar" class="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center shrink-0">
+                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
                     </div>
                     <div>
-                        <div class="h-4 bg-gray-800 rounded w-40 mb-2"></div>
-                        <div class="h-3 bg-gray-300 rounded w-32"></div>
+                        <div class="h-4 bg-gray-800 rounded w-40 mb-1" id="modal-name"></div>
+                        <div class="h-3 bg-gray-400 rounded w-48" id="modal-availability"></div>
                     </div>
                 </div>
-                <div class="h-3 bg-gray-300 rounded w-full mb-2"></div>
-                <div class="h-3 bg-gray-300 rounded w-3/4 mb-6"></div>
-                <div class="flex gap-3">
-                    <button class="flex-1 bg-gray-100 text-gray-700 py-4 rounded-2xl font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors min-h-[56px]" onclick="closeRecruitModal()">
-                        <div class="h-4 bg-gray-400 rounded w-20 mx-auto"></div>
+                
+                <!-- Contador de equipos -->
+                <div class="flex items-center gap-2 mb-3">
+                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <div class="h-3 bg-gray-500 rounded w-16" id="modal-team-count"></div>
+                </div>
+                
+                <!-- Advertencia si tiene >= 12 equipos -->
+                <div id="modal-warning" class="hidden mb-4 p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                    <div class="flex items-start gap-2">
+                        <svg class="w-4 h-4 text-amber-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <div class="h-3 bg-amber-400 rounded w-56"></div>
+                    </div>
+                </div>
+                
+                <!-- Botones -->
+                <div class="flex gap-3 mt-4">
+                    <button class="flex-1 bg-gray-100 text-gray-700 py-4 rounded-2xl font-medium hover:bg-gray-200 active:bg-gray-300 transition-colors min-h-[56px]" onclick="closeInviteModal()">
+                        Cancelar
                     </button>
-                    <button class="flex-1 bg-gray-800 text-white py-4 rounded-2xl font-medium hover:bg-gray-700 active:bg-gray-900 transition-colors min-h-[56px]" onclick="confirmRecruit()">
-                        <div class="h-4 bg-gray-400 rounded w-24 mx-auto"></div>
+                    <button class="flex-1 bg-gray-800 text-white py-4 rounded-2xl font-medium hover:bg-gray-700 active:bg-gray-900 transition-colors min-h-[56px]" onclick="confirmInvite()">
+                        Confirmar invitación
                     </button>
                 </div>
             </div>
@@ -239,22 +347,101 @@
     <!-- ============================================================ -->
     <script>
         // ============================================================
-        // DATOS DE JUGADORES
+        // CONFIGURACIÓN DEL EQUIPO
+        // ============================================================
+        const TEAM_CONFIG = {
+            name: 'Los Pibes',
+            currentMembers: 8,
+            maxMembers: 15,
+            id: 'team_1'
+        };
+
+        // ============================================================
+        // DATOS DE JUGADORES (mock)
         // ============================================================
         const players = [
-            { id: 1, name: 'Carlos Rodríguez', pos: 'Delantero', stats: '12 goles', rating: '4.5', featured: false, recruited: false },
-            { id: 2, name: 'Andrés Martínez', pos: 'Defensa', stats: '8 clean sheets', rating: '4.2', featured: false, recruited: false },
-            { id: 3, name: 'Luis Fernando', pos: 'Mediocampista', stats: '15 asistencias', rating: '4.8', featured: true, recruited: false },
-            { id: 4, name: 'Pedro Gómez', pos: 'Portero', stats: '3.2 avg', rating: '4.0', featured: false, recruited: false },
-            { id: 5, name: 'Juan Pablo', pos: 'Delantero', stats: '9 goles', rating: '4.3', featured: false, recruited: false },
-            { id: 6, name: 'Diego Hernández', pos: 'Mediocampista', stats: '10 asistencias', rating: '4.1', featured: false, recruited: false },
-            { id: 7, name: 'Santiago López', pos: 'Defensa', stats: '6 clean sheets', rating: '4.4', featured: false, recruited: false },
-            { id: 8, name: 'Mateo Silva', pos: 'Portero', stats: '2.8 avg', rating: '4.6', featured: false, recruited: false },
+            { 
+                id: 'player_1', 
+                name: 'Juan Pérez', 
+                availabilitySummary: 'Lun, Mié, Vie (noche)', 
+                teamCount: 3, 
+                maxTeams: 15,
+                avatar: null,
+                isInvited: false
+            },
+            { 
+                id: 'player_2', 
+                name: 'María García', 
+                availabilitySummary: 'Todos los días', 
+                teamCount: 12, 
+                maxTeams: 15,
+                avatar: null,
+                isInvited: true
+            },
+            { 
+                id: 'player_3', 
+                name: 'Carlos Rodríguez', 
+                availabilitySummary: 'Sáb, Dom (mañana)', 
+                teamCount: 7, 
+                maxTeams: 15,
+                avatar: null,
+                isInvited: false
+            },
+            { 
+                id: 'player_4', 
+                name: 'Ana López', 
+                availabilitySummary: 'Mar, Jue (tarde)', 
+                teamCount: 14, 
+                maxTeams: 15,
+                avatar: null,
+                isInvited: false
+            },
+            { 
+                id: 'player_5', 
+                name: 'Diego Hernández', 
+                availabilitySummary: 'Lun-Vie (noche)', 
+                teamCount: 2, 
+                maxTeams: 15,
+                avatar: null,
+                isInvited: false
+            },
+            { 
+                id: 'player_6', 
+                name: 'Santiago Silva', 
+                availabilitySummary: 'Mié, Vie, Dom', 
+                teamCount: 10, 
+                maxTeams: 15,
+                avatar: null,
+                isInvited: false
+            },
+            { 
+                id: 'player_7', 
+                name: 'Lucía Martínez', 
+                availabilitySummary: 'Sáb (todo el día)', 
+                teamCount: 5, 
+                maxTeams: 15,
+                avatar: null,
+                isInvited: false
+            },
+            { 
+                id: 'player_8', 
+                name: 'Mateo Gómez', 
+                availabilitySummary: 'Lun, Mié, Vie, Dom', 
+                teamCount: 15, 
+                maxTeams: 15,
+                avatar: null,
+                isInvited: false
+            },
         ];
 
+        // ============================================================
+        // ESTADO
+        // ============================================================
         let currentFilter = 'todos';
         let searchQuery = '';
         let selectedPlayer = null;
+        let selectedDays = [];
+        let selectedSlots = [];
 
         // ============================================================
         // CARGA INICIAL
@@ -266,15 +453,22 @@
                 const appLoading = document.getElementById('app-loading');
                 const mainContent = document.getElementById('main-content');
                 
-                appLoading.style.opacity = '0';
-                mainContent.style.opacity = '1';
+                appLoading.classList.add('opacity-0');
+                mainContent.classList.remove('opacity-0');
                 
                 setTimeout(() => {
-                    appLoading.style.display = 'none';
-                    showToast('Directorio cargado', '8 jugadores libres disponibles');
+                    appLoading.classList.add('hidden');
+                    showToast('Directorio cargado', `${getVisiblePlayers().length} jugadores disponibles`);
                 }, 500);
             }, 1000);
         });
+
+        // ============================================================
+        // FILTRADO: Jugadores visibles (excluye los con 15 equipos)
+        // ============================================================
+        function getVisiblePlayers() {
+            return players.filter(p => p.teamCount < p.maxTeams);
+        }
 
         // ============================================================
         // RENDERIZAR JUGADORES
@@ -283,22 +477,28 @@
             const list = document.getElementById('players-list');
             const emptyState = document.getElementById('empty-state');
             
-            // Filtrar
-            let filtered = players.filter(p => {
-                const matchesFilter = currentFilter === 'todos' || 
-                    (currentFilter === 'delanteros' && p.pos === 'Delantero') ||
-                    (currentFilter === 'defensas' && p.pos === 'Defensa') ||
-                    (currentFilter === 'mediocampo' && p.pos === 'Mediocampista') ||
-                    (currentFilter === 'porteros' && p.pos === 'Portero');
-                
-                const matchesSearch = !searchQuery || 
-                    p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                    p.pos.toLowerCase().includes(searchQuery.toLowerCase());
-                
-                return matchesFilter && matchesSearch;
-            });
+            let visible = getVisiblePlayers();
 
-            if (filtered.length === 0) {
+            // Filtrar por búsqueda
+            if (searchQuery) {
+                visible = visible.filter(p => 
+                    p.name.toLowerCase().includes(searchQuery.toLowerCase())
+                );
+            }
+
+            // Filtrar por disponibilidad (si hay selección)
+            if (selectedDays.length > 0 || selectedSlots.length > 0) {
+                visible = visible.filter(p => {
+                    const matchesDay = selectedDays.length === 0 || selectedDays.some(day => 
+                        p.availabilitySummary.toLowerCase().includes(day) ||
+                        p.availabilitySummary.toLowerCase().includes('todos')
+                    );
+                    // Mock: en implementación real se filtraría por franja
+                    return matchesDay;
+                });
+            }
+
+            if (visible.length === 0) {
                 list.classList.add('hidden');
                 emptyState.classList.remove('hidden');
                 return;
@@ -307,29 +507,63 @@
             list.classList.remove('hidden');
             emptyState.classList.add('hidden');
 
-            list.innerHTML = filtered.map(player => `
-                <div class="${player.featured ? 'bg-gray-800' : 'bg-gray-100'} rounded-2xl p-4 flex items-center gap-4 ${player.recruited ? 'opacity-50' : ''} transition-all duration-200">
-                    <a href="perfil_jugador.html" class="w-14 h-14 ${player.featured ? 'bg-gray-600' : 'bg-gray-200'} rounded-full flex items-center justify-center shrink-0 hover:scale-105 transition-transform">
-                        <div class="w-8 h-8 ${player.featured ? 'bg-gray-400' : 'bg-gray-300'} rounded-full"></div>
+            const isTeamFull = TEAM_CONFIG.currentMembers >= TEAM_CONFIG.maxMembers;
+
+            list.innerHTML = visible.map(player => {
+                const isInvited = player.isInvited;
+                const isPlayerFull = player.teamCount >= player.maxTeams;
+                const buttonDisabled = isTeamFull || isInvited;
+                
+                return `
+                <div class="bg-gray-100 rounded-2xl p-4 flex items-center gap-4 transition-all duration-200">
+                    <!-- Avatar -->
+                    <a href="perfil_jugador.html?id=${player.id}" class="w-14 h-14 bg-gray-200 rounded-full flex items-center justify-center shrink-0 hover:scale-105 transition-transform overflow-hidden">
+                        ${player.avatar 
+                            ? `<img src="${player.avatar}" alt="${player.name}" class="w-full h-full object-cover">`
+                            : `<svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                               </svg>`
+                        }
                     </a>
-                    <a href="perfil_jugador.html" class="flex-1 min-w-0">
-                        <div class="h-3 ${player.featured ? 'bg-gray-200' : 'bg-gray-800'} rounded w-${Math.min(player.name.length * 2, 40)} mb-1"></div>
-                        <div class="h-2 bg-gray-300 rounded w-20 mb-1"></div>
-                        <div class="flex items-center gap-2">
-                            <div class="h-2 ${player.featured ? 'bg-gray-300' : 'bg-gray-400'} rounded w-12"></div>
-                            <div class="h-2 bg-gray-300 rounded w-16"></div>
+                    
+                    <!-- Info -->
+                    <a href="perfil_jugador.html?id=${player.id}" class="flex-1 min-w-0">
+                        <div class="h-3 bg-gray-800 rounded w-${Math.min(player.name.length * 2, 40)} mb-1.5"></div>
+                        <div class="flex items-center gap-1.5 mb-1">
+                            <svg class="w-3 h-3 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <div class="h-2 bg-gray-400 rounded w-${Math.min(player.availabilitySummary.length * 3, 48)}"></div>
+                        </div>
+                        <div class="flex items-center gap-1.5">
+                            <svg class="w-3 h-3 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            <div class="h-2 bg-gray-400 rounded w-12"></div>
                         </div>
                     </a>
-                    ${player.recruited 
-                        ? `<div class="bg-gray-400 text-white px-5 py-2.5 rounded-xl text-sm font-medium shrink-0">
-                             <div class="h-3 bg-gray-200 rounded w-16"></div>
-                           </div>`
-                        : `<button class="${player.featured ? 'bg-white text-gray-800 hover:bg-gray-100 active:bg-gray-200' : 'bg-gray-800 text-white hover:bg-gray-700 active:bg-gray-900'} px-5 py-2.5 rounded-xl text-sm font-medium transition-colors shrink-0 min-h-[44px]" onclick="openRecruitModal(${player.id})">
-                             <div class="h-3 ${player.featured ? 'bg-gray-600' : 'bg-gray-400'} rounded w-12"></div>
-                           </button>`
-                    }
+                    
+                    <!-- Acciones -->
+                    <div class="flex gap-2 shrink-0">
+                        <a href="perfil_jugador.html?id=${player.id}" class="bg-white text-gray-700 px-4 py-2 rounded-xl text-xs font-medium hover:bg-gray-50 active:bg-gray-100 transition-colors min-h-[40px] flex items-center">
+                            Ver perfil
+                        </a>
+                        ${isInvited 
+                            ? `<button disabled class="bg-gray-300 text-white px-4 py-2 rounded-xl text-xs font-medium cursor-not-allowed min-h-[40px] flex items-center" title="Invitación pendiente">
+                                Invitado
+                               </button>`
+                            : `<button 
+                                ${buttonDisabled ? 'disabled' : ''}
+                                class="${buttonDisabled ? 'bg-gray-300 text-white cursor-not-allowed' : 'bg-gray-800 text-white hover:bg-gray-700 active:bg-gray-900'} px-4 py-2 rounded-xl text-xs font-medium transition-colors min-h-[40px] flex items-center"
+                                ${!buttonDisabled ? `onclick="openInviteModal('${player.id}')"` : ''}
+                                title="${isTeamFull ? 'Tu equipo ya tiene 15 miembros' : ''}"
+                               >
+                                Invitar
+                               </button>`
+                        }
+                    </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         // ============================================================
@@ -352,55 +586,136 @@
         function setFilter(filter) {
             currentFilter = filter;
             
-            const filters = ['todos', 'delanteros', 'defensas', 'mediocampo', 'porteros'];
-            filters.forEach(f => {
-                const btn = document.getElementById(`filter-${f}`);
-                if (f === filter) {
-                    btn.classList.remove('bg-gray-100', 'text-gray-600');
-                    btn.classList.add('bg-gray-800', 'text-white');
-                } else {
-                    btn.classList.remove('bg-gray-800', 'text-white');
-                    btn.classList.add('bg-gray-100', 'text-gray-600');
-                }
-            });
+            const btnTodos = document.getElementById('filter-todos');
+            const btnDisp = document.getElementById('filter-disponibilidad');
+            
+            if (filter === 'todos') {
+                btnTodos.classList.remove('bg-gray-100', 'text-gray-600');
+                btnTodos.classList.add('bg-gray-800', 'text-white');
+                btnDisp.classList.remove('bg-gray-800', 'text-white');
+                btnDisp.classList.add('bg-gray-100', 'text-gray-600');
+                // Cerrar panel de disponibilidad
+                document.getElementById('availability-panel').classList.add('hidden');
+            }
             
             renderPlayers();
             if (navigator.vibrate) navigator.vibrate(30);
         }
 
+        function toggleAvailabilityFilter() {
+            const panel = document.getElementById('availability-panel');
+            const btnTodos = document.getElementById('filter-todos');
+            const btnDisp = document.getElementById('filter-disponibilidad');
+            
+            panel.classList.toggle('hidden');
+            
+            if (!panel.classList.contains('hidden')) {
+                btnDisp.classList.remove('bg-gray-100', 'text-gray-600');
+                btnDisp.classList.add('bg-gray-800', 'text-white');
+                btnTodos.classList.remove('bg-gray-800', 'text-white');
+                btnTodos.classList.add('bg-gray-100', 'text-gray-600');
+                currentFilter = 'disponibilidad';
+            } else {
+                btnDisp.classList.remove('bg-gray-800', 'text-white');
+                btnDisp.classList.add('bg-gray-100', 'text-gray-600');
+                btnTodos.classList.remove('bg-gray-100', 'text-gray-600');
+                btnTodos.classList.add('bg-gray-800', 'text-white');
+                currentFilter = 'todos';
+                selectedDays = [];
+                selectedSlots = [];
+                renderPlayers();
+            }
+            
+            if (navigator.vibrate) navigator.vibrate(30);
+        }
+
+        function toggleDay(btn) {
+            const day = btn.dataset.day;
+            if (selectedDays.includes(day)) {
+                selectedDays = selectedDays.filter(d => d !== day);
+                btn.classList.remove('bg-gray-800', 'text-white');
+                btn.classList.add('bg-gray-100', 'text-gray-600');
+            } else {
+                selectedDays.push(day);
+                btn.classList.remove('bg-gray-100', 'text-gray-600');
+                btn.classList.add('bg-gray-800', 'text-white');
+            }
+            renderPlayers();
+        }
+
+        function toggleSlot(btn) {
+            const slot = btn.dataset.slot;
+            if (selectedSlots.includes(slot)) {
+                selectedSlots = selectedSlots.filter(s => s !== slot);
+                btn.classList.remove('bg-gray-800', 'text-white');
+                btn.classList.add('bg-gray-100', 'text-gray-600');
+            } else {
+                selectedSlots.push(slot);
+                btn.classList.remove('bg-gray-100', 'text-gray-600');
+                btn.classList.add('bg-gray-800', 'text-white');
+            }
+            renderPlayers();
+        }
+
+        function clearAvailabilityFilter() {
+            selectedDays = [];
+            selectedSlots = [];
+            document.querySelectorAll('.day-btn, .slot-btn').forEach(btn => {
+                btn.classList.remove('bg-gray-800', 'text-white');
+                btn.classList.add('bg-gray-100', 'text-gray-600');
+            });
+            renderPlayers();
+        }
+
         // ============================================================
-        // MODAL DE RECLUTAMIENTO
+        // MODAL DE INVITACIÓN
         // ============================================================
-        function openRecruitModal(playerId) {
+        function openInviteModal(playerId) {
             selectedPlayer = players.find(p => p.id === playerId);
-            const modal = document.getElementById('recruit-modal');
+            if (!selectedPlayer) return;
+            
+            const modal = document.getElementById('invite-modal');
+            
+            // Poblar datos del modal
+            document.getElementById('modal-name').style.width = Math.min(selectedPlayer.name.length * 8, 200) + 'px';
+            document.getElementById('modal-availability').style.width = Math.min(selectedPlayer.availabilitySummary.length * 6, 180) + 'px';
+            document.getElementById('modal-team-count').style.width = (selectedPlayer.teamCount.toString().length * 8 + 40) + 'px';
+            
+            // Advertencia si >= 12 equipos
+            const warningEl = document.getElementById('modal-warning');
+            if (selectedPlayer.teamCount >= 12) {
+                warningEl.classList.remove('hidden');
+            } else {
+                warningEl.classList.add('hidden');
+            }
+            
             modal.classList.remove('hidden');
             setTimeout(() => {
-                modal.style.opacity = '1';
-                modal.querySelector('div').style.transform = 'translateY(0)';
+                modal.classList.remove('opacity-0');
+                modal.querySelector('div').classList.remove('translate-y-full');
             }, 10);
             if (navigator.vibrate) navigator.vibrate(50);
         }
 
-        function closeRecruitModal() {
-            const modal = document.getElementById('recruit-modal');
-            modal.style.opacity = '0';
-            modal.querySelector('div').style.transform = 'translateY(100%)';
+        function closeInviteModal() {
+            const modal = document.getElementById('invite-modal');
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.add('translate-y-full');
             setTimeout(() => modal.classList.add('hidden'), 300);
             selectedPlayer = null;
         }
 
-        function confirmRecruit() {
+        function confirmInvite() {
             if (!selectedPlayer) return;
             
-            // Marcar como reclutado
-            selectedPlayer.recruited = true;
+            // Optimistic UI: marcar como invitado inmediatamente
+            selectedPlayer.isInvited = true;
             
-            closeRecruitModal();
+            closeInviteModal();
             
             setTimeout(() => {
                 renderPlayers();
-                showToast('¡Reclutamiento enviado!', `Solicitud enviada a ${selectedPlayer.name}`);
+                showToast('Invitación enviada', `Invitación enviada a ${selectedPlayer.name}`);
             }, 300);
         }
 
@@ -418,12 +733,12 @@
             toastTitle.style.width = Math.min(title.length * 8, 200) + 'px';
             toastSubtitle.style.width = Math.min(subtitle.length * 6, 150) + 'px';
             
-            toast.style.opacity = '0.95';
-            toast.style.transform = 'translateY(0)';
+            toast.classList.remove('opacity-0', '-translate-y-2');
+            toast.classList.add('opacity-95', 'translate-y-0');
             
             toastTimeout = setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-8px)';
+                toast.classList.remove('opacity-95', 'translate-y-0');
+                toast.classList.add('opacity-0', '-translate-y-2');
             }, 3000);
         }
 
@@ -431,7 +746,7 @@
         // TECLADO (Escape para cerrar modal)
         // ============================================================
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeRecruitModal();
+            if (e.key === 'Escape') closeInviteModal();
         });
     </script>
 

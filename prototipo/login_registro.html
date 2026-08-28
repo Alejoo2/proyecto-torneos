@@ -3,20 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Login / Registro — Wireframe Low-Fidelity</title>
+    <title>Autenticación — Wireframe Low-Fidelity</title>
     <script src="https://cdn.tailwindcss.com"></script>
+<base target="_blank">
 </head>
 <body class="bg-gray-950 min-h-[100dvh] flex items-center justify-center">
 
     <!-- ============================================================ -->
-    <!-- APP SHELL: El "Móvil"                                          -->
+    <!-- APP SHELL                                                      -->
     <!-- ============================================================ -->
     <div class="w-full max-w-lg min-h-[100dvh] bg-white md:min-h-[90vh] md:my-[5vh] md:rounded-[2rem] md:border-[10px] md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col relative">
 
         <!-- ============================================================ -->
         <!-- ESTADO DE CARGA INICIAL (Skeleton)                             -->
         <!-- ============================================================ -->
-        <!-- Intención: Se muestra durante 1s simulando carga de la app      -->
         <div id="app-loading" class="absolute inset-0 z-[60] bg-white flex flex-col items-center justify-center transition-opacity duration-500">
             <div class="w-24 h-24 bg-gray-200 rounded-3xl mb-6 animate-pulse"></div>
             <div class="h-6 bg-gray-200 rounded w-48 mb-3 animate-pulse"></div>
@@ -24,21 +24,7 @@
         </div>
 
         <!-- ============================================================ -->
-        <!-- HEADER: Sticky con botón de retroceso (solo en registro)       -->
-        <!-- ============================================================ -->
-        <header id="auth-header" class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100 hidden">
-            <div class="flex items-center gap-3 px-4 py-3">
-                <button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px]" aria-label="Volver al login" onclick="toggleMode('login')">
-                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                    </svg>
-                </button>
-                <div class="h-4 bg-gray-800 rounded w-32"></div>
-            </div>
-        </header>
-
-        <!-- ============================================================ -->
-        <!-- CONTENIDO PRINCIPAL: Auth                                      -->
+        <!-- CONTENIDO PRINCIPAL                                            -->
         <!-- ============================================================ -->
         <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden flex flex-col items-center justify-center p-8 relative opacity-0 transition-opacity duration-500">
 
@@ -46,155 +32,66 @@
             <!-- HERO / BRANDING                                                -->
             <!-- ============================================================ -->
             <div class="flex flex-col items-center mb-12 w-full">
-                <!-- Logo / Escudo de la app (placeholder) -->
+                <!-- Logo app (placeholder) -->
                 <div class="w-24 h-24 bg-gray-200 rounded-3xl mb-6 flex items-center justify-center">
                     <div class="w-12 h-12 bg-gray-400 rounded-xl"></div>
                 </div>
-                <!-- Nombre de la app -->
+                <!-- Nombre de la app (placeholder) -->
                 <div class="h-6 bg-gray-800 rounded w-48 mb-3"></div>
-                <!-- Tagline -->
+                <!-- Tagline (placeholder) -->
                 <div class="h-3 bg-gray-300 rounded w-64"></div>
             </div>
 
             <!-- ============================================================ -->
-            <!-- MODO LOGIN                                                     -->
+            <!-- BOTONES DE AUTENTICACIÓN OAUTH                                   -->
             <!-- ============================================================ -->
-            <div id="login-mode" class="w-full transition-all duration-300">
-                <!-- ============================================================ -->
-                <!-- BOTÓN GIGANTE DE DISCORD                                       -->
-                <!-- ============================================================ -->
-                <div class="w-full mb-8">
-                    <button id="discord-btn" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-5 rounded-2xl flex items-center justify-center gap-4 transition-all duration-200 shadow-lg min-h-[56px] relative overflow-hidden" onclick="loginWithDiscord()">
-                        <!-- Ícono de Discord (placeholder) -->
-                        <div class="w-8 h-8 bg-gray-500 rounded-lg flex items-center justify-center shrink-0">
-                            <svg class="w-5 h-5 text-gray-300" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.007.128 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
-                            </svg>
-                        </div>
-                        <span class="text-lg font-semibold">Continuar con Discord</span>
-                        <!-- Ripple effect container -->
-                        <span class="absolute inset-0 bg-white/20 scale-0 rounded-2xl transition-transform duration-300" id="discord-ripple"></span>
-                    </button>
-                </div>
+            <div class="w-full space-y-3">
 
-                <!-- ============================================================ -->
-                <!-- DIVISOR                                                        -->
-                <!-- ============================================================ -->
-                <div class="w-full flex items-center gap-4 mb-8">
-                    <div class="flex-1 h-px bg-gray-200"></div>
-                    <div class="h-3 bg-gray-300 rounded w-24"></div>
-                    <div class="flex-1 h-px bg-gray-200"></div>
-                </div>
+                <!-- Botón Google -->
+                <button id="google-btn" class="w-full bg-white border-2 border-gray-200 text-gray-700 min-h-[56px] rounded-2xl flex items-center justify-center gap-3 transition-all duration-200 shadow-sm hover:bg-gray-50 active:bg-gray-100 relative overflow-hidden" onclick="loginWithOAuth('google')">
+                    <!-- Icono Google (SVG inline) -->
+                    <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    </svg>
+                    <span class="text-base font-semibold">Continuar con Google</span>
+                    <!-- Ripple effect -->
+                    <span class="absolute inset-0 bg-gray-400/10 scale-0 rounded-2xl transition-transform duration-300" id="google-ripple"></span>
+                </button>
 
-                <!-- ============================================================ -->
-                <!-- FORMULARIO DE LOGIN (Email/Password)                           -->
-                <!-- ============================================================ -->
-                <form id="login-form" class="w-full space-y-4" onsubmit="handleLogin(event)">
-                    <!-- Campo: Email -->
-                    <div class="space-y-2">
-                        <div class="h-3 bg-gray-400 rounded w-16"></div>
-                        <div class="w-full h-14 bg-gray-100 rounded-xl border-2 border-gray-200 flex items-center px-4 focus-within:border-gray-400 transition-colors">
-                            <input type="email" placeholder="correo@ejemplo.com" class="w-full bg-transparent outline-none text-gray-800 placeholder-gray-400" required>
-                        </div>
-                    </div>
+                <!-- Botón Discord -->
+                <button id="discord-btn" class="w-full bg-[#5865F2] text-white min-h-[56px] rounded-2xl flex items-center justify-center gap-3 transition-all duration-200 shadow-sm hover:bg-[#4752C4] active:bg-[#3C45A5] relative overflow-hidden" onclick="loginWithOAuth('discord')">
+                    <!-- Icono Discord (SVG inline) -->
+                    <svg class="w-5 h-5 shrink-0" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994a.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.2 10.2 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.007.128 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.956-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.42 0 1.333-.946 2.418-2.157 2.418z"/>
+                    </svg>
+                    <span class="text-base font-semibold">Continuar con Discord</span>
+                    <!-- Ripple effect -->
+                    <span class="absolute inset-0 bg-white/20 scale-0 rounded-2xl transition-transform duration-300" id="discord-ripple"></span>
+                </button>
 
-                    <!-- Campo: Contraseña -->
-                    <div class="space-y-2">
-                        <div class="h-3 bg-gray-400 rounded w-24"></div>
-                        <div class="w-full h-14 bg-gray-100 rounded-xl border-2 border-gray-200 flex items-center px-4 focus-within:border-gray-400 transition-colors">
-                            <input type="password" placeholder="••••••••" class="w-full bg-transparent outline-none text-gray-800 placeholder-gray-400" required minlength="6">
-                        </div>
-                    </div>
-
-                    <!-- Link: ¿Olvidaste tu contraseña? -->
-                    <div class="flex justify-end">
-                        <button type="button" class="h-3 bg-gray-300 rounded w-40 hover:bg-gray-400 transition-colors cursor-pointer" onclick="showForgotPassword()"></button>
-                    </div>
-
-                    <!-- Botón: Iniciar Sesión -->
-                    <button type="submit" id="login-submit" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px] relative overflow-hidden">
-                        <div class="h-4 bg-gray-400 rounded w-28 mx-auto"></div>
-                        <span class="absolute inset-0 bg-white/20 scale-0 rounded-2xl transition-transform duration-300" id="login-ripple"></span>
-                    </button>
-                </form>
-
-                <!-- ============================================================ -->
-                <!-- FOOTER: Toggle Login / Registro                                -->
-                <!-- ============================================================ -->
-                <div class="mt-8 flex items-center justify-center gap-2">
-                    <div class="h-3 bg-gray-300 rounded w-32"></div>
-                    <button class="h-3 bg-gray-800 rounded w-16 hover:bg-gray-700 transition-colors cursor-pointer" onclick="toggleMode('register')"></button>
-                </div>
             </div>
 
             <!-- ============================================================ -->
-            <!-- MODO REGISTRO                                                  -->
+            <!-- FOOTER                                                         -->
             <!-- ============================================================ -->
-            <div id="register-mode" class="w-full hidden transition-all duration-300">
-                <!-- ============================================================ -->
-                <!-- FORMULARIO DE REGISTRO                                         -->
-                <!-- ============================================================ -->
-                <form id="register-form" class="w-full space-y-4" onsubmit="handleRegister(event)">
-                    <!-- Campo: Nombre completo -->
-                    <div class="space-y-2">
-                        <div class="h-3 bg-gray-400 rounded w-28"></div>
-                        <div class="w-full h-14 bg-gray-100 rounded-xl border-2 border-gray-200 flex items-center px-4 focus-within:border-gray-400 transition-colors">
-                            <input type="text" placeholder="Juan Pérez" class="w-full bg-transparent outline-none text-gray-800 placeholder-gray-400" required>
-                        </div>
-                    </div>
-
-                    <!-- Campo: Email -->
-                    <div class="space-y-2">
-                        <div class="h-3 bg-gray-400 rounded w-16"></div>
-                        <div class="w-full h-14 bg-gray-100 rounded-xl border-2 border-gray-200 flex items-center px-4 focus-within:border-gray-400 transition-colors">
-                            <input type="email" placeholder="correo@ejemplo.com" class="w-full bg-transparent outline-none text-gray-800 placeholder-gray-400" required>
-                        </div>
-                    </div>
-
-                    <!-- Campo: Contraseña -->
-                    <div class="space-y-2">
-                        <div class="h-3 bg-gray-400 rounded w-24"></div>
-                        <div class="w-full h-14 bg-gray-100 rounded-xl border-2 border-gray-200 flex items-center px-4 focus-within:border-gray-400 transition-colors">
-                            <input type="password" placeholder="••••••••" class="w-full bg-transparent outline-none text-gray-800 placeholder-gray-400" required minlength="8">
-                        </div>
-                    </div>
-
-                    <!-- Campo: Confirmar Contraseña -->
-                    <div class="space-y-2">
-                        <div class="h-3 bg-gray-400 rounded w-36"></div>
-                        <div class="w-full h-14 bg-gray-100 rounded-xl border-2 border-gray-200 flex items-center px-4 focus-within:border-gray-400 transition-colors">
-                            <input type="password" placeholder="••••••••" class="w-full bg-transparent outline-none text-gray-800 placeholder-gray-400" required minlength="8">
-                        </div>
-                    </div>
-
-                    <!-- Botón: Crear Cuenta -->
-                    <button type="submit" id="register-submit" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px] relative overflow-hidden mt-4">
-                        <div class="h-4 bg-gray-400 rounded w-32 mx-auto"></div>
-                        <span class="absolute inset-0 bg-white/20 scale-0 rounded-2xl transition-transform duration-300" id="register-ripple"></span>
-                    </button>
-                </form>
-
-                <!-- ============================================================ -->
-                <!-- FOOTER: Toggle Registro / Login                                -->
-                <!-- ============================================================ -->
-                <div class="mt-8 flex items-center justify-center gap-2">
-                    <div class="h-3 bg-gray-300 rounded w-40"></div>
-                    <button class="h-3 bg-gray-800 rounded w-16 hover:bg-gray-700 transition-colors cursor-pointer" onclick="toggleMode('login')"></button>
-                </div>
+            <div class="mt-8 text-center">
+                <div class="h-3 bg-gray-200 rounded w-64 mx-auto"></div>
             </div>
 
             <!-- ============================================================ -->
-            <!-- ESTADO DE CARGA (Skeleton) — Overlay de autenticación          -->
+            <!-- ESTADO DE CARGA POST-OAUTH (Overlay)                           -->
             <!-- ============================================================ -->
-            <!-- Intención: Este overlay aparece mientras se autentica          -->
             <div id="auth-loading" class="absolute inset-0 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center gap-4 z-50 hidden">
                 <!-- Spinner skeleton -->
                 <div class="w-16 h-16 bg-gray-200 rounded-2xl animate-pulse mb-2"></div>
-                <div class="h-4 bg-gray-300 rounded w-40 animate-pulse"></div>
-                <div class="h-3 bg-gray-200 rounded w-56 animate-pulse"></div>
-                <!-- Barra de progreso -->
+                <!-- Texto de conexión -->
+                <div class="h-4 bg-gray-300 rounded w-56 animate-pulse" id="auth-loading-text"></div>
+                <!-- Barra de progreso indeterminada -->
                 <div class="w-48 h-2 bg-gray-200 rounded-full overflow-hidden mt-4">
-                    <div id="auth-progress" class="h-full bg-gray-400 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    <div id="auth-progress" class="h-full bg-gray-400 rounded-full animate-pulse" style="width: 0%"></div>
                 </div>
             </div>
 
@@ -206,9 +103,11 @@
         <div id="toast" class="absolute top-4 left-4 right-4 z-[70] pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
             <div class="bg-gray-800 text-white px-4 py-3 rounded-2xl shadow-lg flex items-center gap-3">
                 <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center shrink-0">
-                    <div class="w-4 h-4 bg-gray-400 rounded"></div>
+                    <svg id="toast-icon" class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
                 </div>
-                <div class="flex-1">
+                <div class="flex-1 min-w-0">
                     <div class="h-3 bg-gray-400 rounded w-3/4 mb-1" id="toast-title"></div>
                     <div class="h-2 bg-gray-500 rounded w-1/2" id="toast-subtitle"></div>
                 </div>
@@ -224,221 +123,127 @@
         // ============================================================
         // ESTADO GLOBAL
         // ============================================================
-        let currentMode = 'login';
         let isAuthenticating = false;
+        let isNewUserToggle = false; // Toggle oculto para testing (doble tap en logo)
+        let tapCount = 0;
 
         // ============================================================
         // CARGA INICIAL
         // ============================================================
         document.addEventListener('DOMContentLoaded', () => {
-            // Mostrar skeleton por 1s, luego fade in del contenido
+            // Mostrar skeleton por 800ms, luego fade in del contenido
             setTimeout(() => {
                 const appLoading = document.getElementById('app-loading');
                 const mainContent = document.getElementById('main-content');
-                
+
                 appLoading.style.opacity = '0';
                 mainContent.style.opacity = '1';
-                
+
                 setTimeout(() => {
                     appLoading.style.display = 'none';
                 }, 500);
-            }, 1000);
+            }, 800);
+
+            // Toggle oculto: doble tap en logo cambia modo de simulación
+            const logo = document.querySelector('.w-24.h-24.bg-gray-200.rounded-3xl');
+            if (logo) {
+                logo.addEventListener('click', () => {
+                    tapCount++;
+                    if (tapCount >= 2) {
+                        isNewUserToggle = !isNewUserToggle;
+                        tapCount = 0;
+                        showToast(
+                            isNewUserToggle ? 'Modo: Usuario NUEVO' : 'Modo: Usuario EXISTENTE',
+                            'Doble tap en logo para alternar'
+                        );
+                    }
+                    setTimeout(() => { tapCount = 0; }, 500);
+                });
+            }
         });
 
         // ============================================================
-        // TOGGLE LOGIN / REGISTRO
+        // LOGIN CON OAUTH
         // ============================================================
-        function toggleMode(mode) {
-            currentMode = mode;
-            const loginMode = document.getElementById('login-mode');
-            const registerMode = document.getElementById('register-mode');
-            const header = document.getElementById('auth-header');
-            
-            if (mode === 'register') {
-                loginMode.classList.add('hidden');
-                registerMode.classList.remove('hidden');
-                header.classList.remove('hidden');
-                // Animación de entrada
-                registerMode.style.opacity = '0';
-                registerMode.style.transform = 'translateX(20px)';
-                setTimeout(() => {
-                    registerMode.style.opacity = '1';
-                    registerMode.style.transform = 'translateX(0)';
-                }, 50);
-            } else {
-                registerMode.classList.add('hidden');
-                loginMode.classList.remove('hidden');
-                header.classList.add('hidden');
-                // Animación de entrada
-                loginMode.style.opacity = '0';
-                loginMode.style.transform = 'translateX(-20px)';
-                setTimeout(() => {
-                    loginMode.style.opacity = '1';
-                    loginMode.style.transform = 'translateX(0)';
-                }, 50);
-            }
-        }
-
-        // ============================================================
-        // LOGIN CON DISCORD (Optimistic UI)
-        // ============================================================
-        function loginWithDiscord() {
+        function loginWithOAuth(provider) {
             if (isAuthenticating) return;
             isAuthenticating = true;
-            
+
             // Feedback táctil
             if (navigator.vibrate) navigator.vibrate(50);
-            
+
             // Ripple effect
-            const ripple = document.getElementById('discord-ripple');
-            ripple.style.transform = 'scale(1)';
-            setTimeout(() => ripple.style.transform = 'scale(0)', 300);
-            
+            const ripple = document.getElementById(provider + '-ripple');
+            if (ripple) {
+                ripple.style.transform = 'scale(1)';
+                setTimeout(() => ripple.style.transform = 'scale(0)', 300);
+            }
+
             // Mostrar overlay de carga
-            showAuthLoading();
-            
+            showAuthLoading(provider);
+
             // Simular progreso
             let progress = 0;
             const progressBar = document.getElementById('auth-progress');
             const interval = setInterval(() => {
-                progress += Math.random() * 30;
+                progress += Math.random() * 25 + 10;
                 if (progress >= 100) {
                     progress = 100;
                     clearInterval(interval);
                     setTimeout(() => {
-                        hideAuthLoading();
-                        showToast('¡Bienvenido!', 'Autenticación exitosa con Discord');
-                        setTimeout(() => {
-                            window.location.href = 'hub_mapa_principal.html';
-                        }, 1500);
-                    }, 500);
+                        handleAuthComplete(provider);
+                    }, 400);
                 }
                 progressBar.style.width = progress + '%';
-            }, 400);
+            }, 300);
         }
 
         // ============================================================
-        // LOGIN CON EMAIL (Optimistic UI)
+        // MANEJO POST-AUTENTICACIÓN
         // ============================================================
-        function handleLogin(e) {
-            e.preventDefault();
-            if (isAuthenticating) return;
-            
-            const form = document.getElementById('login-form');
-            const submitBtn = document.getElementById('login-submit');
-            
-            // Validación visual
-            const inputs = form.querySelectorAll('input');
-            let isValid = true;
-            inputs.forEach(input => {
-                if (!input.checkValidity()) {
-                    input.parentElement.classList.add('border-red-400');
-                    isValid = false;
-                } else {
-                    input.parentElement.classList.remove('border-red-400');
-                }
-            });
-            
-            if (!isValid) {
-                showToast('Error', 'Por favor completa todos los campos');
-                if (navigator.vibrate) navigator.vibrate([50, 100, 50]);
-                return;
-            }
-            
-            isAuthenticating = true;
-            
-            // Ripple effect
-            const ripple = document.getElementById('login-ripple');
-            ripple.style.transform = 'scale(1)';
-            setTimeout(() => ripple.style.transform = 'scale(0)', 300);
-            
-            // Mostrar carga
-            showAuthLoading();
-            
-            // Simular autenticación
-            setTimeout(() => {
-                document.getElementById('auth-progress').style.width = '100%';
+        function handleAuthComplete(provider) {
+            hideAuthLoading();
+
+            // Determinar estado del usuario (aleatorio 50% o toggle oculto)
+            const isNewUser = isNewUserToggle !== undefined ? isNewUserToggle : Math.random() < 0.5;
+            const hasCompletedOnboarding = !isNewUser && Math.random() < 0.8; // 80% de existentes tienen onboarding
+
+            const providerName = provider === 'google' ? 'Google' : 'Discord';
+
+            if (isNewUser) {
+                // Usuario NUEVO
+                showToast('¡Bienvenido!', 'Completa tu perfil para continuar');
                 setTimeout(() => {
-                    hideAuthLoading();
-                    showToast('¡Bienvenido de vuelta!', 'Inicio de sesión exitoso');
-                    setTimeout(() => {
-                        window.location.href = 'hub_mapa_principal.html';
-                    }, 1500);
-                }, 500);
-            }, 2000);
-        }
-
-        // ============================================================
-        // REGISTRO (Optimistic UI)
-        // ============================================================
-        function handleRegister(e) {
-            e.preventDefault();
-            if (isAuthenticating) return;
-            
-            const form = document.getElementById('register-form');
-            const inputs = form.querySelectorAll('input');
-            
-            // Validación visual
-            let isValid = true;
-            inputs.forEach(input => {
-                if (!input.checkValidity()) {
-                    input.parentElement.classList.add('border-red-400');
-                    isValid = false;
-                } else {
-                    input.parentElement.classList.remove('border-red-400');
-                }
-            });
-            
-            // Validar que las contraseñas coincidan
-            const passwords = form.querySelectorAll('input[type="password"]');
-            if (passwords[0].value !== passwords[1].value) {
-                passwords[1].parentElement.classList.add('border-red-400');
-                showToast('Error', 'Las contraseñas no coinciden');
-                if (navigator.vibrate) navigator.vibrate([50, 100, 50]);
-                return;
-            }
-            
-            if (!isValid) {
-                showToast('Error', 'Por favor completa todos los campos correctamente');
-                if (navigator.vibrate) navigator.vibrate([50, 100, 50]);
-                return;
-            }
-            
-            isAuthenticating = true;
-            
-            // Ripple effect
-            const ripple = document.getElementById('register-ripple');
-            ripple.style.transform = 'scale(1)';
-            setTimeout(() => ripple.style.transform = 'scale(0)', 300);
-            
-            // Mostrar carga
-            showAuthLoading();
-            
-            // Simular registro
-            setTimeout(() => {
-                document.getElementById('auth-progress').style.width = '100%';
+                    window.location.href = 'onboarding.html';
+                }, 2000);
+            } else if (!hasCompletedOnboarding) {
+                // Usuario EXISTENTE sin onboarding completo (edge case)
+                showToast('Completa tu perfil', 'Necesitamos más información');
                 setTimeout(() => {
-                    hideAuthLoading();
-                    showToast('¡Cuenta creada!', 'Bienvenido a la comunidad');
-                    setTimeout(() => {
-                        window.location.href = 'hub_mapa_principal.html';
-                    }, 1500);
-                }, 500);
-            }, 2500);
-        }
-
-        // ============================================================
-        // RECUPERAR CONTRASEÑA
-        // ============================================================
-        function showForgotPassword() {
-            showToast('Próximamente', 'Función de recuperación en desarrollo');
+                    window.location.href = 'onboarding.html';
+                }, 2000);
+            } else {
+                // Usuario EXISTENTE con onboarding completo
+                showToast('¡Bienvenido de vuelta!', 'Redirigiendo al hub...');
+                setTimeout(() => {
+                    window.location.href = 'hub_mapa_principal.html';
+                }, 1500);
+            }
         }
 
         // ============================================================
         // OVERLAY DE CARGA
         // ============================================================
-        function showAuthLoading() {
+        function showAuthLoading(provider) {
             const overlay = document.getElementById('auth-loading');
+            const textEl = document.getElementById('auth-loading-text');
+            const providerName = provider === 'google' ? 'Google' : 'Discord';
+
+            // Reemplazar el placeholder skeleton con texto real
+            textEl.classList.remove('bg-gray-300', 'rounded', 'w-56', 'animate-pulse', 'h-4');
+            textEl.classList.add('text-gray-600', 'text-sm', 'font-medium');
+            textEl.textContent = 'Conectando con ' + providerName + '...';
+
             overlay.classList.remove('hidden');
             document.getElementById('auth-progress').style.width = '0%';
         }
@@ -447,6 +252,11 @@
             const overlay = document.getElementById('auth-loading');
             overlay.classList.add('hidden');
             isAuthenticating = false;
+
+            // Restaurar placeholder skeleton
+            const textEl = document.getElementById('auth-loading-text');
+            textEl.className = 'h-4 bg-gray-300 rounded w-56 animate-pulse';
+            textEl.textContent = '';
         }
 
         // ============================================================
@@ -457,35 +267,29 @@
             const toast = document.getElementById('toast');
             const toastTitle = document.getElementById('toast-title');
             const toastSubtitle = document.getElementById('toast-subtitle');
-            
+            const toastIcon = document.getElementById('toast-icon');
+
             clearTimeout(toastTimeout);
-            
-            toastTitle.style.width = Math.min(title.length * 8, 200) + 'px';
-            toastSubtitle.style.width = Math.min(subtitle.length * 6, 150) + 'px';
-            
+
+            // Ajustar anchos de placeholder según longitud del texto
+            toastTitle.style.width = Math.min(title.length * 8 + 20, 220) + 'px';
+            toastSubtitle.style.width = Math.min(subtitle.length * 6 + 20, 180) + 'px';
+
+            // Cambiar icono según tipo de mensaje
+            if (title.includes('Bienvenido')) {
+                toastIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>';
+            } else {
+                toastIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+            }
+
             toast.style.opacity = '0.95';
             toast.style.transform = 'translateY(0)';
-            
+
             toastTimeout = setTimeout(() => {
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateY(-8px)';
             }, 3000);
         }
-
-        // ============================================================
-        // INPUT FOCUS STATES
-        // ============================================================
-        document.querySelectorAll('input').forEach(input => {
-            input.addEventListener('focus', () => {
-                input.parentElement.classList.add('border-gray-400');
-            });
-            input.addEventListener('blur', () => {
-                input.parentElement.classList.remove('border-gray-400');
-            });
-            input.addEventListener('input', () => {
-                input.parentElement.classList.remove('border-red-400');
-            });
-        });
     </script>
 
 </body>
