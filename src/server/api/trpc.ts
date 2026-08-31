@@ -131,3 +131,42 @@ export const protectedProcedure = t.procedure
       },
     });
   });
+  /**
+ * 👇 NUEVO: Permission Procedure (Capa 2 - Autorización TRPC) 👇
+ * Este es el procedimiento que protege endpoints por permiso específico.
+ * Es un "generador": lo llamas pasándole el código del permiso.
+ * 
+ * Ejemplo de uso en un router:
+ * .loadResult: permissionProcedure("match:result")
+ *   .input(...)
+ *   .mutation(...)
+ */
+export const permissionProcedure = (permissionCode: string) =>
+  protectedProcedure.use(async ({ ctx, next }) => {
+    // 1. Verificamos en la BD si el perfil del usuario tiene asignado un rol que contenga este permiso
+    const hasPermission = await ctx.db.roleAssignment.findFirst({
+      where: {
+        profile: { userId: ctx.session.user.id },
+        role: {
+          permissions: {
+            some: {
+              permission: { code: permissionCode },
+            },
+          },
+        },
+      },
+      // Optimización: solo traemos el ID, no necesitamos más datos
+      select: { id: true },
+    });
+
+    // 2. Si no hay coincidencia, lanzamos error 403 Forbidden
+    if (!hasPermission) {
+      throw new TRPCError({
+        code: "FORBIDDEN",
+        message: `Acceso denegado. Se requiere el permiso: ${permissionCode}`,
+      });
+    }
+
+    // 3. Si tiene el permiso, procede al mutation/query
+    return next({ ctx });
+  });

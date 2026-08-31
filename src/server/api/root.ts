@@ -1,23 +1,10 @@
-import { postRouter } from "torneos/server/api/routers/post";
-import { createCallerFactory, createTRPCRouter } from "torneos/server/api/trpc";
+import { postRouter } from "torneos/server/api/routers/post"; // Puedes borrar esto si ya no usas el scaffold de T3
+import { profileRouter } from "torneos/server/api/routers/profile";
+import { availabilityRouter } from "torneos/server/api/routers/availability";
+import { createTRPCRouter } from "torneos/server/api/trpc";
 
-/**
- * This is the primary router for your server.
- *
- * All routers added in /api/routers should be manually added here.
- */
 export const appRouter = createTRPCRouter({
-  post: postRouter,
+  // post: postRouter, // Bórralo si limpiaste el código de ejemplo de T3
+  profile: profileRouter,
+  availability: availabilityRouter,
 });
-
-// export type definition of API
-export type AppRouter = typeof appRouter;
-
-/**
- * Create a server-side caller for the tRPC API.
- * @example
- * const trpc = createCaller(createContext);
- * const res = await trpc.post.all();
- *       ^? Post[]
- */
-export const createCaller = createCallerFactory(appRouter);

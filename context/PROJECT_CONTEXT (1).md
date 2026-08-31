@@ -84,6 +84,162 @@ src/
 ├─ hooks/                   # Solo hooks genéricos de React (useDebounce, useMediaQuery)
 └─ trpc/                    # Config tRPC client/server
 ```
+### 4.1 Estructura de Directorios actual
+proyecto-torneos
+├── README.md
+├── context
+│   ├── PROJECT_CONTEXT (1).md
+│   ├── SISTEMA_01_AUTH_RBAC_REFACTOR.md
+│   ├── SISTEMA_02_USUARIOS_PERFILES_REFACTOR.md
+│   ├── SISTEMA_03_EQUIPOS_PLANTILLAS_REFACTOR.md
+│   ├── SISTEMA_04_RECLUTAMIENTO_REFACTOR.md
+│   ├── SISTEMA_05_CANCHAS_SEDES_REFACTOR.md
+│   ├── SISTEMA_06_TORNEOS_REFACTOR.md
+│   ├── SISTEMA_07_PARTIDOS_APLAZAMIENTOS_REFACTOR.md
+│   ├── SISTEMA_10_RESULTADOS_ESTADISTICAS_REFACTOR.md
+│   └── SISTEMA_11_NOTIFICACIONES.md
+├── eslint.config.js
+├── generated
+│   └── prisma
+│       ├── client.d.ts
+│       ├── client.js
+│       ├── default.d.ts
+│       ├── default.js
+│       ├── edge.d.ts
+│       ├── edge.js
+│       ├── index-browser.js
+│       ├── index.d.ts
+│       ├── index.js
+│       ├── package.json
+│       ├── query_engine-windows.dll.node
+│       ├── query_engine_bg.js
+│       ├── query_engine_bg.wasm
+│       ├── runtime
+│       │   ├── edge-esm.js
+│       │   ├── edge.js
+│       │   ├── index-browser.d.ts
+│       │   ├── index-browser.js
+│       │   ├── library.d.ts
+│       │   ├── library.js
+│       │   ├── react-native.js
+│       │   ├── wasm-compiler-edge.js
+│       │   └── wasm-engine-edge.js
+│       ├── schema.prisma
+│       ├── wasm-edge-light-loader.mjs
+│       ├── wasm-worker-loader.mjs
+│       ├── wasm.d.ts
+│       └── wasm.js
+├── next.config.js
+├── package-lock.json
+├── package.json
+├── postcss.config.js
+├── prettier.config.js
+├── prisma
+│   ├── migrations
+│   │   ├── 20260828142156_init_auth_rbac
+│   │   │   └── migration.sql
+│   │   ├── 20260828161620_add_google_token_expires
+│   │   │   └── migration.sql
+│   │   ├── 20260828162119_fix_user_updated_at
+│   │   │   └── migration.sql
+│   │   ├── 20260831160658_system2_profiles_onboarding
+│   │   │   └── migration.sql
+│   │   └── migration_lock.toml
+│   ├── schema.prisma
+│   └── seed.ts
+├── prototipo
+│   ├── detalle_cancha_sede.html
+│   ├── detalle_equipo_card_maestra.html
+│   ├── detalle_partido_vs.html
+│   ├── detalle_torneo.html
+│   ├── directorio_reclutamiento.html
+│   ├── gestion_torneo_inscripciones.html
+│   ├── gestion_torneo_planilla.html
+│   ├── gestion_torneo_sorteo.html
+│   ├── hub_mapa_principal.html
+│   ├── login_registro.html
+│   ├── panel_admin.html
+│   └── perfil_jugador.html
+├── public
+│   └── favicon.ico
+├── src
+│   ├── app
+│   │   ├── (app)
+│   │   │   ├── config
+│   │   │   ├── equipos
+│   │   │   │   └── [teamId]
+│   │   │   ├── layout.tsx
+│   │   │   ├── notificaciones
+│   │   │   ├── onboarding
+│   │   │   ├── reclutamiento
+│   │   │   │   └── [teamId]
+│   │   │   └── torneos
+│   │   │       └── [tournamentId]
+│   │   ├── (auth)
+│   │   │   └── login
+│   │   │       └── page.tsx
+│   │   ├── (public)
+│   │   ├── _components
+│   │   │   └── post.tsx
+│   │   ├── api
+│   │   │   ├── auth
+│   │   │   └── trpc
+│   │   │       └── [trpc]
+│   │   │           └── route.ts
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── components
+│   │   ├── features
+│   │   │   ├── auth
+│   │   │   │   └── login-form.tsx
+│   │   │   ├── notification
+│   │   │   ├── team
+│   │   │   └── tournament
+│   │   ├── templates
+│   │   └── ui
+│   │       ├── button
+│   │       │   ├── button.tsx
+│   │       │   └── button.variants.ts
+│   │       ├── card
+│   │       ├── input
+│   │       └── oauth-button
+│   │           ├── oauth-button.tsx
+│   │           └── oauth-button.variants.ts
+│   ├── env.js
+│   ├── hooks
+│   ├── lib
+│   │   └── utils.ts
+│   ├── server
+│   │   ├── api
+│   │   │   ├── root.ts
+│   │   │   ├── routers
+│   │   │   │   └── post.ts
+│   │   │   └── trpc.ts
+│   │   ├── auth
+│   │   │   ├── config.ts
+│   │   │   └── index.ts
+│   │   ├── core
+│   │   │   ├── match
+│   │   │   ├── notification
+│   │   │   │   └── notification.engine.ts
+│   │   │   ├── profile
+│   │   │   ├── rbac
+│   │   │   ├── recruitment
+│   │   │   ├── stats
+│   │   │   ├── team
+│   │   │   │   └── team.engine.ts
+│   │   │   └── tournament
+│   │   │       └── tournament.engine.ts
+│   │   └── db.ts
+│   ├── styles
+│   │   └── globals.css
+│   └── trpc
+│       ├── query-client.ts
+│       ├── react.tsx
+│       └── server.ts
+├── start-database.sh
+├── test-fetch.ts
+└── tsconfig.json
 
 ---
 

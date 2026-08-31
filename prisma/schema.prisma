@@ -71,8 +71,10 @@ model Profile {
   phone       String?
   bio         String?  @db.Text
   birthDate   DateTime?
+  onboarded Boolean @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
 
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   roleAssignments RoleAssignment[]
@@ -135,6 +137,8 @@ model Player {
 
   profile        Profile              @relation(fields: [profileId], references: [id], onDelete: Cascade)
   availabilities PlayerAvailability[]
+
+  teamMemberships TeamMembership[]
 }
 
 model PlayerAvailability {
@@ -163,6 +167,17 @@ model Manager {
 
   profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
+model TeamMembership {
+  id        String   @id @default(cuid())
+  playerId  String
+  teamId    String
+  isCaptain Boolean  @default(false)
+  leftAt    DateTime?
+  
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  // team Team @relation(...) // Se vinculará en el Sistema 3
 
+  @@unique([playerId, teamId])
+}
 // Nota: Omitimos TeamMembership y CaptaincyTransfer por ahora. 
 // Esos pertenecen al Sistema 3 (Equipos). Vamos paso a paso.
