@@ -8,12 +8,25 @@ export const availabilityEngine = {
   },
 
   async toggleSlot(prisma: PrismaClient, playerId: string, dayOfWeek: number, timeSlot: number) {
+    // 👇 Buscamos si existe
     const existing = await prisma.playerAvailability.findUnique({
       where: { playerId_dayOfWeek_timeSlot: { playerId, dayOfWeek, timeSlot } },
     });
 
-    if (!existing) throw new Error("Slot no existe");
+    // 👇 Si no existe, la creamos como AVAILABLE (o UNAVAILABLE si ese fuera el caso)
+    // Esto repara los usuarios antiguos que no tuvieron el seed automático
+    if (!existing) {
+      return prisma.playerAvailability.create({
+        data: {
+          playerId,
+          dayOfWeek,
+          timeSlot,
+          status: "AVAILABLE",
+        },
+      });
+    }
 
+    // 👇 Si existe, hacemos el toggle normal
     return prisma.playerAvailability.update({
       where: { id: existing.id },
       data: {

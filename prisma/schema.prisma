@@ -138,7 +138,10 @@ model Player {
   profile        Profile              @relation(fields: [profileId], references: [id], onDelete: Cascade)
   availabilities PlayerAvailability[]
 
+  
   teamMemberships TeamMembership[]
+  invitations     TeamInvitation[]
+  sentInvitations TeamInvitation[]     @relation("SentInvitations")
 }
 
 model PlayerAvailability {
@@ -167,17 +170,93 @@ model Manager {
 
   profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
 }
+
+model Team {
+  id            String      @id @default(cuid())
+  name          String      @unique
+  abbreviation  String      @unique @db.VarChar(10)
+  primaryColor  String      @db.VarChar(7)
+  secondaryColor String?    @db.VarChar(7)
+  description   String?     @db.Text
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  status        TeamStatus  @default(DRAFT)
+
+  memberships     TeamMembership[]
+  invitations     TeamInvitation[]
+  captaincyTransfers CaptaincyTransfer[] // Corregido: una sola relación
+}
+
+enum TeamStatus {
+  DRAFT
+  ACTIVE
+  INACTIVE
+}
+
 model TeamMembership {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   playerId  String
   teamId    String
-  isCaptain Boolean  @default(false)
+  isCaptain Boolean   @default(false)
+  joinedAt  DateTime  @default(now())
   leftAt    DateTime?
-  
+
   player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  // team Team @relation(...) // Se vinculará en el Sistema 3
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  incomingTransfers CaptaincyTransfer[] @relation("IncomingTransfer")
+  outgoingTransfers CaptaincyTransfer[] @relation("OutgoingTransfer")
 
   @@unique([playerId, teamId])
+  @@index([teamId, leftAt])
+  @@index([playerId, leftAt])
+}
+
+model TeamInvitation {
+  id          String              @id @default(cuid())
+  teamId      String?             
+  playerId    String
+  invitedBy   String
+  status      InvitationStatus    @default(PENDING)
+  createdAt   DateTime            @default(now())
+  respondedAt DateTime?
+
+  team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  player Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  inviter Player @relation("SentInvitations", fields: [invitedBy], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, playerId])
+  @@index([playerId, status])
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
+  REVOKED
+}
+
+model CaptaincyTransfer {
+  id          String                  @id @default(cuid())
+  teamId      String
+  fromId      String
+  toId        String
+  status      CaptaincyTransferStatus @default(PENDING)
+  requestedAt DateTime                @default(now())
+  respondedAt DateTime?
+
+  team         Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  from         TeamMembership @relation("OutgoingTransfer", fields: [fromId], references: [id], onDelete: Cascade)
+  to           TeamMembership @relation("IncomingTransfer", fields: [toId], references: [id], onDelete: Cascade)
+
+  @@unique([fromId, toId, status])
+}
+
+enum CaptaincyTransferStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
 }
 // Nota: Omitimos TeamMembership y CaptaincyTransfer por ahora. 
 // Esos pertenecen al Sistema 3 (Equipos). Vamos paso a paso.

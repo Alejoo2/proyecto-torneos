@@ -1,4 +1,3 @@
-import { db } from "torneos/server/db";
 import type { PrismaClient, Profile } from "@prisma/client";
 
 export const profileEngine = {
@@ -15,6 +14,7 @@ export const profileEngine = {
       include: {
         player: {
           include: {
+            // Quitamos el include: { team: true } porque el modelo Team es del Sistema 3
             teamMemberships: { where: { leftAt: null } },
           },
         },
@@ -39,7 +39,9 @@ export const profileEngine = {
       where: { id: targetProfileId },
       include: {
         player: {
-          include: { teamMemberships: { where: { leftAt: null }, include: { team: true } } },
+          include: { 
+            teamMemberships: { where: { leftAt: null } } 
+          },
         },
       },
     });
@@ -50,20 +52,29 @@ export const profileEngine = {
       where: { userId: viewerUserId },
       include: {
         player: {
-          include: { teamMemberships: { where: { leftAt: null, isCaptain: true } } },
+          include: { 
+            teamMemberships: { where: { leftAt: null, isCaptain: true } } 
+          },
         },
         manager: true,
       },
     });
 
+    // Caso 1: El target es capitán -> gestores lo ven
     const targetIsCaptain = targetProfile.player?.teamMemberships.some((tm) => tm.isCaptain);
-    if (targetIsCaptain && viewerProfile?.manager) return targetProfile.phone;
+    if (targetIsCaptain && viewerProfile?.manager) {
+      return targetProfile.phone;
+    }
 
+    // Caso 2: El target está en un equipo -> solo su capitán lo ve
     const targetTeamId = targetProfile.player?.teamMemberships[0]?.teamId;
     const viewerIsCaptainOfTargetTeam = viewerProfile?.player?.teamMemberships.some(
       (tm) => tm.teamId === targetTeamId
     );
-    if (viewerIsCaptainOfTargetTeam) return targetProfile.phone;
+    
+    if (viewerIsCaptainOfTargetTeam) {
+      return targetProfile.phone;
+    }
 
     return null;
   },

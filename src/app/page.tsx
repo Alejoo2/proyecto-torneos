@@ -1,69 +1,83 @@
 import Link from "next/link";
-
-import { LatestPost } from "torneos/app/_components/post";
 import { auth } from "torneos/server/auth";
-import { api, HydrateClient } from "torneos/trpc/server";
 
 export default async function Home() {
-  const hello = await api.post.hello({ text: "from tRPC" });
   const session = await auth();
 
-  if (session?.user) {
-    void api.post.getLatest.prefetch();
-  }
-
   return (
-    <HydrateClient>
-      <main className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-[#2e026d] to-[#15162c] text-white">
-        <div className="container flex flex-col items-center justify-center gap-12 px-4 py-16">
-          <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-            Create <span className="text-[hsl(280,100%,70%)]">T3</span> App
+    <main className="flex min-h-screen flex-col items-center justify-center bg-zinc-950 text-white px-4 py-12">
+      <div className="w-full max-w-md flex flex-col gap-8">
+        
+        {/* Header */}
+        <div className="text-center">
+          <h1 className="text-4xl font-black uppercase tracking-tight">
+            Torneos <span className="text-emerald-500">de Barrio</span>
           </h1>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-8">
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-              href="https://create.t3.gg/en/usage/first-steps"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">First Steps →</h3>
-              <div className="text-lg">
-                Just the basics - Everything you need to know to set up your
-                database and authentication.
-              </div>
-            </Link>
-            <Link
-              className="flex max-w-xs flex-col gap-4 rounded-xl bg-white/10 p-4 hover:bg-white/20"
-              href="https://create.t3.gg/en/introduction"
-              target="_blank"
-            >
-              <h3 className="text-2xl font-bold">Documentation →</h3>
-              <div className="text-lg">
-                Learn more about Create T3 App, the libraries it uses, and how
-                to deploy it.
-              </div>
-            </Link>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <p className="text-2xl text-white">
-              {hello ? hello.greeting : "Loading tRPC query..."}
-            </p>
+          <p className="text-zinc-400 mt-2 text-sm uppercase tracking-widest">
+            Plataforma en construcción
+          </p>
+        </div>
 
-            <div className="flex flex-col items-center justify-center gap-4">
-              <p className="text-center text-2xl text-white">
-                {session && <span>Logged in as {session.user?.name}</span>}
+        {/* Auth Section */}
+        <div className="flex flex-col items-center gap-4 bg-zinc-900 p-6 rounded-xl border border-zinc-800">
+          {session?.user ? (
+            <>
+              <p className="text-lg font-bold text-center">
+                Bienvenido, <span className="text-emerald-500">{session.user.name ?? "Jugador"}</span>
               </p>
               <Link
-                href={session ? "/api/auth/signout" : "/api/auth/signin"}
-                className="rounded-full bg-white/10 px-10 py-3 font-semibold no-underline transition hover:bg-white/20"
+                href="/api/auth/signout"
+                className="w-full text-center bg-zinc-800 text-white px-6 py-2 rounded-md font-bold uppercase tracking-wide hover:bg-zinc-700 transition-colors"
               >
-                {session ? "Sign out" : "Sign in"}
+                Cerrar Sesión
               </Link>
-            </div>
-          </div>
-
-          {session?.user && <LatestPost />}
+            </>
+          ) : (
+            <Link
+              href="/api/auth/signin"
+              className="w-full text-center bg-emerald-500 text-zinc-950 px-6 py-2 rounded-md font-black uppercase tracking-wide hover:bg-emerald-400 transition-colors"
+            >
+              Iniciar Sesión
+            </Link>
+          )}
         </div>
-      </main>
-    </HydrateClient>
+
+        {/* Navigation Hub */}
+        <div className="flex flex-col gap-4">
+          <h2 className="text-xl font-bold uppercase border-b border-zinc-800 pb-2">
+            Navegación (Demo)
+          </h2>
+          
+          <div className="flex flex-col gap-3">
+            <Link 
+              href="/onboarding" 
+              className="block bg-zinc-900 p-4 rounded-lg border border-zinc-800 hover:border-emerald-500 transition-colors"
+            >
+              <h3 className="font-bold uppercase text-emerald-500">Sistema 2: Onboarding</h3>
+              <p className="text-zinc-400 text-sm mt-1">Configuración de perfil y matriz de disponibilidad.</p>
+            </Link>
+
+            <Link 
+              href="/config" 
+              className="block bg-zinc-900 p-4 rounded-lg border border-zinc-800 hover:border-zinc-600 transition-colors opacity-50 cursor-not-allowed"
+              aria-disabled="true"
+            >
+              <h3 className="font-bold uppercase text-zinc-500">Sistema 3: Equipos (Próximamente)</h3>
+              <p className="text-zinc-500 text-sm mt-1">Gestión de equipos y plantillas.</p>
+            </Link>
+
+            <Link 
+              href="/config/torneos" 
+              className="block bg-zinc-900 p-4 rounded-lg border border-zinc-800 hover:border-zinc-600 transition-colors opacity-50 cursor-not-allowed"
+              aria-disabled="true"
+            >
+              <h3 className="font-bold uppercase text-zinc-500">Sistema 6: Torneos (Próximamente)</h3>
+              <p className="text-zinc-500 text-sm mt-1">Inscripción y sala de cine.</p>
+            </Link>
+          </div>
+        </div>
+
+      </div>
+    </main>
   );
 }
