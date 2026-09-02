@@ -3,8 +3,8 @@ import { availabilityEngine } from "torneos/server/core/availability/availabilit
 import { z } from "zod";
 
 export const availabilityRouter = createTRPCRouter({
-  getMine: protectedProcedure.query(({ ctx }) => {
-    return ctx.db.profile.findUnique({
+  getMine: protectedProcedure.query(async ({ ctx }) => { // <-- Añadido async
+    return await ctx.db.profile.findUnique({ // <-- Añadido await
       where: { userId: ctx.session.user.id },
       include: { player: { include: { availabilities: true } } },
     });
@@ -18,7 +18,6 @@ export const availabilityRouter = createTRPCRouter({
       })
     )
     .mutation(async ({ ctx, input }) => {
-      // 1. Buscamos el perfil usando el userId presente en la sesión
       const profile = await ctx.db.profile.findUnique({
         where: { userId: ctx.session.user.id },
         include: { player: true },
@@ -28,7 +27,6 @@ export const availabilityRouter = createTRPCRouter({
         throw new Error("Jugador no encontrado para este usuario");
       }
 
-      // 2. Ejecutamos el engine pasando ctx.db y el ID del jugador encontrado
       return availabilityEngine.toggleSlot(
         ctx.db,
         profile.player.id,

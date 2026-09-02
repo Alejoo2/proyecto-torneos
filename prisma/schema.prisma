@@ -181,6 +181,7 @@ model Team {
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
   status        TeamStatus  @default(DRAFT)
+  deletionRequest TeamDeletionRequest?
 
   memberships     TeamMembership[]
   invitations     TeamInvitation[]
@@ -258,5 +259,34 @@ enum CaptaincyTransferStatus {
   ACCEPTED
   REJECTED
 }
-// Nota: Omitimos TeamMembership y CaptaincyTransfer por ahora. 
-// Esos pertenecen al Sistema 3 (Equipos). Vamos paso a paso.
+// Nuevos modelos:
+model TeamDeletionRequest {
+  id          String                @id @default(cuid())
+  teamId      String                @unique
+  requestedBy String
+  createdAt   DateTime              @default(now())
+  status      DeletionRequestStatus @default(PENDING)
+
+  team  Team                 @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  votes TeamDeletionVote[]
+
+  @@index([teamId])
+}
+
+enum DeletionRequestStatus {
+  PENDING
+  APPROVED
+  CANCELLED
+}
+
+model TeamDeletionVote {
+  id         String   @id @default(cuid())
+  requestId  String
+  playerId   String
+  approve    Boolean  @default(true)
+  votedAt    DateTime @default(now())
+
+  request TeamDeletionRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@unique([requestId, playerId])
+}

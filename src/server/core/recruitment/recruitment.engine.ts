@@ -1,9 +1,9 @@
 // src/server/core/recruitment/recruitment.engine.ts
 
-import type { PrismaClient } from "@prisma/client";
+import { AvailabilityStatus, InvitationStatus, type PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 
-// Helper interno para validar que el usuario es capitán del equipo y el equipo está activo
+// Helper interno para validar que el usuario es capitán del equipo
 async function assertActiveCaptain(prisma: PrismaClient, teamId: string, userId: string) {
   const membership = await prisma.teamMembership.findFirst({
     where: {
@@ -18,7 +18,8 @@ async function assertActiveCaptain(prisma: PrismaClient, teamId: string, userId:
   if (!membership) {
     throw new TRPCError({ code: "FORBIDDEN", message: "No eres capitán de este equipo" });
   }
-  if (membership.team.status !== "ACTIVE") {
+  // 👇 PERMITIMOS DRAFT Y ACTIVE 👇
+  if (membership.team.status !== "ACTIVE" && membership.team.status !== "DRAFT") {
     throw new TRPCError({ code: "BAD_REQUEST", message: "El equipo no está activo para reclutar" });
   }
   return membership;
@@ -60,7 +61,7 @@ export const recruitmentEngine = {
       // Excluir miembros actuales del equipo
       teamMemberships: { none: { teamId: input.teamId, leftAt: null } },
       // Excluir jugadores con invitación PENDING para este equipo
-      invitations: { none: { teamId: input.teamId, status: "PENDING" } },
+      invitations: { none: { teamId: input.teamId, status: InvitationStatus.PENDING } },
       // Filtro por nombre (insensitive)
       profile: {
         displayName: input.query
@@ -73,30 +74,32 @@ export const recruitmentEngine = {
             some: {
               dayOfWeek: input.availabilityFilter.dayOfWeek,
               timeSlot: input.availabilityFilter.timeSlot,
-              status: "AVAILABLE",
+              status: AvailabilityStatus.AVAILABLE,
             },
           }
         : undefined,
     };
+
+    const pageSize = input.pageSize ?? 20;
+    const page = input.page ?? 1;
 
     const players = await prisma.player.findMany({
       where: whereClause,
       include: {
         profile: { include: { user: { select: { image: true } } } },
         availabilities: {
-          where: { status: "AVAILABLE" },
+          where: { status: AvailabilityStatus.AVAILABLE },
           select: { dayOfWeek: true, timeSlot: true },
         },
         _count: {
           select: { teamMemberships: { where: { leftAt: null } } },
         },
       },
-      skip: ((input.page || 1) - 1) * (input.pageSize || 20),
-      take: input.pageSize || 20,
+      skip: (page - 1) * pageSize,
+      take: pageSize,
     });
 
     // 4. Filtrar post-query: Excluir jugadores saturados (>= 15 equipos)
-    // Hacemos esto en memoria porque Prisma no soporta _count > X en el where nativo sin raw queries.
     return players.filter((p) => p._count.teamMemberships < 15);
   },
 
@@ -239,7 +242,7 @@ export const recruitmentEngine = {
       where: { id: invitationId },
     });
 
-    if (!invitation || invitation.playerId !== profile.player.id) {
+    if (!invitation?.playerId || invitation.playerId !== profile.player.id) {
       throw new TRPCError({ code: "FORBIDDEN", message: "Esta invitación no es para ti" });
     }
     if (invitation.status !== "PENDING") {
@@ -248,6 +251,8 @@ export const recruitmentEngine = {
     if (!invitation.teamId) {
       throw new TRPCError({ code: "BAD_REQUEST", message: "Invitación no vinculada a un equipo activo" });
     }
+
+    const targetTeamId = invitation.teamId;
 
     return prisma.$transaction(async (tx) => {
       // 1. Marcar invitación como aceptada
@@ -260,21 +265,21 @@ export const recruitmentEngine = {
       await tx.teamMembership.create({
         data: {
           playerId: invitation.playerId,
-          teamId: invitation.teamId,
+          teamId: targetTeamId,
           isCaptain: false,
         },
       });
 
       // 3. Lógica de Saturación: ¿El equipo llegó a 15?
       const activeMembersCount = await tx.teamMembership.count({
-        where: { teamId: invitation.teamId, leftAt: null },
+        where: { teamId: targetTeamId, leftAt: null },
       });
 
       if (activeMembersCount >= 15) {
         // Rechazar automáticamente todas las otras PENDING de este equipo
         await tx.teamInvitation.updateMany({
           where: {
-            teamId: invitation.teamId,
+            teamId: targetTeamId,
             status: "PENDING",
             id: { not: invitationId },
           },
@@ -286,7 +291,7 @@ export const recruitmentEngine = {
 
       // TODO: Sistema 11 - Emitir notificación al capitán de que el jugador aceptó
 
-      return { success: true, teamId: invitation.teamId };
+      return { success: true, teamId: targetTeamId };
     });
   },
 
@@ -307,7 +312,7 @@ export const recruitmentEngine = {
       where: { id: invitationId },
     });
 
-    if (!invitation || invitation.playerId !== profile.player.id) {
+    if (!invitation?.playerId || invitation.playerId !== profile.player.id) {
       throw new TRPCError({ code: "FORBIDDEN", message: "Esta invitación no es para ti" });
     }
     if (invitation.status !== "PENDING") {
@@ -322,5 +327,38 @@ export const recruitmentEngine = {
     // TODO: Sistema 11 - Emitir notificación al capitán de que el jugador rechazó
 
     return updated;
+  },
+    // ==========================================
+  // 4. Perfil Público de Jugador (para Capitanes)
+  // ==========================================
+  async getPlayerProfile(
+    prisma: PrismaClient,
+    input: { teamId: string; playerId: string },
+    userId: string
+  ) {
+    // 1. Validar que quien pide la info es capitán de un equipo activo/draft
+    await assertActiveCaptain(prisma, input.teamId, userId);
+
+    // 2. Obtener el jugador con su perfil y disponibilidades
+    const player = await prisma.player.findUnique({
+      where: { id: input.playerId },
+      include: {
+        profile: { 
+          include: { user: { select: { image: true } } } 
+        },
+        availabilities: {
+          select: { dayOfWeek: true, timeSlot: true, status: true }
+        },
+        _count: {
+          select: { teamMemberships: { where: { leftAt: null } } }
+        }
+      },
+    });
+
+    if (!player) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Jugador no encontrado" });
+    }
+
+    return player;
   },
 };

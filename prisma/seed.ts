@@ -1,5 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-import type { Permission } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -7,49 +6,22 @@ async function main() {
   console.log("Iniciando el seed de Roles y Permisos...");
 
   // 1. CREAR ROLES
-  const adminRole = await prisma.role.upsert({
-    where: { name: "admin" },
-    update: {},
-    create: {
-      name: "admin",
-      description: "Administrador global. Crea canchas, habilita gestores.",
-      isSystem: true,
-    },
-  });
+  const rolesData = [
+    { name: "admin", description: "Administrador global. Crea canchas, habilita gestores.", isSystem: true },
+    { name: "manager", description: "Gestor de torneos. Opera en canchas existentes.", isSystem: true },
+    { name: "player", description: "Jugador base. Asignado automáticamente al registrarse.", isSystem: true },
+    { name: "captain", description: "Capitán de equipo. Permisos de gestión sobre su equipo.", isSystem: true },
+  ];
 
-  const managerRole = await prisma.role.upsert({
-    where: { name: "manager" },
-    update: {},
-    create: {
-      name: "manager",
-      description: "Gestor de torneos. Opera en canchas existentes.",
-      isSystem: true,
-    },
-  });
+  for (const role of rolesData) {
+    await prisma.role.upsert({
+      where: { name: role.name },
+      update: {},
+      create: role,
+    });
+  }
 
-  const playerRole = await prisma.role.upsert({
-    where: { name: "player" },
-    update: {},
-    create: {
-      name: "player",
-      description: "Jugador base. Asignado automáticamente al registrarse.",
-      isSystem: true,
-    },
-  });
-
-  const captainRole = await prisma.role.upsert({
-    where: { name: "captain" },
-    update: {},
-    create: {
-      name: "captain",
-      description: "Capitán de equipo. Permisos de gestión sobre su equipo.",
-      isSystem: true,
-    },
-  });
-
-  console.log("Roles creados:", { adminRole, managerRole, playerRole, captainRole });
-
-  // 2. CREAR PERMISOS
+  // 2. CREAR PERMISOS DE FORMA MASIVA
   const permissionsData = [
     { code: "user:manage", name: "Gestionar usuarios", module: "user" },
     { code: "manager:create", name: "Crear gestores", module: "user" },
@@ -67,60 +39,57 @@ async function main() {
     { code: "match:result", name: "Cargar resultados de partido", module: "match" },
   ];
 
-  const permissions: Record<string, Permission> = {};
-  for (const p of permissionsData) {
-    const permission = await prisma.permission.upsert({
-      where: { code: p.code },
-      update: {},
-      create: p,
-    });
-    permissions[p.code] = permission;
-  }
+  await prisma.permission.createMany({
+    data: permissionsData,
+    skipDuplicates: true,
+  });
 
-  console.log(`✅ ${permissionsData.length} permisos creados.`);
+  // Obtener IDs actualizados
+  const [dbRoles, dbPermissions] = await Promise.all([
+    prisma.role.findMany(),
+    prisma.permission.findMany(),
+  ]);
 
-  // 3. ASIGNAR PERMISOS A ROLES
-  const assignPermissionToRole = async (roleId: string, permissionId: string) => {
-    await prisma.rolePermission.upsert({
-      where: {
-        roleId_permissionId: { roleId, permissionId },
-      },
-      update: {},
-      create: { roleId, permissionId },
-    });
+  const roles = Object.fromEntries(dbRoles.map((r) => [r.name, r.id]));
+  const perms = Object.fromEntries(dbPermissions.map((p) => [p.code, p.id]));
+
+  // 3. MAPEO DE PERMISOS POR ROL
+  const rolePermissionsMap: Record<string, string[]> = {
+    admin: [
+      "user:manage",
+      "manager:create",
+      "manager:disable",
+      "court:create",
+      "court:edit",
+      "court:disable",
+      "court:view",
+      "tournament:approve",
+    ],
+    manager: [
+      "court:view",
+      "tournament:create",
+      "tournament:manage",
+      "match:postpone",
+      "match:result",
+    ],
+    player: ["court:view"],
+    captain: ["court:view", "team:invite", "team:manage"],
   };
 
-  await Promise.all([
-    assignPermissionToRole(adminRole.id, permissions["user:manage"]!.id),
-    assignPermissionToRole(adminRole.id, permissions["manager:create"]!.id),
-    assignPermissionToRole(adminRole.id, permissions["manager:disable"]!.id),
-    assignPermissionToRole(adminRole.id, permissions["court:create"]!.id),
-    assignPermissionToRole(adminRole.id, permissions["court:edit"]!.id),
-    assignPermissionToRole(adminRole.id, permissions["court:disable"]!.id),
-    assignPermissionToRole(adminRole.id, permissions["court:view"]!.id),
-    assignPermissionToRole(adminRole.id, permissions["tournament:approve"]!.id),
-  ]);
+  const rolePermissionsData = Object.entries(rolePermissionsMap).flatMap(
+    ([roleName, permCodes]) =>
+      permCodes.map((code) => ({
+        roleId: roles[roleName]!,
+        permissionId: perms[code]!,
+      }))
+  );
 
-  await Promise.all([
-    assignPermissionToRole(managerRole.id, permissions["court:view"]!.id),
-    assignPermissionToRole(managerRole.id, permissions["tournament:create"]!.id),
-    assignPermissionToRole(managerRole.id, permissions["tournament:manage"]!.id),
-    assignPermissionToRole(managerRole.id, permissions["match:postpone"]!.id),
-    assignPermissionToRole(managerRole.id, permissions["match:result"]!.id),
-  ]);
+  await prisma.rolePermission.createMany({
+    data: rolePermissionsData,
+    skipDuplicates: true,
+  });
 
-  await Promise.all([
-    assignPermissionToRole(playerRole.id, permissions["court:view"]!.id),
-  ]);
-
-  await Promise.all([
-    assignPermissionToRole(captainRole.id, permissions["court:view"]!.id),
-    assignPermissionToRole(captainRole.id, permissions["team:invite"]!.id),
-    assignPermissionToRole(captainRole.id, permissions["team:manage"]!.id),
-  ]);
-
-  console.log("✅ Permisos asignados a roles correctamente.");
-  console.log("Seed finalizado con éxito.");
+  console.log("✅ Seed finalizado correctamente.");
 }
 
 main()
