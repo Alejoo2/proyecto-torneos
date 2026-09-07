@@ -172,20 +172,20 @@ model Manager {
 }
 
 model Team {
-  id            String      @id @default(cuid())
-  name          String      @unique
-  abbreviation  String      @unique @db.VarChar(10)
-  primaryColor  String      @db.VarChar(7)
-  secondaryColor String?    @db.VarChar(7)
-  description   String?     @db.Text
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  status        TeamStatus  @default(DRAFT)
-  deletionRequest TeamDeletionRequest?
+  id               String       @id @default(cuid())
+  name             String       @unique
+  abbreviation     String       @unique @db.VarChar(10)
+  primaryColor     String       @db.VarChar(7)
+  secondaryColor   String?      @db.VarChar(7)
+  description      String?      @db.Text
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  status           TeamStatus   @default(DRAFT)
+  deletionRequest  TeamDeletionRequest?
 
-  memberships     TeamMembership[]
-  invitations     TeamInvitation[]
-  captaincyTransfers CaptaincyTransfer[] // Corregido: una sola relación
+  memberships        TeamMembership[]
+  invitations        TeamInvitation[]
+  captaincyTransfers CaptaincyTransfer[]
 }
 
 enum TeamStatus {
@@ -214,17 +214,17 @@ model TeamMembership {
 }
 
 model TeamInvitation {
-  id          String              @id @default(cuid())
-  teamId      String?             
+  id          String           @id @default(cuid())
+  teamId      String?          
   playerId    String
   invitedBy   String
-  status      InvitationStatus    @default(PENDING)
-  createdAt   DateTime            @default(now())
+  status      InvitationStatus @default(PENDING)
+  createdAt   DateTime         @default(now())
   respondedAt DateTime?
 
-  team   Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  player Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  inviter Player @relation("SentInvitations", fields: [invitedBy], references: [id], onDelete: Cascade)
+  team    Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  player  Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  inviter Player  @relation("SentInvitations", fields: [invitedBy], references: [id], onDelete: Cascade)
 
   @@unique([teamId, playerId])
   @@index([playerId, status])
@@ -247,9 +247,9 @@ model CaptaincyTransfer {
   requestedAt DateTime                @default(now())
   respondedAt DateTime?
 
-  team         Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  from         TeamMembership @relation("OutgoingTransfer", fields: [fromId], references: [id], onDelete: Cascade)
-  to           TeamMembership @relation("IncomingTransfer", fields: [toId], references: [id], onDelete: Cascade)
+  team Team           @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  from TeamMembership @relation("OutgoingTransfer", fields: [fromId], references: [id], onDelete: Cascade)
+  to   TeamMembership @relation("IncomingTransfer", fields: [toId], references: [id], onDelete: Cascade)
 
   @@unique([fromId, toId, status])
 }
@@ -259,34 +259,76 @@ enum CaptaincyTransferStatus {
   ACCEPTED
   REJECTED
 }
-// Nuevos modelos:
-model TeamDeletionRequest {
-  id          String                @id @default(cuid())
-  teamId      String                @unique
-  requestedBy String
-  createdAt   DateTime              @default(now())
-  status      DeletionRequestStatus @default(PENDING)
 
-  team  Team                 @relation(fields: [teamId], references: [id], onDelete: Cascade)
+model TeamDeletionRequest {
+  id          String         @id @default(cuid())
+  teamId      String         @unique
+  requestedBy String
+  createdAt   DateTime       @default(now())
+  status      DeletionStatus @default(PENDING)
+
+  team  Team               @relation(fields: [teamId], references: [id], onDelete: Cascade)
   votes TeamDeletionVote[]
 
-  @@index([teamId])
+  @@index([teamId, status])
 }
 
-enum DeletionRequestStatus {
+enum DeletionStatus {
   PENDING
   APPROVED
   CANCELLED
+  EXECUTED
 }
 
 model TeamDeletionVote {
-  id         String   @id @default(cuid())
-  requestId  String
-  playerId   String
-  approve    Boolean  @default(true)
-  votedAt    DateTime @default(now())
+  id        String   @id @default(cuid())
+  requestId String
+  playerId  String
+  approve   Boolean  @default(true)
+  votedAt   DateTime @default(now())
 
   request TeamDeletionRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
 
   @@unique([requestId, playerId])
+}
+
+// ==========================================
+// SISTEMA 5: CANCHAS / SEDES
+// ==========================================
+
+model Court {
+  id          String      @id @default(cuid())
+  name        String      @unique
+  address     String
+  description String?     @db.Text
+  inventory   String?     @db.Text
+  status      CourtStatus @default(ENABLED)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  availability CourtAvailability[]
+  // tournaments Tournament[] // Sistema 6 (pendiente)
+}
+
+enum CourtStatus {
+  ENABLED
+  DISABLED
+}
+
+model CourtAvailability {
+  id        String   @id @default(cuid())
+  courtId   String
+  date      DateTime @db.Date
+  timeSlot  Int
+  status    CourtAvailabilityStatus @default(AVAILABLE)
+
+  court Court @relation(fields: [courtId], references: [id], onDelete: Cascade)
+
+  @@unique([courtId, date, timeSlot])
+  @@index([courtId, date])
+}
+
+enum CourtAvailabilityStatus {
+  AVAILABLE
+  UNAVAILABLE
 }

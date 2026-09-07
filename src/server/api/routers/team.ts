@@ -80,6 +80,17 @@ export const teamRouter = createTRPCRouter({
           },
           _count: {
             select: { memberships: { where: { leftAt: null } } }
+          },
+          deletionRequest: {
+            where: { status: "PENDING" },
+            include: {
+              votes: {
+                select: {
+                  playerId: true,
+                  approve: true // Corregido: 'approve' en lugar de 'approved'
+                }
+              }
+            }
           }
         }
       });
@@ -88,23 +99,21 @@ export const teamRouter = createTRPCRouter({
       return team;
     }),
 
-     requestDelete: protectedProcedure
+  // ==========================================
+  // Eliminación de Equipo y Votación
+  // ==========================================
+  requestDelete: protectedProcedure
     .input(z.object({ teamId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       return teamEngine.requestDelete(ctx.db, input.teamId, ctx.session.user.id);
     }),
 
-  voteDeletion: protectedProcedure
-    .input(z.object({ teamId: z.string(), approve: z.boolean() }))
+  confirmDelete: protectedProcedure
+    .input(z.object({ requestId: z.string(), approved: z.boolean() }))
     .mutation(async ({ ctx, input }) => {
-      return teamEngine.voteDeletion(ctx.db, input.teamId, ctx.session.user.id, input.approve);
+      return teamEngine.confirmDelete(ctx.db, input.requestId, input.approved, ctx.session.user.id);
     }),
 
-  cancelDeletionRequest: protectedProcedure
-    .input(z.object({ teamId: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      return teamEngine.cancelDeletionRequest(ctx.db, input.teamId, ctx.session.user.id);
-    }),
   // ==========================================
   // Gestión de Equipo (Sistema 3)
   // ==========================================

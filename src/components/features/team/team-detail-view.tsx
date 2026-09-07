@@ -1,25 +1,27 @@
 "use client";
-import { api } from "torneos/trpc/react";
 import Link from "next/link";
+import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useLeaveTeam, useRequestDelete, useVoteDeletion, useCancelDeletionRequest } from "torneos/components/features/team/use-team";
+import { useGetTeamById, useLeaveTeam, useRequestDelete, useConfirmDelete } from "torneos/components/features/team/use-team";
 import { ConfirmModal } from "torneos/components/ui/confirm-modal/confirm-modal";
+import { DeletionBanner } from "torneos/components/ui/deletion-banner/deletion-banner";
 
-interface Props { teamId: string }
+interface Props { 
+  teamId: string; 
+}
 
 export function TeamDetailView({ teamId }: Props) {
-  const router = useRouter();
   const { data: session } = useSession();
-  const { data: team, isLoading } = api.team.getById.useQuery({ teamId });
+  // NUEVO HOOK APLICADO
+  const { data: team, isLoading } = useGetTeamById(teamId);
   
-  // Hooks de mutaciones
-  const { mutate: leaveTeam, isPending: isLeaving } = useLeaveTeam();
+  // Mutaciones
+  const { mutate: leaveTeam, isPending: isLeaving, error: leaveError } = useLeaveTeam();
   const { mutate: requestDelete, isPending: isRequestingDelete } = useRequestDelete();
-  const { mutate: voteDeletion, isPending: isVoting } = useVoteDeletion();
-  const { mutate: cancelRequest } = useCancelDeletionRequest();
+  const { mutate: confirmDelete } = useConfirmDelete();
   
+  // Modales
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
@@ -29,39 +31,21 @@ export function TeamDetailView({ teamId }: Props) {
   const currentUserId = session?.user?.id;
   const isMember = team.memberships.some(m => m.player.profile?.userId === currentUserId);
   const isCaptain = team.memberships.some(m => m.isCaptain && m.player.profile?.userId === currentUserId);
-  
-  // Lógica de Eliminación / Votación
-  const deletionRequest = team.deletionRequest;
-  const hasPendingRequest = deletionRequest?.status === "PENDING";
-  const hasVoted = deletionRequest?.votes.some(v => v.player.profile?.userId === currentUserId) ?? false;
-  const myVote = deletionRequest?.votes.find(v => v.player.profile?.userId === currentUserId);
+  const myPlayerId = team.memberships.find(m => m.player.profile?.userId === currentUserId)?.playerId;
 
-  const handleDelete = () => {
-    requestDelete({ teamId }, {
-      onSuccess: (data) => {
-        setIsDeleteModalOpen(false);
-        if (data.directDelete) {
-          router.push("/equipos"); // Si se eliminó directo, salir de la vista
-        }
-      }
-    });
-  };
-
-  const handleVote = (approve: boolean) => {
-    voteDeletion({ teamId, approve });
-  };
-
-  const handleCancelRequest = () => {
-    cancelRequest({ teamId });
-  };
+  // Lógica de Votación 
+  const deletionRequest = team.deletionRequest; 
+  // Corrección de propiedades según Prisma: voterId y approved
+  const hasVoted = deletionRequest?.votes.some(v => v.playerId === myPlayerId) ?? false;
+  const approveVotes = deletionRequest?.votes.filter(v => v.approve).length ?? 0;
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-gray-50 pb-20">
+    <div className="flex flex-col min-h-dvh bg-gray-50 pb-20">
       
       {/* Header */}
       <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
         <div className="flex items-center justify-between px-4 py-3">
-          <Link href="/equipos" className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors min-w-[44px] min-h-[44px]" aria-label="Volver">
+          <Link href="/equipos" className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors min-w-11 min-h-11" aria-label="Volver">
             <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
             </svg>
@@ -70,6 +54,17 @@ export function TeamDetailView({ teamId }: Props) {
           <div className="w-10"></div>
         </div>
       </header>
+
+      {/* BANNER DE VOTACIÓN */}
+      {deletionRequest && isMember && (
+        <DeletionBanner 
+          votes={approveVotes}
+          totalMembers={team._count.memberships}
+          hasVoted={hasVoted}
+          onApprove={() => confirmDelete({ requestId: deletionRequest.id, approved: true })}
+          onReject={() => confirmDelete({ requestId: deletionRequest.id, approved: false })}
+        />
+      )}
 
       {/* Card Maestra */}
       <div className="bg-white p-6 m-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center text-center">
@@ -92,58 +87,8 @@ export function TeamDetailView({ teamId }: Props) {
         </div>
       </div>
 
-      {/* BANNER DE VOTACIÓN DE ELIMINACIÓN */}
-      {hasPendingRequest && isMember && (
-        <div className="mx-4 mb-4 p-4 bg-red-50 border border-red-200 rounded-2xl flex flex-col gap-3">
-          <div className="flex items-start gap-3">
-            <svg className="w-6 h-6 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <div>
-              <h3 className="text-sm font-bold text-red-900">Votación de Eliminación</h3>
-              <p className="text-xs text-red-700 mt-1">
-                El capitán ha solicitado eliminar este equipo. Se requiere el voto afirmativo de todos los miembros.
-              </p>
-            </div>
-          </div>
-          
-          {!hasVoted ? (
-            <div className="flex gap-2">
-              <button 
-                onClick={() => handleVote(true)} 
-                disabled={isVoting}
-                className="flex-1 bg-red-500 text-white py-2 rounded-xl text-xs font-bold uppercase hover:bg-red-600 transition-colors disabled:opacity-50"
-              >
-                Votar Eliminar
-              </button>
-              <button 
-                onClick={() => handleVote(false)} 
-                disabled={isVoting}
-                className="flex-1 bg-white text-gray-700 border border-gray-200 py-2 rounded-xl text-xs font-bold uppercase hover:bg-gray-50 transition-colors disabled:opacity-50"
-              >
-                Rechazar
-              </button>
-            </div>
-          ) : (
-            <div className="text-center text-xs font-bold text-red-800 bg-white py-2 rounded-xl border border-red-100">
-              {myVote?.approve ? "Has votado eliminar. Esperando al resto..." : "Tu voto rechazó la eliminación."}
-            </div>
-          )}
-
-          {/* Botón para que el capitán cancele la solicitud */}
-          {isCaptain && (
-            <button 
-              onClick={handleCancelRequest}
-              className="text-xs text-gray-500 hover:text-gray-700 underline mt-1"
-            >
-              Cancelar solicitud de eliminación
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Botón de Reclutamiento (Solo Capitán) */}
-      {isCaptain && !hasPendingRequest && (
+      {/* Botón de Reclutamiento */}
+      {isCaptain && team.status !== "INACTIVE" && (
         <div className="px-4 mb-4">
           <Link 
             href={`/reclutamiento/${team.id}`}
@@ -163,9 +108,14 @@ export function TeamDetailView({ teamId }: Props) {
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm divide-y divide-gray-100">
           {team.memberships.map((m) => (
             <div key={m.id} className="flex items-center gap-3 p-4">
-              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0 overflow-hidden">
+              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0 overflow-hidden relative">
                 {m.player.profile?.user?.image ? (
-                  <img src={m.player.profile.user.image} alt={m.player.profile.displayName ?? "Jugador"} className="w-full h-full object-cover" />
+                  <Image 
+                    src={m.player.profile.user.image} 
+                    alt={m.player.profile.displayName ?? "Jugador"} 
+                    fill 
+                    className="object-cover" 
+                  />
                 ) : (
                   <span className="text-sm font-bold text-gray-500">
                     {m.player.profile?.displayName?.charAt(0).toUpperCase() ?? "?"}
@@ -184,31 +134,36 @@ export function TeamDetailView({ teamId }: Props) {
       </div>
 
       {/* Acciones de Miembro */}
-      {isMember && !hasPendingRequest && (
+      {isMember && team.status !== "INACTIVE" && (
         <div className="px-4 mt-8 flex flex-col gap-3">
-          {isCaptain ? (
+          <button 
+            onClick={() => setIsLeaveModalOpen(true)}
+            className="w-full bg-white text-red-500 border border-red-200 py-3 rounded-xl font-bold text-sm uppercase tracking-wide hover:bg-red-50 transition-colors active:scale-[0.98]"
+          >
+            Abandonar Equipo
+          </button>
+
+          {isCaptain && !deletionRequest && (
             <button 
               onClick={() => setIsDeleteModalOpen(true)}
-              className="w-full bg-white text-red-500 border border-red-200 py-3 rounded-xl font-bold text-sm uppercase tracking-wide hover:bg-red-50 transition-colors active:scale-[0.98]"
+              disabled={isRequestingDelete}
+              className="w-full bg-transparent text-gray-400 border border-gray-200 py-3 rounded-xl font-bold text-sm uppercase tracking-wide hover:bg-gray-100 transition-colors active:scale-[0.98]"
             >
               Eliminar Equipo
-            </button>
-          ) : (
-            <button 
-              onClick={() => setIsLeaveModalOpen(true)}
-              className="w-full bg-white text-red-500 border border-red-200 py-3 rounded-xl font-bold text-sm uppercase tracking-wide hover:bg-red-50 transition-colors active:scale-[0.98]"
-            >
-              Abandonar Equipo
             </button>
           )}
         </div>
       )}
 
-      {/* Modales */}
+      {/* MODALES */}
       <ConfirmModal
         isOpen={isLeaveModalOpen}
         title="Abandonar Equipo"
-        message="¿Estás seguro de que quieres abandonar este equipo? Tendrás que ser invitado de nuevo para volver."
+        message={
+          isCaptain 
+            ? "Si abandonas el equipo siendo capitán, y no hay otros miembros, el equipo pasará a estado INACTIVO. ¿Estás seguro?"
+            : "¿Estás seguro de que quieres abandonar este equipo? Tendrás que ser invitado de nuevo para volver."
+        }
         confirmText={isLeaving ? "Abandonando..." : "Sí, Abandonar"}
         variant="danger"
         onConfirm={() => leaveTeam({ teamId })}
@@ -219,15 +174,24 @@ export function TeamDetailView({ teamId }: Props) {
         isOpen={isDeleteModalOpen}
         title="Eliminar Equipo"
         message={
-          team._count.memberships < 3 
-            ? "Como la plantilla es menor a 3, el equipo se eliminará inmediatamente. ¿Estás seguro?"
-            : "Como la plantilla es de 3 o más, se creará una solicitud de votación. Todos los miembros deberán aprobarla. ¿Deseas iniciar la votación?"
+          team._count.memberships < 3
+            ? "Al haber menos de 3 miembros, el equipo se eliminará (pasará a inactivo) inmediatamente. ¿Estás seguro?"
+            : "Al tener 3 o más miembros, se iniciará una votación. Todos deben aprobar para que el equipo se elimine. ¿Deseas iniciar la votación?"
         }
         confirmText={isRequestingDelete ? "Procesando..." : "Sí, Continuar"}
         variant="danger"
-        onConfirm={handleDelete}
+        onConfirm={() => {
+          requestDelete({ teamId });
+          setIsDeleteModalOpen(false);
+        }}
         onCancel={() => setIsDeleteModalOpen(false)}
       />
+
+      {leaveError && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-red-500 text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg z-50">
+          {leaveError.message}
+        </div>
+      )}
     </div>
   );
 }

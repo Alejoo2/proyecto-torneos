@@ -54,10 +54,13 @@ export const teamEngine = {
     return prisma.$transaction(async (tx) => {
       const newTeam = await tx.team.create({ data: { ...input, status: "DRAFT" } });
 
+      // Solución error TS18047: Usamos la constante validada profile.player.id
+      const playerId = profile.player.id;
+
       // Crear la membresía del creador como Capitán
       await tx.teamMembership.create({
         data: {
-          playerId: profile.player.id,
+          playerId,
           teamId: newTeam.id,
           isCaptain: true,
         },
@@ -214,7 +217,8 @@ export const teamEngine = {
       });
     });
   },
-    async leaveTeam(prisma: PrismaClient, teamId: string, userId: string) {
+
+  async leaveTeam(prisma: PrismaClient, teamId: string, userId: string) {
     const profile = await prisma.profile.findUnique({
       where: { userId },
       include: { player: true },
@@ -271,14 +275,11 @@ export const teamEngine = {
         });
       }
 
-      // 4. Si era el último capitán pero quedan miembros (caso borde no cubierto arriba por alguna razón)
-      // El equipo se queda sin capitán, pero mantenemos ACTIVE para que puedan reclamar capitanía luego.
-      // Esto está cubierto por el throw de arriba, pero lo dejamos como nota de seguridad.
-
       return { success: true, remainingMembers };
     });
   },
-    // Helper local para validar capitanía
+
+  // Helper local para validar capitanía
   async assertTeamCaptain(prisma: PrismaClient, teamId: string, userId: string) {
     const membership = await prisma.teamMembership.findFirst({
       where: { teamId, isCaptain: true, leftAt: null, player: { profile: { userId } } },
@@ -287,137 +288,148 @@ export const teamEngine = {
     return membership;
   },
 
+  // ==========================================
+  // Eliminación de Equipo (Sistema 3)
+  // ==========================================
   async requestDelete(prisma: PrismaClient, teamId: string, userId: string) {
-    const captainMship = await this.assertTeamCaptain(prisma, teamId, userId);
-
-    // 1. Contar miembros activos
-    const activeMembersCount = await prisma.teamMembership.count({
-      where: { teamId, leftAt: null },
+    // 1. Validar que es capitán
+    const membership = await prisma.teamMembership.findFirst({
+      where: { 
+        teamId, 
+        isCaptain: true, 
+        leftAt: null, 
+        player: { profile: { userId } } 
+      },
+      include: { team: true }
     });
 
-    // 2. Si es < 3, eliminación directa (Soft Delete: Status INACTIVE)
-    if (activeMembersCount < 3) {
-      return prisma.$transaction(async (tx) => {
-        await tx.teamMembership.updateMany({
-          where: { teamId, leftAt: null },
-          data: { leftAt: new Date() },
-        });
-        await tx.team.update({
-          where: { id: teamId },
-          data: { status: "INACTIVE" },
-        });
-        return { directDelete: true, message: "Equipo eliminado correctamente" };
-      });
+    if (!membership) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "Solo el capitán puede solicitar la eliminación" });
     }
 
-    // 3. Si es >= 3, verificar que no haya una solicitud pendiente ya
-    const existingRequest = await prisma.teamDeletionRequest.findUnique({
-      where: { teamId },
+    if (membership.team.status === "INACTIVE") {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "El equipo ya está inactivo" });
+    }
+
+    // 2. Contar miembros activos
+    const activeMembersCount = await prisma.teamMembership.count({
+      where: { teamId, leftAt: null }
     });
 
-    if (existingRequest && existingRequest.status === "PENDING") {
+    // 3. Si es < 3, eliminación directa (Soft Delete: pasa a INACTIVE)
+    if (activeMembersCount < 3) {
+      await prisma.$transaction(async (tx) => {
+        await tx.team.update({
+          where: { id: teamId },
+          data: { status: "INACTIVE" }
+        });
+        // Marcar membresías como abandonadas para limpiar la plantilla
+        await tx.teamMembership.updateMany({
+          where: { teamId, leftAt: null },
+          data: { leftAt: new Date() }
+        });
+      });
+      return { directDelete: true };
+    }
+
+    // 4. Si es >= 3, crear solicitud de votación
+    const existingRequest = await prisma.teamDeletionRequest.findFirst({
+      where: { teamId, status: "PENDING" }
+    });
+    if (existingRequest) {
       throw new TRPCError({ code: "CONFLICT", message: "Ya hay una solicitud de eliminación pendiente" });
     }
 
-    // 4. Crear solicitud de eliminación
-    await prisma.teamDeletionRequest.create({
+    const request = await prisma.teamDeletionRequest.create({
       data: {
         teamId,
-        requestedBy: captainMship.playerId,
-        status: "PENDING",
-      },
+        requestedBy: membership.playerId,
+        status: "PENDING"
+      }
     });
 
-    return { directDelete: false, message: "Solicitud de eliminación creada. Se requiere votación de la plantilla." };
+    // El capitán que la solicita vota automáticamente a favor (Corregido: playerId y approve)
+    await prisma.teamDeletionVote.create({
+      data: {
+        requestId: request.id,
+        playerId: membership.playerId,
+        approve: true
+      }
+    });
+
+    return { directDelete: false, requestId: request.id };
   },
 
-  async voteDeletion(prisma: PrismaClient, teamId: string, userId: string, approve: boolean) {
+  async confirmDelete(prisma: PrismaClient, requestId: string, approve: boolean, userId: string) {
     const profile = await prisma.profile.findUnique({
       where: { userId },
-      include: { player: true },
+      include: { player: true }
     });
-    if (!profile?.player) throw new TRPCError({ code: "NOT_FOUND", message: "Perfil no encontrado" });
-
-    const membership = await prisma.teamMembership.findFirst({
-      where: { teamId, playerId: profile.player.id, leftAt: null },
-    });
-    if (!membership) throw new TRPCError({ code: "FORBIDDEN", message: "No eres miembro de este equipo" });
+    if (!profile?.player) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Perfil no encontrado" });
+    }
 
     const request = await prisma.teamDeletionRequest.findUnique({
-      where: { teamId },
-      include: { votes: true },
+      where: { id: requestId },
+      include: { team: true }
     });
 
+    // Solución ESLint: Optional chaining request?.status
     if (!request || request.status !== "PENDING") {
-      throw new TRPCError({ code: "NOT_FOUND", message: "No hay solicitud de eliminación pendiente" });
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Solicitud no encontrada o ya procesada" });
     }
 
-    // 1. Verificar si ya votó
-    const hasVoted = request.votes.some(v => v.playerId === profile.player!.id);
-    if (hasVoted) throw new TRPCError({ code: "CONFLICT", message: "Ya has emitido tu voto" });
+    // Validar que el votante es miembro activo del equipo
+    const membership = await prisma.teamMembership.findFirst({
+      where: { teamId: request.teamId, playerId: profile.player.id, leftAt: null }
+    });
+    if (!membership) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "No eres miembro de este equipo" });
+    }
 
-    return prisma.$transaction(async (tx) => {
-      // 2. Registrar voto
-      await tx.teamDeletionVote.create({
-        data: {
-          requestId: request.id,
-          playerId: profile.player!.id,
-          approve,
-        },
+    // Upsert del voto (Corregido: requestId_playerId, playerId y approve)
+    await prisma.teamDeletionVote.upsert({
+      where: { requestId_playerId: { requestId, playerId: membership.playerId } },
+      update: { approve },
+      create: { requestId, playerId: membership.playerId, approve }
+    });
+
+    // Si rechaza, la solicitud se deniega
+    if (!approve) {
+      await prisma.teamDeletionRequest.update({
+        where: { id: requestId },
+        data: { status: "CANCELLED" }
       });
+      return { finalized: true, approved: false };
+    }
 
-      // 3. Si el voto es NO, se cancela la solicitud automáticamente
-      if (!approve) {
-        await tx.teamDeletionRequest.update({
-          where: { id: request.id },
-          data: { status: "CANCELLED" },
-        });
-        return { deleted: false, message: "Voto registrado. Solicitud cancelada por rechazo." };
-      }
+    // Contar votos a favor y total de miembros (Corregido: approve)
+    const approveVotes = await prisma.teamDeletionVote.count({
+      where: { requestId, approve: true }
+    });
+    const totalMembers = await prisma.teamMembership.count({
+      where: { teamId: request.teamId, leftAt: null }
+    });
 
-      // 4. Si el voto es SÍ, verificar si todos los miembros activos han votado que SÍ
-      const activeMembers = await tx.teamMembership.count({
-        where: { teamId, leftAt: null },
-      });
-
-      const yesVotes = await tx.teamDeletionVote.count({
-        where: { requestId: request.id, approve: true },
-      });
-
-      // Si la cantidad de votos afirmativos equivale a la cantidad de miembros activos -> Consenso alcanzado
-      if (yesVotes >= activeMembers) {
-        await tx.teamMembership.updateMany({
-          where: { teamId, leftAt: null },
-          data: { leftAt: new Date() },
-        });
+    // Si hay consenso unánime, ejecutar eliminación (Soft delete)
+    if (approveVotes >= totalMembers) {
+      await prisma.$transaction(async (tx) => {
         await tx.team.update({
-          where: { id: teamId },
-          data: { status: "INACTIVE" },
+          where: { id: request.teamId },
+          data: { status: "INACTIVE" }
+        });
+        await tx.teamMembership.updateMany({
+          where: { teamId: request.teamId, leftAt: null },
+          data: { leftAt: new Date() }
         });
         await tx.teamDeletionRequest.update({
-          where: { id: request.id },
-          data: { status: "APPROVED" },
+          where: { id: requestId },
+          data: { status: "EXECUTED" }
         });
-        return { deleted: true, message: "Consenso alcanzado. Equipo eliminado." };
-      }
-
-      return { deleted: false, message: "Voto registrado. Faltan votos para alcanzar consenso." };
-    });
-  },
-
-  async cancelDeletionRequest(prisma: PrismaClient, teamId: string, userId: string) {
-    await this.assertTeamCaptain(prisma, teamId, userId);
-    
-    const request = await prisma.teamDeletionRequest.findUnique({ where: { teamId } });
-    if (!request || request.status !== "PENDING") {
-      throw new TRPCError({ code: "NOT_FOUND", message: "No hay solicitud pendiente para cancelar" });
+      });
+      return { finalized: true, approved: true };
     }
 
-    await prisma.teamDeletionRequest.update({
-      where: { id: request.id },
-      data: { status: "CANCELLED" },
-    });
-
-    return { success: true };
+    return { finalized: false, votes: approveVotes, total: totalMembers };
   },
 };

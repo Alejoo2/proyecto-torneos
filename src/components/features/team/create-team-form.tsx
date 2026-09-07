@@ -1,34 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { api } from "torneos/trpc/react";
-import { useRouter } from "next/navigation";
-import { Button } from "torneos/components/ui/button/button"; // Ajusta la ruta a tu componente Button
+import { Button } from "torneos/components/ui/button/button";
+import { useCreateDraft } from "torneos/components/features/team/use-team";
 
 export function CreateTeamForm() {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const createDraft = api.team.createDraft.useMutation({
-    onSuccess: (data) => {
-      // En el Sistema 4 haremos el flow de invitación, por ahora solo creamos el draft y redirigimos
-      router.push(`/equipos/${data.id}`);
-    },
-    onError: (err) => {
-      setError(err.message);
-      setIsLoading(false);
-    },
-  });
+  const { mutate: createDraft, isPending: isLoading, error } = useCreateDraft();
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
-    
     const formData = new FormData(e.currentTarget);
     
-    createDraft.mutate({
+    createDraft({
       name: formData.get("name") as string,
       abbreviation: formData.get("abbreviation") as string,
       primaryColor: formData.get("primaryColor") as string,
@@ -102,7 +84,7 @@ export function CreateTeamForm() {
         />
       </div>
 
-      {error && <p className="text-red-500 text-sm bg-red-50 p-2 rounded-lg">{error}</p>}
+      {error && <p className="text-red-500 text-sm bg-red-50 p-2 rounded-lg">{error.message}</p>}
 
       <Button type="submit" disabled={isLoading} className="w-full mt-2">
         {isLoading ? "Creando Borrador..." : "Iniciar Creación (Draft)"}

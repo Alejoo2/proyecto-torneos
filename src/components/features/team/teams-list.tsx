@@ -1,9 +1,9 @@
 "use client";
-import { api } from "torneos/trpc/react";
 import Link from "next/link";
+import { useMyTeams } from "torneos/components/features/team/use-team";
 
 export function TeamsList() {
-  const { data: teams, isLoading } = api.team.getMyTeams.useQuery();
+  const { data: teams, isLoading } = useMyTeams();
 
   if (isLoading) return <p className="text-gray-500">Cargando equipos...</p>;
   
