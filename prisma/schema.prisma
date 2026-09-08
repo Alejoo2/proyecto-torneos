@@ -169,6 +169,7 @@ model Manager {
   updatedAt DateTime @updatedAt
 
   profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  tournaments Tournament[]
 }
 
 model Team {
@@ -186,6 +187,7 @@ model Team {
   memberships        TeamMembership[]
   invitations        TeamInvitation[]
   captaincyTransfers CaptaincyTransfer[]
+  enrollments        TournamentEnrollment[]
 }
 
 enum TeamStatus {
@@ -307,7 +309,7 @@ model Court {
   updatedAt   DateTime    @updatedAt
 
   availability CourtAvailability[]
-  // tournaments Tournament[] // Sistema 6 (pendiente)
+  tournaments Tournament[] 
 }
 
 enum CourtStatus {
@@ -331,4 +333,112 @@ model CourtAvailability {
 enum CourtAvailabilityStatus {
   AVAILABLE
   UNAVAILABLE
+}
+// ==========================================
+// SISTEMA 6: TORNEOS
+// ==========================================
+
+model Tournament {
+  id                 String              @id @default(cuid())
+  name               String
+  description        String?             @db.Text
+  courtId            String
+  managerId          String
+  status             TournamentStatus    @default(DRAFT)
+  format             TournamentFormat    @default(SINGLE_ELIMINATION)
+  maxTeams           Int
+  type               TournamentType      @default(PUBLIC)
+  startDate          DateTime?
+  enrollmentDeadline DateTime
+  dayOfWeek          Int
+  timeSlot           Int
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  court       Court                 @relation(fields: [courtId], references: [id], onDelete: Restrict)
+  manager     Manager               @relation(fields: [managerId], references: [id], onDelete: Restrict)
+  enrollments TournamentEnrollment[]
+  phases      TournamentPhase[]
+  slotHolds   TournamentSlotHold[]
+  // matches     Match[] // Descomentar cuando integremos Sistema 7
+
+  @@index([status, enrollmentDeadline])
+  @@index([courtId, status])
+}
+
+enum TournamentStatus {
+  DRAFT
+  SCHEDULED
+  GRACE_PERIOD
+  IN_PROGRESS
+  FINISHED
+  CANCELLED
+  SUSPENDED
+}
+
+enum TournamentFormat {
+  SINGLE_ELIMINATION
+  LEAGUE
+  LEAGUE_PLUS_ELIMINATION
+}
+
+enum TournamentType {
+  PUBLIC
+  PRIVATE
+}
+
+model TournamentEnrollment {
+  id                String            @id @default(cuid())
+  tournamentId      String
+  teamId            String
+  status            EnrollmentStatus  @default(PENDING_AVAILABILITY)
+  availabilityNote  String?           @db.Text
+  enrolledAt        DateTime          @default(now())
+  approvedAt        DateTime?
+  approvedBy        String?
+  disapprovedAt     DateTime?
+  disapprovedBy     String?
+  disapprovedReason String?           @db.Text
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  team       Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, teamId])
+  @@index([tournamentId, status])
+  @@index([teamId, status])
+}
+
+enum EnrollmentStatus {
+  PENDING_AVAILABILITY
+  PENDING_PAYMENT
+  APPROVED
+  REJECTED
+  DISAPPROVED
+}
+
+model TournamentPhase {
+  id           String   @id @default(cuid())
+  tournamentId String
+  name         String
+  order        Int
+  createdAt    DateTime @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  // matches    Match[]   // Descomentar cuando integremos Sistema 7
+
+  @@index([tournamentId, order])
+}
+
+model TournamentSlotHold {
+  id            String   @id @default(cuid())
+  tournamentId  String
+  heldBy        String   // PlayerId del capitán
+  teamId        String?
+  expiresAt     DateTime
+  createdAt     DateTime @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+
+  @@index([tournamentId, expiresAt])
+  @@index([heldBy])
 }

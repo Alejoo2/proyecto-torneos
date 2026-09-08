@@ -1,131 +1,92 @@
 "use client";
 
+import { useState } from "react";
 import { api } from "torneos/trpc/react";
 import { Button } from "torneos/components/ui/button/button";
-import { CourtAvailabilityMatrix } from "torneos/components/ui/court-availability-matrix/court-availability-matrix";
+import { CreateTournamentModal } from "torneos/components/ui/tournament/create-tournament-modal";
+import Link from "next/link";
 
-interface CourtDetailTemplateProps {
-  courtId: string;
-  isAdmin: boolean; // Se inyecta desde el servidor
-}
+export function CourtDetailTemplate({ courtId }: { courtId: string }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-export function CourtDetailTemplate({ courtId, isAdmin }: CourtDetailTemplateProps) {
-  const utils = api.useUtils();
-  
-  const [court] = api.court.getById.useSuspenseQuery({ courtId });
-  const [availability] = api.court.getAvailability.useSuspenseQuery({ courtId });
+  // Queries
+  const { data: court } = api.court.getById.useQuery({ courtId });
+  const { data: tournaments } = api.tournament.listByCourt.useQuery({ courtId });
 
-  const toggleMutation = api.court.toggleAvailability.useMutation({
-    onSuccess: () => utils.court.getAvailability.invalidate({ courtId }),
+  // Para saber si es gestor, intentamos resolver su perfil de manager.
+  // Si no lo es, la query devolverá null y simplemente no verá el botón.
+  const { data: myManagerProfile } = api.admin.getMyManagerProfile.useQuery(undefined, {
+    retry: false
   });
 
-  const setMutation = api.court.setAvailability.useMutation({
-    onSuccess: () => utils.court.getAvailability.invalidate({ courtId }),
+  // Mutations
+  const createMutation = api.tournament.create.useMutation({
+    onSuccess: (newTournament) => {
+      setIsModalOpen(false);
+      // Por ahora el torneo se crea en DRAFT. 
+      // Idealmente aquí mismo llamamos a publish o lo mandamos a una pantalla de gestión.
+      alert("Torneo creado en estado DRAFT. Ve a la API o BD para publicarlo (SCHEDULED) por ahora.");
+    }
   });
 
-  const disableMutation = api.court.disable.useMutation({
-    onSuccess: () => {
-      utils.court.getById.invalidate({ courtId });
-      utils.court.getAvailability.invalidate({ courtId });
-    },
-  });
-
-  const enableMutation = api.court.enable.useMutation({
-    onSuccess: () => utils.court.getById.invalidate({ courtId }),
-  });
-
-  const handleToggle = (date: Date, timeSlot: number) => {
-    toggleMutation.mutate({ courtId, date, timeSlot });
-  };
-
-  const handleCloseDay = (date: Date) => {
-    // Generar las 12 franjas como UNAVAILABLE
-    const slots = Array.from({ length: 12 }, (_, timeSlot) => ({
-      date,
-      timeSlot,
-      status: "UNAVAILABLE" as const,
-    }));
-    setMutation.mutate({ courtId, slots });
-  };
-
-  const today = new Date();
-  today.setUTCHours(0, 0, 0, 0);
+  const isManager = !!myManagerProfile;
 
   return (
-    <div className="flex flex-col min-h-screen bg-white">
-      {/* HERO */}
-      <div className="relative w-full h-32 bg-zinc-100 flex items-center justify-center border-b border-zinc-200">
-        <div className="text-center">
-          <p className="text-xs text-zinc-400">Ilustración de cancha</p>
-        </div>
-        <div className={`absolute top-4 right-4 px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 ${
-          court.status === "ENABLED" ? "bg-green-600 text-white" : "bg-red-600 text-white"
-        }`}>
-          <div className="w-1.5 h-1.5 bg-white rounded-full" />
-          {court.status === "ENABLED" ? "Habilitada" : "Deshabilitada"}
-        </div>
+    <div className="pb-8">
+      {/* Header Cancha */}
+      <div className="px-6 pt-5 pb-4">
+        <h1 className="text-xl font-bold text-zinc-900 mb-1">{court?.name || "Cancha"}</h1>
+        <p className="text-sm text-zinc-500">{court?.address}</p>
       </div>
 
-      {/* INFO PRINCIPAL */}
-      <div className="px-6 py-6">
-        <h1 className="text-xl font-bold text-zinc-900 mb-1">{court.name}</h1>
-        <p className="text-sm text-zinc-500 mb-6">{court.address}</p>
-
-        {court.description && (
-          <div className="mb-6">
-            <h2 className="text-sm font-semibold text-zinc-800 mb-2">Descripción</h2>
-            <p className="text-sm text-zinc-600 leading-relaxed">{court.description}</p>
-          </div>
-        )}
-
-        {court.inventory && (
-          <div className="mb-8">
-            <h2 className="text-sm font-semibold text-zinc-800 mb-2">Implementos</h2>
-            <p className="text-sm text-zinc-600">{court.inventory}</p>
-          </div>
-        )}
-
-        {/* Botón de Deshabilitar Total (Solo Admin) */}
-        {isAdmin && (
-          <div className="mb-8">
-            {court.status === "ENABLED" ? (
-              <Button 
-                variant="destructive" 
-                onClick={() => disableMutation.mutate({ courtId })}
-                isLoading={disableMutation.isPending}
-              >
-                Deshabilitar Cancha Totalmente
-              </Button>
-            ) : (
-              <Button 
-                variant="secondary" 
-                onClick={() => enableMutation.mutate({ courtId })}
-                isLoading={enableMutation.isPending}
-              >
-                Habilitar Cancha
-              </Button>
-            )}
-          </div>
-        )}
-
-        {/* Matriz de Disponibilidad */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-semibold text-zinc-800">Disponibilidad (2 semanas)</h2>
-          </div>
-          
-          <div className="bg-zinc-50 rounded-2xl p-4 border border-zinc-100">
-            <CourtAvailabilityMatrix
-              startDate={today}
-              slots={availability.map(a => ({ date: a.date, timeSlot: a.timeSlot, status: a.status }))}
-              isCourtDisabled={court.status === "DISABLED"}
-              isReadOnly={!isAdmin} // Si no es admin, modo lectura
-              onToggleSlot={isAdmin ? handleToggle : undefined}
-              onCloseDay={isAdmin ? handleCloseDay : undefined}
-            />
-          </div>
+      {/* Acción Gestor */}
+      {isManager && (
+        <div className="px-6 mb-8">
+          <Button className="w-full min-h-[56px]" onClick={() => setIsModalOpen(true)}>
+            + Crear Torneo aquí
+          </Button>
         </div>
+      )}
+
+      {/* Lista de Torneos */}
+      <div className="px-6">
+        <h2 className="text-base font-bold text-zinc-900 mb-4">Torneos Activos</h2>
+        
+        {tournaments && tournaments.length > 0 ? (
+          <div className="space-y-3">
+            {tournaments.map((t) => (
+              <Link 
+                key={t.id} 
+                href={`/torneos/${t.id}`}
+                className="block bg-white border-2 border-zinc-100 rounded-2xl p-4 hover:border-zinc-300 transition-colors"
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <h3 className="font-semibold text-zinc-900">{t.name}</h3>
+                  <span className="text-xs font-medium bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                    {t.status}
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 text-xs text-zinc-500">
+                  <span>👥 {t._count.enrollments}/{t.maxTeams} equipos</span>
+                  <span>⏳ Cierra: {new Date(t.enrollmentDeadline).toLocaleDateString()}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-zinc-50 rounded-2xl p-6 text-center border border-zinc-100">
+            <p className="text-sm text-zinc-500">No hay torneos activos en esta cancha.</p>
+          </div>
+        )}
       </div>
+
+      {/* Modal Crear Torneo */}
+      <CreateTournamentModal 
+        courtId={courtId}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onCreate={(data) => createMutation.mutate(data)}
+      />
     </div>
   );
 }

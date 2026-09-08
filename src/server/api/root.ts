@@ -5,6 +5,9 @@ import { teamRouter } from "torneos/server/api/routers/team";
 import { captaincyRouter } from "torneos/server/api/routers/capitaincy";
 import { recruitmentRouter } from "torneos/server/api/routers/recruitment"; // <-- NUEVO
 import { courtRouter } from "torneos/server/api/routers/court"; // <-- NUEVO
+import { tournamentRouter } from "./routers/tournament";
+import { enrollmentRouter } from "./routers/enrollment";
+import { adminRouter } from "./routers/admin";
 
 
 export const appRouter = createTRPCRouter({
@@ -13,7 +16,10 @@ export const appRouter = createTRPCRouter({
   team: teamRouter,
   captaincy: captaincyRouter,
   recruitment: recruitmentRouter,
-  court: courtRouter, // <-- NUEVO
+  court: courtRouter,
+  tournament: tournamentRouter,
+  enrollment: enrollmentRouter,
+  admin : adminRouter, // <-- NUEVO
 });
 
 export type AppRouter = typeof appRouter;
