@@ -8,24 +8,33 @@ import Link from "next/link";
 
 export function CourtDetailTemplate({ courtId }: { courtId: string }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  
+  // Hook de utilidades de tRPC para invalidar queries
+  const utils = api.useUtils();
 
   // Queries
   const { data: court } = api.court.getById.useQuery({ courtId });
   const { data: tournaments } = api.tournament.listByCourt.useQuery({ courtId });
 
   // Para saber si es gestor, intentamos resolver su perfil de manager.
-  // Si no lo es, la query devolverá null y simplemente no verá el botón.
   const { data: myManagerProfile } = api.admin.getMyManagerProfile.useQuery(undefined, {
     retry: false
   });
 
-  // Mutations
+  // Mutación para crear
   const createMutation = api.tournament.create.useMutation({
-    onSuccess: (newTournament) => {
+    onSuccess: () => {
       setIsModalOpen(false);
-      // Por ahora el torneo se crea en DRAFT. 
-      // Idealmente aquí mismo llamamos a publish o lo mandamos a una pantalla de gestión.
-      alert("Torneo creado en estado DRAFT. Ve a la API o BD para publicarlo (SCHEDULED) por ahora.");
+      // Refresca la lista de torneos para que aparezca el nuevo
+      void utils.tournament.listByCourt.invalidate();
+    }
+  });
+
+  // Mutación para publicar (DRAFT -> SCHEDULED)
+  const publishMutation = api.tournament.publish.useMutation({
+    onSuccess: () => {
+      // Refresca la lista para que cambie el estado y los botones
+      void utils.tournament.listByCourt.invalidate();
     }
   });
 
@@ -42,8 +51,12 @@ export function CourtDetailTemplate({ courtId }: { courtId: string }) {
       {/* Acción Gestor */}
       {isManager && (
         <div className="px-6 mb-8">
-          <Button className="w-full min-h-[56px]" onClick={() => setIsModalOpen(true)}>
-            + Crear Torneo aquí
+          <Button 
+            className="w-full min-h-[56px]" 
+            onClick={() => setIsModalOpen(true)}
+            disabled={createMutation.isPending}
+          >
+            {createMutation.isPending ? "Creando..." : "+ Crear Torneo aquí"}
           </Button>
         </div>
       )}
@@ -55,22 +68,48 @@ export function CourtDetailTemplate({ courtId }: { courtId: string }) {
         {tournaments && tournaments.length > 0 ? (
           <div className="space-y-3">
             {tournaments.map((t) => (
-              <Link 
+              <div 
                 key={t.id} 
-                href={`/torneos/${t.id}`}
-                className="block bg-white border-2 border-zinc-100 rounded-2xl p-4 hover:border-zinc-300 transition-colors"
+                className="bg-white border-2 border-zinc-100 rounded-2xl p-4 hover:border-zinc-300 transition-colors"
               >
                 <div className="flex justify-between items-start mb-2">
-                  <h3 className="font-semibold text-zinc-900">{t.name}</h3>
-                  <span className="text-xs font-medium bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                  <Link href={`/torneos/${t.id}`} className="flex-1">
+                    <h3 className="font-semibold text-zinc-900 hover:underline">{t.name}</h3>
+                  </Link>
+                  <span className={`text-xs font-medium px-2 py-1 rounded-full ${
+                    t.status === "SCHEDULED" ? "bg-blue-100 text-blue-700" :
+                    t.status === "IN_PROGRESS" ? "bg-green-100 text-green-700" :
+                    "bg-zinc-100 text-zinc-700" // DRAFT u otros
+                  }`}>
                     {t.status}
                   </span>
                 </div>
-                <div className="flex items-center gap-4 text-xs text-zinc-500">
+                
+                <div className="flex items-center gap-4 text-xs text-zinc-500 mb-3">
                   <span>👥 {t._count.enrollments}/{t.maxTeams} equipos</span>
                   <span>⏳ Cierra: {new Date(t.enrollmentDeadline).toLocaleDateString()}</span>
                 </div>
-              </Link>
+
+                {/* Botones de Gestor condicionales */}
+                {isManager && t.status === "DRAFT" && (
+                  <Button 
+                    size="sm" 
+                    className="w-full"
+                    onClick={() => publishMutation.mutate({ tournamentId: t.id })}
+                    disabled={publishMutation.isPending}
+                  >
+                    {publishMutation.isPending ? "Publicando..." : "Publicar Torneo"}
+                  </Button>
+                )}
+
+                {isManager && t.status === "SCHEDULED" && (
+                  <Link href={`/torneos/${t.id}/gestion`}>
+                    <Button size="sm" variant="secondary" className="w-full">
+                      Gestionar Inscripciones
+                    </Button>
+                  </Link>
+                )}
+              </div>
             ))}
           </div>
         ) : (

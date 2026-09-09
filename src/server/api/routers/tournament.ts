@@ -61,13 +61,27 @@ export const tournamentRouter = createTRPCRouter({
       return slotHoldEngine.check(ctx.db, input.tournamentId, ctx.session.user.id);
     }),
       // ─── Listar por Cancha ───
+    // ─── Listar por Cancha ───
   listByCourt: protectedProcedure
     .input(z.object({ courtId: z.string() }))
     .query(async ({ ctx, input }) => {
+      // Verificamos si el usuario actual es gestor activo
+      const manager = await ctx.db.manager.findFirst({
+        where: { 
+          profile: { userId: ctx.session.user.id }, 
+          isActive: true 
+        },
+      });
+
+      // Si es gestor, puede ver los DRAFT. Si no, solo los públicos (SCHEDULED etc)
+      const allowedStatuses = manager 
+        ? ["DRAFT", "SCHEDULED", "IN_PROGRESS", "GRACE_PERIOD"]
+        : ["SCHEDULED", "IN_PROGRESS", "GRACE_PERIOD"];
+
       return ctx.db.tournament.findMany({
         where: { 
           courtId: input.courtId,
-          status: { in: ["SCHEDULED", "IN_PROGRESS", "GRACE_PERIOD"] }
+          status: { in: allowedStatuses }
         },
         include: {
           _count: {
