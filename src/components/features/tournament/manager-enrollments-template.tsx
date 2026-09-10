@@ -17,10 +17,23 @@ export function ManagerEnrollmentsTemplate({ tournamentId }: { tournamentId: str
     onSuccess: () => utils.enrollment.listByTournament.invalidate({ tournamentId })
   });
 
+  const disapproveMutation = api.enrollment.disapprove.useMutation({
+    onSuccess: () => utils.enrollment.listByTournament.invalidate({ tournamentId })
+  });
+
   const closeAndDrawMutation = api.tournament.closeAndDraw.useMutation({
     onSuccess: () => {
       alert("¡Sorteo ejecutado! Torneo en progreso.");
       utils.enrollment.listByTournament.invalidate({ tournamentId });
+    }
+  });
+
+  const cancelMutation = api.tournament.cancel.useMutation({
+    onSuccess: () => {
+      alert("Torneo cancelado.");
+      utils.tournament.listByCourt.invalidate();
+      // Idealmente redirigir al dashboard del gestor
+      window.location.href = "/admin";
     }
   });
 
@@ -82,17 +95,27 @@ export function ManagerEnrollmentsTemplate({ tournamentId }: { tournamentId: str
         </h2>
         <div className="space-y-3">
           {approved.map(env => (
-            <div key={env.id} className="bg-green-50 border-2 border-green-100 rounded-2xl p-4">
-              <p className="font-semibold text-zinc-900">{env.team.name}</p>
-              <p className="text-xs text-green-600 mt-1">Equipo confirmado en el torneo</p>
+            <div key={env.id} className="bg-green-50 border-2 border-green-100 rounded-2xl p-4 flex items-center justify-between">
+              <div>
+                <p className="font-semibold text-zinc-900">{env.team.name}</p>
+                <p className="text-xs text-green-600 mt-1">Equipo confirmado</p>
+              </div>
+              <Button 
+                size="sm" 
+                variant="destructive"
+                onClick={() => disapproveMutation.mutate({ enrollmentId: env.id })}
+                disabled={disapproveMutation.isPending}
+              >
+                Desaprobar
+              </Button>
             </div>
           ))}
           {approved.length === 0 && <p className="text-sm text-zinc-400">Ningún equipo aprobado aún.</p>}
         </div>
       </div>
 
-      {/* Botón de Cierre y Sorteo */}
-      <div className="pt-4 border-t border-zinc-200">
+      {/* Acciones Finales */}
+      <div className="pt-6 border-t border-zinc-200 space-y-3">
         <Button 
           className="w-full min-h-[56px]"
           onClick={() => closeAndDrawMutation.mutate({ tournamentId })}
@@ -103,8 +126,21 @@ export function ManagerEnrollmentsTemplate({ tournamentId }: { tournamentId: str
             : `Cerrar Inscripciones y Sortear (${approved.length} equipos)`}
         </Button>
         {approved.length < 2 && (
-          <p className="text-xs text-center text-zinc-400 mt-2">Necesitas al menos 2 equipos aprobados para sortear.</p>
+          <p className="text-xs text-center text-zinc-400">Necesitas al menos 2 equipos aprobados para sortear.</p>
         )}
+
+        <Button 
+          variant="secondary"
+          className="w-full min-h-[48px] text-red-600 border border-red-200 hover:bg-red-50"
+          onClick={() => {
+            if (confirm("¿Seguro que deseas CANCELAR este torneo? Se archivarán todas las inscripciones.")) {
+              cancelMutation.mutate({ tournamentId });
+            }
+          }}
+          disabled={cancelMutation.isPending}
+        >
+          Cancelar Torneo
+        </Button>
       </div>
     </div>
   );

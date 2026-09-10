@@ -3,8 +3,8 @@ import type { PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 
 export const enrollmentEngine = {
-  async enroll(prisma: PrismaClient, input: { tournamentId: string; teamId: string }, userId: string) {
-    // 1. Verificar que el usuario es capitán del teamId
+    async enroll(prisma: PrismaClient, input: { tournamentId: string; teamId: string }, userId: string) {
+    // 1. Verificar capitán (igual)
     const membership = await prisma.teamMembership.findFirst({
       where: {
         teamId: input.teamId,
@@ -15,7 +15,7 @@ export const enrollmentEngine = {
     });
     if (!membership) throw new TRPCError({ code: "FORBIDDEN", message: "No eres capitán de este equipo" });
 
-    // 2. Verificar estado del torneo y cupos
+    // 2. Verificar torneo y cupos (igual)
     const tournament = await prisma.tournament.findUnique({
       where: { id: input.tournamentId, status: { in: ["SCHEDULED", "GRACE_PERIOD"] } },
       include: {
@@ -34,13 +34,16 @@ export const enrollmentEngine = {
       throw new TRPCError({ code: "CONFLICT", message: "No hay cupos disponibles" });
     }
 
-    // 3. Verificar que no existe enrollment previo
+    // 3. Verificar inscripción previa
     const existing = await prisma.tournamentEnrollment.findUnique({
       where: { tournamentId_teamId: { tournamentId: input.tournamentId, teamId: input.teamId } },
     });
-    if (existing) throw new TRPCError({ code: "CONFLICT", message: "Equipo ya inscrito" });
+    
+    if (existing && !["DISAPPROVED", "REJECTED"].includes(existing.status)) {
+      throw new TRPCError({ code: "CONFLICT", message: "Equipo ya inscrito o pendiente" });
+    }
 
-    // 4. Verificar SlotHold activo del capitán
+    // 4. Verificar Hold (igual)
     const hold = await prisma.tournamentSlotHold.findFirst({
       where: {
         tournamentId: input.tournamentId,
@@ -50,7 +53,7 @@ export const enrollmentEngine = {
     });
     if (!hold) throw new TRPCError({ code: "FORBIDDEN", message: "No tienes una prereserva activa" });
 
-    // 5. Evaluar Factor 1: disponibilidad horaria
+    // 5. Evaluar Factor 1 (igual)
     const teamMembers = await prisma.teamMembership.findMany({
       where: { teamId: input.teamId, leftAt: null },
       include: {
@@ -69,23 +72,35 @@ export const enrollmentEngine = {
     });
 
     const availableCount = teamMembers.filter(tm => tm.player.availabilities.length > 0).length;
+    const newStatus = availableCount >= 5 ? "PENDING_PAYMENT" : "PENDING_AVAILABILITY";
+    const availabilityNote = availableCount >= 5 
+      ? null 
+      : `Solo ${availableCount} de ${teamMembers.length} jugadores disponibles en la franja del torneo`;
 
-    // 6. Crear enrollment y eliminar hold en una transacción
+    // 6. Crear o actualizar enrollment (Upsert) y eliminar hold
     const [enrollment] = await prisma.$transaction([
-      prisma.tournamentEnrollment.create({
-        data: {
+      prisma.tournamentEnrollment.upsert({
+        where: { tournamentId_teamId: { tournamentId: input.tournamentId, teamId: input.teamId } },
+        update: {
+          status: newStatus,
+          availabilityNote,
+          enrolledAt: new Date(),
+          approvedAt: null,
+          approvedBy: null,
+          disapprovedAt: null,
+          disapprovedBy: null,
+          disapprovedReason: null,
+        },
+        create: {
           tournamentId: input.tournamentId,
           teamId: input.teamId,
-          status: availableCount >= 5 ? "PENDING_PAYMENT" : "PENDING_AVAILABILITY",
-          availabilityNote: availableCount >= 5 
-            ? null 
-            : `Solo ${availableCount} de ${teamMembers.length} jugadores disponibles en la franja del torneo`,
+          status: newStatus,
+          availabilityNote,
         },
       }),
       prisma.tournamentSlotHold.delete({ where: { id: hold.id } })
     ]);
 
-    // Notificación al gestor (Sistema 11 - omitido por ahora)
     return enrollment;
   },
 
@@ -109,5 +124,31 @@ export const enrollmentEngine = {
     });
   },
 
-  // Aquí irían reject, disapprove, reevaluate...misma estructura.
+    async disapprove(prisma: PrismaClient, enrollmentId: string, managerId: string) {
+    const enrollment = await prisma.tournamentEnrollment.findUnique({
+      where: { id: enrollmentId },
+      include: { tournament: true }
+    });
+
+    if (!enrollment) throw new TRPCError({ code: "NOT_FOUND", message: "Inscripción no encontrada" });
+    if (enrollment.status !== "APPROVED") {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Solo se pueden desaprobar inscripciones APPROVED" });
+    }
+    if (enrollment.tournament.managerId !== managerId) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "No eres el gestor de este torneo" });
+    }
+    if (!["SCHEDULED", "GRACE_PERIOD"].includes(enrollment.tournament.status)) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Ya no se pueden desaprobar equipos (torneo iniciado o cancelado)" });
+    }
+
+    return prisma.tournamentEnrollment.update({
+      where: { id: enrollmentId },
+      data: { 
+        status: "DISAPPROVED", 
+        disapprovedAt: new Date(), 
+        disapprovedBy: managerId,
+        disapprovedReason: "Pago no verificado o rechazado por el gestor"
+      },
+    });
+  },  // Aquí irían reject, disapprove, reevaluate...misma estructura.
 };

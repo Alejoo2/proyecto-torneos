@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, permissionProcedure } from "torneos/server/api/trpc";
 import { courtEngine } from "torneos/server/core/court/court.engine";
+import { getMapData, getBubbleData } from "torneos/server/core/court/hub.engine";
 
 export const courtRouter = createTRPCRouter({
   // ─── Admin: Crear ───
@@ -107,4 +108,13 @@ export const courtRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       return courtEngine.setAvailability(ctx.db, input);
     }),
+
+    // ─── Hub: Pines del mapa (read-model ligero) ───
+  getMap: protectedProcedure.query(({ ctx }) => getMapData(ctx.db)),
+
+  // ─── Hub: Burbuja de detalle (matriz 7×12 + torneos activos) ───
+  getBubble: protectedProcedure
+    .input(z.object({ courtId: z.string() }))
+    .query(({ ctx, input }) => getBubbleData(ctx.db, input.courtId)
+  ),
 });

@@ -134,5 +134,25 @@ export const tournamentEngine = {
 
     if (!tournament) throw new TRPCError({ code: "NOT_FOUND", message: "Torneo no encontrado" });
     return tournament;
-  }
+
+  },
+    async cancel(prisma: PrismaClient, tournamentId: string, userId: string) {
+    const tournament = await prisma.tournament.findUnique({
+      where: { id: tournamentId },
+      include: { manager: { include: { profile: true } } },
+    });
+
+    if (!tournament) throw new TRPCError({ code: "NOT_FOUND", message: "Torneo no encontrado" });
+    if (tournament.manager.profile.userId !== userId) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "No eres el gestor de este torneo" });
+    }
+    if (tournament.status === "IN_PROGRESS") {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "No se puede cancelar un torneo en progreso. Debes reagendarlo." });
+    }
+
+    return prisma.tournament.update({
+      where: { id: tournamentId },
+      data: { status: "CANCELLED" },
+    });
+  },
 };

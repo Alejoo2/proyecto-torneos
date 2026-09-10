@@ -6,11 +6,12 @@ interface SalaCineModalProps {
   isOpen: boolean;
   secondsRemaining: number;
   teamName?: string;
+  isEnrolling?: boolean; // <-- NUEVA PROP
   onConfirm: () => void;
   onCancel: () => void;
 }
 
-export function SalaCineModal({ isOpen, secondsRemaining, teamName, onConfirm, onCancel }: SalaCineModalProps) {
+export function SalaCineModal({ isOpen, secondsRemaining, teamName, isEnrolling, onConfirm, onCancel }: SalaCineModalProps) {
   if (!isOpen) return null;
 
   const mins = Math.floor(secondsRemaining / 60);
@@ -44,11 +45,11 @@ export function SalaCineModal({ isOpen, secondsRemaining, teamName, onConfirm, o
         </div>
 
         <div className="flex gap-3">
-          <Button variant="secondary" className="flex-1 min-h-[56px]" onClick={onCancel}>
+          <Button variant="secondary" className="flex-1 min-h-[56px]" onClick={onCancel} disabled={isEnrolling}>
             Cancelar
           </Button>
-          <Button className="flex-1 min-h-[56px]" onClick={onConfirm}>
-            Confirmar
+          <Button className="flex-1 min-h-[56px]" onClick={onConfirm} disabled={isEnrolling}>
+            {isEnrolling ? "Procesando..." : "Confirmar"}
           </Button>
         </div>
       </div>

@@ -91,4 +91,10 @@ export const tournamentRouter = createTRPCRouter({
         orderBy: { enrollmentDeadline: "asc" },
       });
     }),
+      // ─── Cancelar Torneo (Gestor) ───
+  cancel: permissionProcedure("tournament:manage")
+    .input(z.object({ tournamentId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      return tournamentEngine.cancel(ctx.db, input.tournamentId, ctx.session.user.id);
+    }),
 });

@@ -172,6 +172,7 @@ export function TournamentDetailTemplate({ tournamentId }: { tournamentId: strin
         isOpen={isModalOpen}
         secondsRemaining={secondsRemaining}
         teamName={myTeams?.find(t => t.id === selectedTeamId)?.name}
+        isEnrolling={enrollMutation.isPending}
         onConfirm={handleEnroll}
         onCancel={() => setIsModalOpen(false)}
       />

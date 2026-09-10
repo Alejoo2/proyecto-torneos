@@ -9,6 +9,67 @@ interface UserRef {
   player: Player;
 }
 
+// ==========================================
+// HUB: CANCHAS CON COORDENADAS
+// ==========================================
+const HUB_COURTS = [
+  { name: "Cancha El Sol", address: "Centro, Sogamoso", lat: 5.7184, lon: -72.9321, status: "ENABLED" as const, description: "Cancha de microfútbol con arcos, redes y vestuarios disponibles.", inventory: "Arcos, redes, 4 pelotas, vestuarios" },
+  { name: "Cancha La Villa", address: "Parque Principal, Nobsa", lat: 5.7683, lon: -72.8445, status: "ENABLED" as const, description: "Espacio amplio con iluminación nocturna.", inventory: "Arcos, redes, 6 pelotas, bancas" },
+  { name: "Cancha Sugamuxi", address: "Barrio San Martín, Sogamoso", lat: 5.7050, lon: -72.9450, status: "DISABLED" as const, description: "Cancha en mantenimiento temporal.", inventory: "Arcos, redes (mantenimiento)" },
+  { name: "Cancha Malcasado", address: "Vía a Belén, Nobsa", lat: 5.7550, lon: -72.8600, status: "ENABLED" as const, description: "Cancha comunitaria recién inaugurada.", inventory: "Arcos, redes, 2 pelotas" },
+];
+
+/** Franjas abiertas: 12:00–22:00 → slots 6,7,8,9,10 (celdas de 2h) */
+const OPEN_SLOTS = [6, 7, 8, 9, 10];
+
+async function seedHub() {
+  console.log("Creando canchas del Hub...");
+
+  for (const court of HUB_COURTS) {
+    await prisma.court.upsert({
+      where: { name: court.name },
+      update: { lat: court.lat, lon: court.lon, status: court.status },
+      create: court,
+    });
+  }
+
+  // Limpia disponibilidad vencida para que el seed no acumule registros viejos
+  const today = new Date();
+  today.setUTCHours(0, 0, 0, 0);
+
+  await prisma.courtAvailability.deleteMany({
+    where: { date: { lt: today } },
+  });
+
+  // Abre franjas para TODAS las canchas (incluidas las creadas vía admin)
+  const courts = await prisma.court.findMany({ select: { id: true, name: true, lat: true, lon: true } });
+
+  for (const court of courts) {
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(today);
+      date.setUTCDate(today.getUTCDate() + d);
+
+      for (const timeSlot of OPEN_SLOTS) {
+        await prisma.courtAvailability.upsert({
+          where: { courtId_date_timeSlot: { courtId: court.id, date, timeSlot } },
+          update: { status: "AVAILABLE" },
+          create: { courtId: court.id, date, timeSlot, status: "AVAILABLE" },
+        });
+      }
+    }
+  }
+
+  // Aviso visible si alguna cancha quedó sin coordenadas (no aparecerá en el mapa)
+  const sinCoordenadas = courts.filter((c) => c.lat === 0 && c.lon === 0);
+  if (sinCoordenadas.length > 0) {
+    console.warn(
+      `⚠️  Canchas sin coordenadas (no se pintan en el mapa): ${sinCoordenadas.map((c) => c.name).join(", ")}`,
+    );
+  }
+
+  console.log(`✅ Hub: ${courts.length} canchas listas con disponibilidad de 7 días`);
+}
+
 async function main() {
   console.log("Iniciando el seed de Roles, Permisos y Datos de Prueba...");
 
@@ -192,6 +253,11 @@ async function main() {
       });
     }
   }
+
+  // ==========================================
+  // 5. HUB: CANCHAS + DISPONIBILIDAD
+  // ==========================================
+  await seedHub();
 
   console.log("✅ Seed finalizado correctamente.");
 }

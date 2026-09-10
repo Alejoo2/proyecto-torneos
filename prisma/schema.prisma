@@ -305,11 +305,13 @@ model Court {
   description String?     @db.Text
   inventory   String?     @db.Text
   status      CourtStatus @default(ENABLED)
+  lat         Float       @default(0)   // ← debe estar
+  lon         Float       @default(0)   // ← debe estar
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
   availability CourtAvailability[]
-  tournaments Tournament[] 
+  tournaments  Tournament[]
 }
 
 enum CourtStatus {

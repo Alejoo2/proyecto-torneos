@@ -6,18 +6,15 @@
     <title>Hub / Mapa Principal — Wireframe Interactivo</title>
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- Leaflet -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <!-- Solo Leaflet base -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-    <!-- Esri Leaflet -->
-    <script src="https://unpkg.com/esri-leaflet@3.0.19/dist/esri-leaflet.js"></script>
-
-    <!-- Esri Leaflet Vector -->
-    <script src="https://unpkg.com/esri-leaflet-vector@4.3.2/dist/esri-leaflet-vector.js"></script>
     
     <style>
-        * { -webkit-tap-highlight-color: transparent; }
+        * {
+            -webkit-tap-highlight-color: transparent;
+        }
+        
         .scrollbar-hide::-webkit-scrollbar { display: none; }
         .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -28,7 +25,7 @@
             background: radial-gradient(circle at 20% 20%, #00ff87 0%, transparent 40%),
                         radial-gradient(circle at 80% 0%, #60efff 0%, transparent 40%),
                         radial-gradient(circle at 50% 100%, #a855f7 0%, transparent 50%),
-                        #0f172a; 
+                        #0f172a; /* Fondo oscuro base */
         }
 
         #map {
@@ -40,12 +37,14 @@
 
         .leaflet-control-container { display: none !important; }
 
-        /* TRANSPARENCIA DE LA CAPA VECTORIAL */
+        /* MAGIA CSS: Hacer transparente el fondo blanco del mapa y dejar solo calles */
         .leaflet-tile-pane {
-            opacity: 0.6; /* Ajusta la transparencia del mapa (0.1 a 1.0) */
-            mix-blend-mode: normal; /* El mapa ya es gris nativamente, no necesita multiply */
+            filter: grayscale(100%); /* Convertimos todo a gris */
+            mix-blend-mode: multiply; /* El blanco se vuelve transparente, el gris se oscurece sobre el fondo */
+            opacity: 0.8; /* Un poco de transparencia extra para que se integre */
         }
 
+        /* Estilo para los pines (Los pines NO heredan la transparencia) */
         .custom-pin-wrapper {
             background: transparent;
             border: none;
@@ -86,14 +85,21 @@
             border-top: 12px solid white;
         }
 
-        .skeleton-pulse { animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
-        @keyframes skeleton-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .skeleton-pulse {
+            animation: skeleton-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes skeleton-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
     </style>
 </head>
 <body class="bg-gray-950 min-h-[100dvh] flex items-center justify-center">
 
+    <!-- APP SHELL -->
     <div class="w-full max-w-lg min-h-[100dvh] bg-white md:min-h-[90vh] md:my-[5vh] md:rounded-[2rem] md:border-[10px] md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col relative">
 
+        <!-- ESTADO DE CARGA INICIAL -->
         <div id="loading-overlay" class="absolute inset-0 z-[60] bg-gray-100 flex flex-col items-center justify-center transition-opacity duration-500">
             <div class="w-full h-full relative">
                 <div class="absolute inset-0 bg-gray-200 animate-pulse"></div>
@@ -111,10 +117,13 @@
             </div>
         </div>
 
+        <!-- CONTENIDO PRINCIPAL: Mapa Interactivo Real -->
         <main id="main-content" class="flex-1 relative overflow-hidden opacity-0 transition-opacity duration-500">
             
+            <!-- AQUÍ SE INYECTA EL MAPA REAL -->
             <div id="map"></div>
 
+            <!-- SEARCH BAR SUPERIOR -->
             <div class="absolute top-4 left-4 right-4 z-30">
                 <div class="bg-white rounded-2xl shadow-lg flex items-center gap-3 px-4 py-3">
                     <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center shrink-0">
@@ -124,6 +133,7 @@
                 </div>
             </div>
 
+            <!-- FILTROS RÁPIDOS -->
             <div class="absolute top-20 left-4 right-4 z-20">
                 <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                     <button id="filter-todas" class="bg-gray-800 text-white px-4 py-2 rounded-full text-sm font-medium shrink-0 hover:bg-gray-700 active:bg-gray-900 transition-colors min-h-[44px]" onclick="setFilter('todas')">Todas</button>
@@ -132,6 +142,7 @@
                 </div>
             </div>
 
+            <!-- CONTROLES DE ZOOM -->
             <div class="absolute right-4 bottom-24 z-30 flex flex-col gap-2">
                 <button class="w-12 h-12 bg-white rounded-xl shadow-lg flex items-center justify-center hover:bg-gray-50 active:bg-gray-100 transition-colors min-w-[44px] min-h-[44px]" aria-label="Zoom in" onclick="zoomIn()">
                     <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
@@ -141,14 +152,17 @@
                 </button>
             </div>
 
+            <!-- BOTÓN CENTRAR VISTA -->
             <div class="absolute right-4 bottom-44 z-30">
                 <button class="w-12 h-12 bg-white rounded-xl shadow-lg flex items-center justify-center hover:bg-gray-50 active:bg-gray-100 transition-colors min-w-[44px] min-h-[44px]" aria-label="Centrar vista" onclick="centerView()">
                     <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
                 </button>
             </div>
 
+            <!-- MODAL BURBUJA DE CANCHA -->
             <div id="cancha-sheet" class="absolute bottom-24 left-4 z-[40] w-[320px] max-w-[calc(100vw-32px)] bg-white rounded-3xl shadow-[0_10px_30px_rgba(0,0,0,0.2)] p-5">
                 <div class="bubble-tail"></div>
+                
                 <div class="flex items-start gap-4 mb-4">
                     <div class="w-16 h-16 bg-gray-100 rounded-2xl shrink-0 flex items-center justify-center border-2 border-gray-200">
                         <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-1 8h1m-1-4h1m-1 4h1"></path></svg>
@@ -165,22 +179,45 @@
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                     </button>
                 </div>
-                <p id="sheet-description" class="text-xs text-gray-600 mb-4 line-clamp-2">Cancha de microfútbol con arcos, redes y vestuarios disponibles.</p>
+
+                <p id="sheet-description" class="text-xs text-gray-600 mb-4 line-clamp-2">
+                    Cancha de microfútbol con arcos, redes y vestuarios disponibles.
+                </p>
+
                 <div class="mb-4">
                     <p class="text-[10px] text-gray-500 mb-2 uppercase tracking-wide font-medium">Disponibilidad esta semana</p>
                     <div class="bg-gray-50 rounded-xl p-3 border border-gray-100">
                         <div class="flex gap-1 mb-2">
-                            <div class="w-6 h-3 bg-gray-200 rounded skeleton-pulse"></div><div class="w-6 h-3 bg-gray-200 rounded skeleton-pulse"></div><div class="w-6 h-3 bg-gray-200 rounded skeleton-pulse"></div><div class="w-6 h-3 bg-gray-200 rounded skeleton-pulse"></div><div class="w-6 h-3 bg-gray-200 rounded skeleton-pulse"></div><div class="w-6 h-3 bg-gray-200 rounded skeleton-pulse"></div><div class="w-6 h-3 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="w-6 h-3 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="w-6 h-3 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="w-6 h-3 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="w-6 h-3 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="w-6 h-3 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="w-6 h-3 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="w-6 h-3 bg-gray-200 rounded skeleton-pulse"></div>
                         </div>
                         <div class="grid grid-cols-7 gap-1">
-                            <div class="h-6 bg-green-200 rounded skeleton-pulse"></div><div class="h-6 bg-green-200 rounded skeleton-pulse"></div><div class="h-6 bg-gray-200 rounded skeleton-pulse"></div><div class="h-6 bg-green-200 rounded skeleton-pulse"></div><div class="h-6 bg-green-200 rounded skeleton-pulse"></div><div class="h-6 bg-gray-200 rounded skeleton-pulse"></div><div class="h-6 bg-green-200 rounded skeleton-pulse"></div>
+                            <div class="h-6 bg-green-200 rounded skeleton-pulse"></div>
+                            <div class="h-6 bg-green-200 rounded skeleton-pulse"></div>
+                            <div class="h-6 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="h-6 bg-green-200 rounded skeleton-pulse"></div>
+                            <div class="h-6 bg-green-200 rounded skeleton-pulse"></div>
+                            <div class="h-6 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="h-6 bg-green-200 rounded skeleton-pulse"></div>
                         </div>
                         <div class="grid grid-cols-7 gap-1 mt-1">
-                            <div class="h-6 bg-green-200 rounded skeleton-pulse"></div><div class="h-6 bg-gray-200 rounded skeleton-pulse"></div><div class="h-6 bg-gray-200 rounded skeleton-pulse"></div><div class="h-6 bg-green-200 rounded skeleton-pulse"></div><div class="h-6 bg-green-200 rounded skeleton-pulse"></div><div class="h-6 bg-green-200 rounded skeleton-pulse"></div><div class="h-6 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="h-6 bg-green-200 rounded skeleton-pulse"></div>
+                            <div class="h-6 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="h-6 bg-gray-200 rounded skeleton-pulse"></div>
+                            <div class="h-6 bg-green-200 rounded skeleton-pulse"></div>
+                            <div class="h-6 bg-green-200 rounded skeleton-pulse"></div>
+                            <div class="h-6 bg-green-200 rounded skeleton-pulse"></div>
+                            <div class="h-6 bg-gray-200 rounded skeleton-pulse"></div>
                         </div>
                         <p class="text-[10px] text-gray-400 mt-2 text-center italic">Matriz de franjas horarias (7 días × 12 slots)</p>
                     </div>
                 </div>
+
                 <div class="mb-4">
                     <p class="text-[10px] text-gray-500 mb-2 uppercase tracking-wide font-medium">Torneos activos</p>
                     <div class="space-y-2">
@@ -200,14 +237,19 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="mb-4">
                     <p class="text-[10px] text-gray-500 mb-1 uppercase tracking-wide font-medium">Implementos</p>
                     <p id="sheet-inventory" class="text-xs text-gray-600">Arcos, redes, 4 pelotas, vestuarios</p>
                 </div>
-                <a href="detalle_cancha_sede.html" class="block w-full bg-gray-800 text-white py-3.5 rounded-2xl font-medium hover:bg-gray-700 active:bg-gray-900 transition-colors text-center text-sm">Ver Detalle de la Cancha</a>
+
+                <a href="detalle_cancha_sede.html" class="block w-full bg-gray-800 text-white py-3.5 rounded-2xl font-medium hover:bg-gray-700 active:bg-gray-900 transition-colors text-center text-sm">
+                    Ver Detalle de la Cancha
+                </a>
             </div>
         </main>
 
+        <!-- BOTTOM NAV -->
         <nav class="absolute bottom-0 w-full z-50 bg-white border-t border-gray-200" style="padding-bottom: env(safe-area-inset-bottom);">
             <div class="grid grid-cols-4 h-16">
                 <button class="flex flex-col items-center justify-center gap-1 text-gray-800 min-h-[44px]" aria-label="Inicio">
@@ -229,6 +271,7 @@
             </div>
         </nav>
 
+        <!-- TOAST -->
         <div id="toast" class="absolute top-20 left-4 right-4 z-[70] pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
             <div class="bg-gray-800 text-white px-4 py-3 rounded-2xl shadow-lg flex items-center gap-3">
                 <div class="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center shrink-0">
@@ -254,29 +297,26 @@
         ];
 
         // ============================================================
-        // INICIALIZACIÓN DEL MAPA (VECTOR TILES DE ESRI)
+        // INICIALIZACIÓN DEL MAPA (OPENSTREETMAP PURO)
         // ============================================================
         const map = L.map('map', {
             zoomControl: false,
             attributionControl: false,
             minZoom: 13,
-            maxZoom: 20, 
+            maxZoom: 19, // Zoom máximo permitido por OpenStreetMap
             maxBounds: [
-                [5.6700, -72.9800], 
-                [5.7900, -72.8200]  
+                [5.6700, -72.9800], // Suroeste (Sogamoso)
+                [5.7900, -72.8200]  // Noreste (Nobsa)
             ],
             maxBoundsViscosity: 1.0
         });
 
-        // 👇👇👇 PEGA AQUÍ TU API KEY DE ARCGIS DEVELOPER 👇👇👇
-        const esriApiKey = '';
-        // 👆👆👆 ------------------------------------------------- 👆👆👆
-
-        // ID del mapa: 979c6cc89af9449cbeb5342a439c6a76 (Light Gray Canvas)
-        L.esri.Vector.vectorTileLayer('979c6cc89af9449cbeb5342a439c6a76', {
-            apikey: esriApiKey // Pasamos la API key en las opciones de la capa
+        // Usamos OpenStreetMap puro (Sin API keys)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19
         }).addTo(map);
 
+        // Centrar el mapa
         map.setView([5.7400, -72.8900], 14);
 
         // ============================================================
@@ -392,6 +432,7 @@
                     btn.classList.add('bg-white', 'text-gray-700', 'shadow-sm');
                 }
             });
+            
             const labels = {
                 'todas': 'Mostrando todas las canchas',
                 'activas': 'Mostrando canchas con torneos activos',
@@ -404,10 +445,13 @@
         function showToast(title, subtitle) {
             const toast = document.getElementById('toast');
             clearTimeout(toastTimeout);
+            
             document.getElementById('toast-title').innerText = title;
             document.getElementById('toast-sub').innerText = subtitle;
+            
             toast.style.opacity = '0.95';
             toast.style.transform = 'translateY(0)';
+            
             toastTimeout = setTimeout(() => {
                 toast.style.opacity = '0';
                 toast.style.transform = 'translateY(-8px)';
@@ -423,6 +467,7 @@
                 const mainContent = document.getElementById('main-content');
                 mainContent.style.opacity = '1';
                 overlay.style.opacity = '0';
+                
                 setTimeout(() => {
                     overlay.style.display = 'none';
                     showToast('Mapa cargado', 'Toca un pin para ver detalles');

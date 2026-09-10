@@ -48,4 +48,15 @@ export const enrollmentRouter = createTRPCRouter({
         orderBy: { enrolledAt: "asc" },
       });
     }),
+      // ─── Desaprobar Inscripción (Gestor) ───
+  disapprove: permissionProcedure("tournament:manage")
+    .input(z.object({ enrollmentId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const manager = await ctx.db.manager.findFirst({
+        where: { profile: { userId: ctx.session.user.id } },
+      });
+      if (!manager) throw new TRPCError({ code: "FORBIDDEN", message: "Manager no encontrado" });
+      
+      return enrollmentEngine.disapprove(ctx.db, input.enrollmentId, manager.id);
+    }),
 });
