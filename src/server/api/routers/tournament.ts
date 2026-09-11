@@ -1,10 +1,37 @@
-// src/server/api/routers/tournament.ts
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure, permissionProcedure } from "torneos/server/api/trpc";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  protectedProcedure,
+  permissionProcedure,
+} from "torneos/server/api/trpc";
 import { tournamentEngine } from "torneos/server/core/tournament/tournament.engine";
 import { slotHoldEngine } from "torneos/server/core/tournament/slotHold.engine";
 
 export const tournamentRouter = createTRPCRouter({
+  // ─── Vitrina anónima (publicProcedure, solo lecturas) ───
+  // Read-model distinto al del gestor (vitrineCard/DetailSelect): sin manager,
+  // sin PENDING_*, sin holds. NOT_FOUND si no califica como vitrina.
+
+  /** Lista /torneos anónima. */
+  listPublic: publicProcedure.query(({ ctx }) =>
+    tournamentEngine.listPublic(ctx.db),
+  ),
+
+  /** Detalle /torneos/:id anónimo. PRIVATE/DRAFT/CANCELLED → NOT_FOUND. */
+  getPublicById: publicProcedure
+    .input(z.object({ tournamentId: z.string() }))
+    .query(({ ctx, input }) =>
+      tournamentEngine.getPublicById(ctx.db, input.tournamentId),
+    ),
+
+  /** Torneos de vitrina de una cancha (detalle /canchas/:id anónimo). */
+  listByCourtPublic: publicProcedure
+    .input(z.object({ courtId: z.string() }))
+    .query(({ ctx, input }) =>
+      tournamentEngine.listByCourtPublic(ctx.db, input.courtId),
+    ),
+
   // ─── Crear (Gestor) ───
   create: permissionProcedure("tournament:create")
     .input(z.object({
@@ -41,7 +68,7 @@ export const tournamentRouter = createTRPCRouter({
       return tournamentEngine.closeAndDraw(ctx.db, input.tournamentId, ctx.session.user.id);
     }),
 
-  // ─── Consultas ───
+  // ─── Consultas (autenticadas: gestor ve DRAFT/PRIVATE + PENDING_*) ───
   getById: protectedProcedure
     .input(z.object({ tournamentId: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -60,26 +87,26 @@ export const tournamentRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       return slotHoldEngine.check(ctx.db, input.tournamentId, ctx.session.user.id);
     }),
-      // ─── Listar por Cancha ───
-    // ─── Listar por Cancha ───
+
+  // ─── Listar por Cancha (autenticado; gestor ve DRAFT) ───
   listByCourt: protectedProcedure
     .input(z.object({ courtId: z.string() }))
     .query(async ({ ctx, input }) => {
       // Verificamos si el usuario actual es gestor activo
       const manager = await ctx.db.manager.findFirst({
-        where: { 
-          profile: { userId: ctx.session.user.id }, 
-          isActive: true 
+        where: {
+          profile: { userId: ctx.session.user.id },
+          isActive: true
         },
       });
 
       // Si es gestor, puede ver los DRAFT. Si no, solo los públicos (SCHEDULED etc)
-      const allowedStatuses = manager 
+      const allowedStatuses = manager
         ? ["DRAFT", "SCHEDULED", "IN_PROGRESS", "GRACE_PERIOD"]
         : ["SCHEDULED", "IN_PROGRESS", "GRACE_PERIOD"];
 
       return ctx.db.tournament.findMany({
-        where: { 
+        where: {
           courtId: input.courtId,
           status: { in: allowedStatuses }
         },
@@ -91,7 +118,8 @@ export const tournamentRouter = createTRPCRouter({
         orderBy: { enrollmentDeadline: "asc" },
       });
     }),
-      // ─── Cancelar Torneo (Gestor) ───
+
+  // ─── Cancelar Torneo (Gestor) ───
   cancel: permissionProcedure("tournament:manage")
     .input(z.object({ tournamentId: z.string() }))
     .mutation(async ({ ctx, input }) => {

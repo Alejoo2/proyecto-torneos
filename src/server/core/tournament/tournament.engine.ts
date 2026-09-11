@@ -1,10 +1,58 @@
 // src/server/core/tournament/tournament.engine.ts
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
+import { VITRINE_TOURNAMENT_WHERE } from "torneos/lib/hub";
 import { fisherYatesShuffle, generateEliminationPhases } from "./tournament.helpers";
 
 type PrismaDb = PrismaClient | Prisma.TransactionClient;
 type CreateTournamentInput = Omit<Prisma.TournamentUncheckedCreateInput, "managerId" | "status">;
+
+/**
+ * Read-models de vitrina anónima (capa 1). Deliberadamente NUEVOS en vez de
+ * recortar getById: el contrato del gestor (manager.profile, PENDING_*,
+ * slotHolds) es otro read-model y mezclarlos filtra PII a destiempo.
+ * ALLOWLIST de campos: solo lo que la vitrina muestra. Sin manager, sin holds.
+ */
+const vitrineCardSelect = {
+  id: true,
+  name: true,
+  status: true,
+  dayOfWeek: true,
+  timeSlot: true,
+  maxTeams: true,
+  enrollmentDeadline: true,
+  court: { select: { id: true, name: true } },
+  _count: { select: { enrollments: { where: { status: "APPROVED" } } } },
+} satisfies Prisma.TournamentSelect;
+
+const vitrineDetailSelect = {
+  ...vitrineCardSelect,
+  description: true,
+  format: true,
+  startDate: true,
+  court: {
+    select: { id: true, name: true, address: true, lat: true, lon: true },
+  },
+  enrollments: {
+    where: { status: "APPROVED" },
+    select: {
+      id: true,
+      enrolledAt: true,
+      status: true,           // ← LÍNEA NUEVA
+      availabilityNote: true, // ← LÍNEA NUEVA
+      team: {
+        select: {
+          id: true,
+          name: true,
+          abbreviation: true,
+          primaryColor: true,
+          secondaryColor: true,
+        },
+      },
+    },
+    orderBy: { enrolledAt: "asc" as const },
+  },
+} satisfies Prisma.TournamentSelect;
 
 export const tournamentEngine = {
   async create(prisma: PrismaDb, input: CreateTournamentInput, userId: string) {
@@ -154,5 +202,42 @@ export const tournamentEngine = {
       where: { id: tournamentId },
       data: { status: "CANCELLED" },
     });
+  },
+
+    // ==========================================
+  // VITRINA ANÓNIMA (publicProcedure en el router)
+  // type PUBLIC + status publicado → si no califica, NOT_FOUND (nunca 401:
+  // no delata existencia a medias de torneos PRIVATE/DRAFT).
+  // ==========================================
+
+  /** Catálogo de torneos de vitrina (lista /torneos anónima). */
+  async listPublic(prisma: PrismaDb) {
+    return prisma.tournament.findMany({
+      where: VITRINE_TOURNAMENT_WHERE,
+      select: vitrineCardSelect,
+      orderBy: { createdAt: "desc" },
+    });
+  },
+
+  /** Torneos de vitrina de una cancha (detalle /canchas/:id anónimo). */
+  async listByCourtPublic(prisma: PrismaDb, courtId: string) {
+    return prisma.tournament.findMany({
+      where: { courtId, ...VITRINE_TOURNAMENT_WHERE },
+      select: vitrineCardSelect,
+      orderBy: { createdAt: "asc" },
+    });
+  },
+
+  /** Detalle de vitrina /torneos/:id anónimo. Cupos = APPROVED, sin holds. */
+  async getPublicById(prisma: PrismaDb, tournamentId: string) {
+    const tournament = await prisma.tournament.findFirst({
+      where: { id: tournamentId, ...VITRINE_TOURNAMENT_WHERE },
+      select: vitrineDetailSelect,
+    });
+
+    if (!tournament) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Torneo no encontrado" });
+    }
+    return tournament;
   },
 };

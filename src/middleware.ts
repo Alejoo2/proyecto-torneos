@@ -1,34 +1,56 @@
 import { auth } from "torneos/server/auth";
 import { NextResponse } from "next/server";
+import {
+  isAnonymousPath,
+  isSafeInternalPath,
+  DEFAULT_AUTHENTICATED_PATH,
+} from "torneos/lib/anon-access";
 
 export default auth((req) => {
   const { nextUrl } = req;
-  const isLoggedIn = !!req.auth;
-  
-  // 👈 Hacemos un cast seguro para evitar el error de TypeScript
-  const user = req.auth?.user as { onboarded?: boolean } | undefined;
-  const isOnboarded = user?.onboarded;
-  
-  const isOnboardingPage = nextUrl.pathname.startsWith("/onboarding");
-  const isAuthPage = nextUrl.pathname.startsWith("/api/auth") || nextUrl.pathname.startsWith("/login");
+  const pathname = nextUrl.pathname;
 
-  // Las llamadas a /api (como tRPC) no deben ser redirigidas a HTML
-  if (nextUrl.pathname.startsWith("/api")) {
+  // API (incluye /api/auth y tRPC): nunca redirect a HTML
+  if (pathname.startsWith("/api") || pathname.startsWith("/trpc")) {
     return NextResponse.next();
   }
 
-  if (!isLoggedIn && !isAuthPage) {
-    return NextResponse.redirect(new URL("/login", nextUrl));
+  const isLoggedIn = !!req.auth;
+  // Cast igual al que ya usabas: onboarded viaja en la sesión pero no está tipado
+  const user = req.auth?.user as { onboarded?: boolean } | undefined;
+  const isOnboarded = !!user?.onboarded;
+
+  const isAuthPage = pathname === "/login" || pathname === "/login-dev";
+
+  // Páginas de auth: anónimo pasa; logueado rebota
+  if (isAuthPage) {
+    if (!isLoggedIn) return NextResponse.next();
+    if (!isOnboarded) return NextResponse.redirect(new URL("/onboarding", nextUrl));
+    const callbackUrl = nextUrl.searchParams.get("callbackUrl");
+    const target =
+      callbackUrl && isSafeInternalPath(callbackUrl)
+        ? callbackUrl
+        : DEFAULT_AUTHENTICATED_PATH;
+    return NextResponse.redirect(new URL(target, nextUrl));
   }
 
-  // Si está logueado pero no completó onboarding
-  if (isLoggedIn && !isOnboarded && !isOnboardingPage) {
+  // Sin sesión: solo allowlist anónima pasa (vitrina)
+  if (!isLoggedIn) {
+    if (isAnonymousPath(pathname)) return NextResponse.next();
+    const loginUrl = new URL("/login", nextUrl);
+    loginUrl.searchParams.set("callbackUrl", pathname + nextUrl.search);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Con sesión sin onboarding: solo /onboarding
+  if (!isOnboarded) {
+    if (pathname === "/onboarding") return NextResponse.next();
     return NextResponse.redirect(new URL("/onboarding", nextUrl));
   }
 
-  // Si ya completó onboarding e intenta ir a /onboarding, sacarlo de ahí
-  if (isLoggedIn && isOnboarded && isOnboardingPage) {
-    return NextResponse.redirect(new URL("/", nextUrl));
+  // Onboarded: fuera de /onboarding
+  if (pathname === "/onboarding") {
+    return NextResponse.redirect(new URL(DEFAULT_AUTHENTICATED_PATH, nextUrl));
   }
 
   return NextResponse.next();

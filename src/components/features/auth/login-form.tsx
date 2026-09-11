@@ -1,10 +1,15 @@
 "use client";
-
+import { useSearchParams } from "next/navigation";
+import {
+  isSafeInternalPath,
+  DEFAULT_AUTHENTICATED_PATH,
+} from "torneos/lib/anon-access";
 import { useState, useEffect } from "react";
 import { signIn } from "next-auth/react";
 import { OAuthButton } from "torneos/components/ui/oauth-button/oauth-button";
 
 export function LoginForm() {
+  const searchParams = useSearchParams();
   const [appLoading, setAppLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState<"google" | "discord" | null>(null);
   const [toast, setToast] = useState<{ title: string; subtitle: string, type: "success" | "info" } | null>(null);
@@ -24,15 +29,20 @@ export function LoginForm() {
   }, [toast]);
 
   const handleOAuth = async (provider: "google" | "discord") => {
-    setAuthLoading(provider);
-    
-    // NextAuth gestiona la redirección. 
-    await signIn(provider, { callbackUrl: "/hub" });
-    
-    // Si llega aquí, falló o se detuvo. Ocultamos loader.
-    setAuthLoading(null);
-    setToast({ title: "Error de conexión", subtitle: "Intenta de nuevo", type: "info" });
-  };
+  setAuthLoading(provider);
+
+  const requested = searchParams.get("callbackUrl");
+  const callbackUrl = isSafeInternalPath(requested)
+    ? requested
+    : DEFAULT_AUTHENTICATED_PATH;
+
+  // NextAuth gestiona la redirección.
+  await signIn(provider, { callbackUrl });
+
+  // Si llega aquí, falló o se detuvo. Ocultamos loader.
+  setAuthLoading(null);
+  setToast({ title: "Error de conexión", subtitle: "Intenta de nuevo", type: "info" });
+};
 
   return (
     <div className="w-full max-w-lg min-h-100dvh bg-white md:min-h-[90vh] md:my-[5vh] md:rounded-2rem md:border-10px md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col relative mx-auto">

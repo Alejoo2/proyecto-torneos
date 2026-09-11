@@ -1,7 +1,17 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure, permissionProcedure } from "torneos/server/api/trpc";
+import { TRPCError } from "@trpc/server";
+import {
+  createTRPCRouter,
+  publicProcedure,
+  protectedProcedure,
+  permissionProcedure,
+} from "torneos/server/api/trpc";
 import { courtEngine } from "torneos/server/core/court/court.engine";
-import { getMapData, getBubbleData } from "torneos/server/core/court/hub.engine";
+import {
+  getMapData,
+  getBubbleData,
+  getPublicCourtById,
+} from "torneos/server/core/court/hub.engine";
 
 export const courtRouter = createTRPCRouter({
   // ─── Admin: Crear ───
@@ -55,6 +65,7 @@ export const courtRouter = createTRPCRouter({
     }),
 
   // ─── Consultas Públicas (Autenticadas) ───
+  // NO convertir a público: list es para admin (ALL/DISABLED).
   list: protectedProcedure
     .input(z.object({
       status: z.enum(["ENABLED", "DISABLED", "ALL"]).default("ALL"),
@@ -80,7 +91,7 @@ export const courtRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const today = new Date();
       today.setUTCHours(0, 0, 0, 0);
-      
+
       const inTwoWeeks = new Date(today);
       inTwoWeeks.setUTCDate(today.getUTCDate() + 14);
 
@@ -95,7 +106,8 @@ export const courtRouter = createTRPCRouter({
         orderBy: { date: "asc" },
       });
     }),
-      // ─── Admin: Cerrar Día (Bulk) ───
+
+  // ─── Admin: Cerrar Día (Bulk) ───
   setAvailability: permissionProcedure("court:edit")
     .input(z.object({
       courtId: z.string(),
@@ -109,12 +121,25 @@ export const courtRouter = createTRPCRouter({
       return courtEngine.setAvailability(ctx.db, input);
     }),
 
-    // ─── Hub: Pines del mapa (read-model ligero) ───
-  getMap: protectedProcedure.query(({ ctx }) => getMapData(ctx.db)),
+  // ─── Vitrina anónima (publicProcedure, solo lecturas) ───
 
-  // ─── Hub: Burbuja de detalle (matriz 7×12 + torneos activos) ───
-  getBubble: protectedProcedure
+  // Pines del mapa: solo ENABLED (lo filtra el engine)
+  getMap: publicProcedure.query(({ ctx }) => getMapData(ctx.db)),
+
+  // Burbuja: matriz 7×12 + torneos de vitrina. DISABLED → NOT_FOUND
+  // (antes devolvía null; el contrato ahora es error, más simple de manejar)
+  getBubble: publicProcedure
     .input(z.object({ courtId: z.string() }))
-    .query(({ ctx, input }) => getBubbleData(ctx.db, input.courtId)
-  ),
+    .query(async ({ ctx, input }) => {
+      const bubble = await getBubbleData(ctx.db, input.courtId);
+      if (!bubble) {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Cancha no encontrada" });
+      }
+      return bubble;
+    }),
+
+  // Detalle de vitrina de cancha ENABLED
+  getPublicById: publicProcedure
+    .input(z.object({ courtId: z.string() }))
+    .query(({ ctx, input }) => getPublicCourtById(ctx.db, input.courtId)),
 });

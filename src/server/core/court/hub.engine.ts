@@ -1,8 +1,9 @@
 import "server-only";
 
 import type { PrismaClient } from "@prisma/client";
+import { TRPCError } from "@trpc/server";
 
-import { ACTIVE_TOURNAMENT_STATUSES, SLOTS_PER_DAY } from "torneos/lib/hub";
+import { SLOTS_PER_DAY, VITRINE_TOURNAMENT_WHERE } from "torneos/lib/hub";
 
 type DB = PrismaClient;
 
@@ -16,13 +17,16 @@ const addUtcDays = (date: Date, days: number): Date => {
 };
 
 /**
- * Read-model ligero para los pines del mapa + filtros del Hub.
+ * Read-model de vitrina para los pines del mapa.
+ * Vitrina: solo canchas ENABLED. hasTournaments solo cuenta torneos de vitrina
+ * (PUBLIC + statuses publicados); un PRIVATE no enciende la burbuja del pin.
  */
 export async function getMapData(db: DB) {
   const today = toUtcMidnight(new Date());
   const tomorrow = addUtcDays(today, 1);
 
   const courts = await db.court.findMany({
+    where: { status: "ENABLED" },
     select: {
       id: true,
       name: true,
@@ -31,7 +35,7 @@ export async function getMapData(db: DB) {
       lon: true,
       status: true,
       tournaments: {
-        where: { status: { in: [...ACTIVE_TOURNAMENT_STATUSES] } },
+        where: VITRINE_TOURNAMENT_WHERE,
         select: { id: true },
       },
       availability: {
@@ -57,7 +61,9 @@ export async function getMapData(db: DB) {
 }
 
 /**
- * Read-model de la burbuja: cancha + matriz 7×12 + torneos activos.
+ * Read-model de la burbuja: cancha + matriz 7×12 + torneos de vitrina.
+ * Vitrina: la cancha debe existir Y estar ENABLED (null → router hace 404).
+ * Cupos = enrollments APPROVED. Sin holds, sin PENDING_*, sin manager (PII).
  */
 export async function getBubbleData(db: DB, courtId: string) {
   const today = toUtcMidnight(new Date());
@@ -76,7 +82,7 @@ export async function getBubbleData(db: DB, courtId: string) {
       },
     }),
     db.tournament.findMany({
-      where: { courtId, status: { in: [...ACTIVE_TOURNAMENT_STATUSES] } },
+      where: { courtId, ...VITRINE_TOURNAMENT_WHERE },
       select: {
         id: true,
         name: true,
@@ -94,7 +100,7 @@ export async function getBubbleData(db: DB, courtId: string) {
     }),
   ]);
 
-  if (!court) return null;
+  if (!court || court.status !== "ENABLED") return null;
 
   const openSlots = new Set(
     availability
@@ -138,4 +144,29 @@ export async function getBubbleData(db: DB, courtId: string) {
       maxTeams: t.maxTeams,
     })),
   };
+}
+
+/**
+ * Detalle de vitrina de una cancha: solo ENABLED. Descripción e inventario
+ * permitidos en vitrina (producto aprobado §2). DISABLED → NOT_FOUND (nunca 401).
+ */
+export async function getPublicCourtById(db: DB, courtId: string) {
+  const court = await db.court.findFirst({
+    where: { id: courtId, status: "ENABLED" },
+    select: {
+      id: true,
+      name: true,
+      address: true,
+      description: true,
+      inventory: true,
+      lat: true,
+      lon: true,
+      status: true,
+    },
+  });
+
+  if (!court) {
+    throw new TRPCError({ code: "NOT_FOUND", message: "Cancha no encontrada" });
+  }
+  return court;
 }

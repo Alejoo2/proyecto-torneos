@@ -3,13 +3,19 @@
    Se importa desde hub-template.tsx (no en globals.css).
    ============================================================ */
 
-/* Fondo base del mapa: oscuro, evita flash blanco mientras cargan tiles */
 .leaflet-container {
   background: #0f172a;
   font-family: inherit;
 }
 
-/* Atribución (obligatoria con tiles OSM/CARTO), discreta */
+/* El truco del wireframe (multiply) no puede funcionar: el transform de
+   Leaflet crea un stacking context que aísla la mezcla. invert() transforma
+   los píxeles localmente: blanco→negro, calles→contornos claros. */
+.leaflet-tile-pane {
+  filter: grayscale(100%) invert(100%) brightness(90%) contrast(95%);
+}
+
+/* Atribución discreta (ver nota de licencia abajo) */
 .leaflet-control-attribution {
   background: rgba(15, 23, 42, 0.65);
   color: #94a3b8;

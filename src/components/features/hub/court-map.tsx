@@ -3,8 +3,6 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import "./hub.css"; // ← ÚNICO CAMBIO: los estilos viajan garantizados con el componente
-
 
 import type { RouterOutputs } from "torneos/trpc/react";
 import { HUB_BOUNDS, HUB_CENTER, HUB_ZOOM } from "torneos/lib/hub";
@@ -14,6 +12,7 @@ type CourtPin = RouterOutputs["court"]["getMap"][number];
 interface CourtMapProps {
   courts: CourtPin[];
   onSelectCourt: (courtId: string) => void;
+  onReady?: (map: L.Map) => void;
 }
 
 function buildPinHtml(court: CourtPin): string {
@@ -33,14 +32,16 @@ function buildPinHtml(court: CourtPin): string {
     </div>`;
 }
 
-export function CourtMap({ courts, onSelectCourt }: CourtMapProps) {
+export function CourtMap({ courts, onSelectCourt, onReady }: CourtMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const layerRef = useRef<L.LayerGroup | null>(null);
-  const didFitRef = useRef(false);
 
+  // Callbacks en refs para no re-crear el mapa en cada render
   const onSelectRef = useRef(onSelectCourt);
   onSelectRef.current = onSelectCourt;
+  const onReadyRef = useRef(onReady);
+  onReadyRef.current = onReady;
 
   // Init único del mapa
   useEffect(() => {
@@ -48,49 +49,37 @@ export function CourtMap({ courts, onSelectCourt }: CourtMapProps) {
 
     const map = L.map(containerRef.current, {
       zoomControl: false,
-      minZoom: 12, // permite encuadrar todo el corredor en pantallas chicas
+      attributionControl: false, // TODO producción: OSM exige atribución visible
+      minZoom: 13,
       maxZoom: 19,
       maxBounds: HUB_BOUNDS,
       maxBoundsViscosity: 1.0,
     });
 
-    // Basemap oscuro nativo (CARTO, sin API key). La atribución es obligatoria.
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-      subdomains: "abcd",
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
     }).addTo(map);
 
     map.setView(HUB_CENTER, HUB_ZOOM);
     mapRef.current = map;
+    onReadyRef.current?.(map);
 
     return () => {
       map.remove();
       mapRef.current = null;
       layerRef.current = null;
-      didFitRef.current = false;
     };
   }, []);
 
-  // Pines + encuadre inicial
+  // Pines: se reconstruyen cuando cambian datos o filtros
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
     layerRef.current?.remove();
     const group = L.layerGroup();
-    const valid: CourtPin[] = [];
 
     for (const court of courts) {
-      if (court.lat === 0 && court.lon === 0) {
-        console.warn(
-          `[Hub] "${court.name}" (${court.id}) sin coordenadas. Bórrala o edítala en Prisma Studio.`,
-        );
-        continue;
-      }
-      valid.push(court);
-
       const marker = L.marker([court.lat, court.lon], {
         icon: L.divIcon({
           className: "custom-pin-wrapper",
@@ -100,39 +89,17 @@ export function CourtMap({ courts, onSelectCourt }: CourtMapProps) {
         }),
         keyboard: false,
       });
-
       marker.on("click", () => {
+        // Empuja la cancha hacia arriba para que la burbuja no la tape
         map.panTo([court.lat + 0.004, court.lon]);
         onSelectRef.current(court.id);
       });
-
       group.addLayer(marker);
     }
 
     group.addTo(map);
     layerRef.current = group;
-
-    // Al primer fetch con datos: encuadra todos los pines de una vez
-    if (!didFitRef.current && valid.length > 0) {
-      didFitRef.current = true;
-
-      const only = valid[0];
-      if (valid.length === 1 && only) {
-        map.setView([only.lat, only.lon], 15);
-      } else if (valid.length > 1) {
-        map.fitBounds(
-          L.latLngBounds(valid.map((c) => [c.lat, c.lon] as [number, number])),
-          { padding: [48, 48] },
-        );
-      }
-    }
   }, [courts]);
 
-  return (
-    <>
-      <div ref={containerRef} className="absolute inset-0 z-0" />
-      {/* Aurora encima del mapa: screen-blend sobre tiles oscuros = glow */}
-      <div className="hub-aurora" aria-hidden />
-    </>
-  );
+  return <div ref={containerRef} className="absolute inset-0 z-0" />;
 }

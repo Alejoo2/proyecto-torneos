@@ -1,43 +1,56 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { api } from "torneos/trpc/react";
 import { Button } from "torneos/components/ui/button/button";
 import { CreateTournamentModal } from "torneos/components/ui/tournament/create-tournament-modal";
-import Link from "next/link";
 
-export function CourtDetailTemplate({ courtId }: { courtId: string }) {
+interface CourtDetailTemplateProps {
+  courtId: string;
+  isLoggedIn: boolean;
+}
+
+export function CourtDetailTemplate({ courtId, isLoggedIn }: CourtDetailTemplateProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  
-  // Hook de utilidades de tRPC para invalidar queries
+
   const utils = api.useUtils();
 
-  // Queries
-  const { data: court } = api.court.getById.useQuery({ courtId });
-  const { data: tournaments } = api.tournament.listByCourt.useQuery({ courtId });
+  // Vitrina de cancha: público, sirve a anónimos y logueados (header + metadatos)
+  const { data: court } = api.court.getBubble.useQuery({ courtId });
 
-  // Para saber si es gestor, intentamos resolver su perfil de manager.
+  // Lista ramificada por sesión: anónimo → vitrina (sin DRAFT);
+  // logueado → listByCourt (el gestor ve DRAFT; caso 9)
+  const { data: publicTournaments } = api.tournament.listByCourtPublic.useQuery(
+    { courtId },
+    { enabled: !isLoggedIn },
+  );
+  const { data: managerTournaments } = api.tournament.listByCourt.useQuery(
+    { courtId },
+    { enabled: isLoggedIn, retry: false },
+  );
+  const tournaments = isLoggedIn ? managerTournaments : publicTournaments;
+
+  // Resolver perfil de gestor SOLO con sesión (401-spam off para anónimos)
   const { data: myManagerProfile } = api.admin.getMyManagerProfile.useQuery(undefined, {
-    retry: false
+    enabled: isLoggedIn,
+    retry: false,
   });
 
-  // Mutación para crear
   const createMutation = api.tournament.create.useMutation({
     onSuccess: () => {
       setIsModalOpen(false);
-      // Refresca la lista de torneos para que aparezca el nuevo
       void utils.tournament.listByCourt.invalidate();
     }
   });
 
-  // Mutación para publicar (DRAFT -> SCHEDULED)
   const publishMutation = api.tournament.publish.useMutation({
     onSuccess: () => {
-      // Refresca la lista para que cambie el estado y los botones
       void utils.tournament.listByCourt.invalidate();
     }
   });
 
+  // Solo puede ser true con sesión activa
   const isManager = !!myManagerProfile;
 
   return (
@@ -48,11 +61,11 @@ export function CourtDetailTemplate({ courtId }: { courtId: string }) {
         <p className="text-sm text-zinc-500">{court?.address}</p>
       </div>
 
-      {/* Acción Gestor */}
+      {/* Acción Gestor (implícitamente gated por sesión) */}
       {isManager && (
         <div className="px-6 mb-8">
-          <Button 
-            className="w-full min-h-[56px]" 
+          <Button
+            className="w-full min-h-[56px]"
             onClick={() => setIsModalOpen(true)}
             disabled={createMutation.isPending}
           >
@@ -64,12 +77,12 @@ export function CourtDetailTemplate({ courtId }: { courtId: string }) {
       {/* Lista de Torneos */}
       <div className="px-6">
         <h2 className="text-base font-bold text-zinc-900 mb-4">Torneos Activos</h2>
-        
+
         {tournaments && tournaments.length > 0 ? (
           <div className="space-y-3">
             {tournaments.map((t) => (
-              <div 
-                key={t.id} 
+              <div
+                key={t.id}
                 className="bg-white border-2 border-zinc-100 rounded-2xl p-4 hover:border-zinc-300 transition-colors"
               >
                 <div className="flex justify-between items-start mb-2">
@@ -84,7 +97,7 @@ export function CourtDetailTemplate({ courtId }: { courtId: string }) {
                     {t.status}
                   </span>
                 </div>
-                
+
                 <div className="flex items-center gap-4 text-xs text-zinc-500 mb-3">
                   <span>👥 {t._count.enrollments}/{t.maxTeams} equipos</span>
                   <span>⏳ Cierra: {new Date(t.enrollmentDeadline).toLocaleDateString()}</span>
@@ -92,8 +105,8 @@ export function CourtDetailTemplate({ courtId }: { courtId: string }) {
 
                 {/* Botones de Gestor condicionales */}
                 {isManager && t.status === "DRAFT" && (
-                  <Button 
-                    size="sm" 
+                  <Button
+                    size="sm"
                     className="w-full"
                     onClick={() => publishMutation.mutate({ tournamentId: t.id })}
                     disabled={publishMutation.isPending}
@@ -119,8 +132,8 @@ export function CourtDetailTemplate({ courtId }: { courtId: string }) {
         )}
       </div>
 
-      {/* Modal Crear Torneo */}
-      <CreateTournamentModal 
+      {/* Modal Crear Torneo (solo alcanzable por gestor logueado) */}
+      <CreateTournamentModal
         courtId={courtId}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
