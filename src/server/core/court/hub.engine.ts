@@ -100,7 +100,7 @@ export async function getBubbleData(db: DB, courtId: string) {
     }),
   ]);
 
-  if (!court || court.status !== "ENABLED") return null;
+  if (court?.status !== "ENABLED") return null;
 
   const openSlots = new Set(
     availability

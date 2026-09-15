@@ -13,7 +13,7 @@ export default async function CourtDetailPage({
 
   // DISABLED/inexistente → 404 de Next (nunca 401)
   try {
-    await api.court.getBubble.fetch({ courtId });
+    await api.court.getBubble({ courtId });
   } catch {
     notFound();
   }

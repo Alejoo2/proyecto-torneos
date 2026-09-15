@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
+import { notificationEngine } from "../notification/notification.engine"; // NUEVO
 
 export const teamEngine = {
   async createDraft(
@@ -35,11 +36,12 @@ export const teamEngine = {
     });
     if (!profile?.player)
       throw new TRPCError({ code: "NOT_FOUND", message: "Tu perfil de jugador no existe" });
+    const player = profile.player;
 
     // 3. Validar que no sea capitán de otro equipo activo
     const isCaptainElsewhere = await prisma.teamMembership.findFirst({
       where: {
-        playerId: profile.player.id,
+        playerId: player.id,
         isCaptain: true,
         leftAt: null,
       },
@@ -54,8 +56,7 @@ export const teamEngine = {
     return prisma.$transaction(async (tx) => {
       const newTeam = await tx.team.create({ data: { ...input, status: "DRAFT" } });
 
-      // Solución error TS18047: Usamos la constante validada profile.player.id
-      const playerId = profile.player.id;
+      const playerId = player.id;
 
       // Crear la membresía del creador como Capitán
       await tx.teamMembership.create({
@@ -93,53 +94,56 @@ export const teamEngine = {
       include: { player: true },
     });
     if (!inviterProfile?.player)
-      throw new TRPCError({
-        code: "NOT_FOUND",
-        message: "Invitador no es jugador",
-      });
+      throw new TRPCError({ code: "NOT_FOUND", message: "Invitador no es jugador" });
+    const inviterPlayerId = inviterProfile.player.id;
 
     if (input.teamId) {
       const membership = await prisma.teamMembership.findFirst({
-        where: {
-          teamId: input.teamId,
-          playerId: inviterProfile.player.id,
-          isCaptain: true,
-          leftAt: null,
-        },
+        where: { teamId: input.teamId, playerId: inviterPlayerId, isCaptain: true, leftAt: null },
       });
-      if (!membership)
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Solo el capitán puede invitar",
-        });
+      if (!membership) throw new TRPCError({ code: "FORBIDDEN", message: "Solo el capitán puede invitar" });
 
-      // Validar que no invita a alguien que ya es miembro
       const isAlreadyMember = await prisma.teamMembership.findFirst({
         where: { teamId: input.teamId, playerId: input.playerId, leftAt: null },
       });
-      if (isAlreadyMember)
-        throw new TRPCError({ code: "CONFLICT", message: "El jugador ya es miembro de este equipo" });
+      if (isAlreadyMember) throw new TRPCError({ code: "CONFLICT", message: "El jugador ya es miembro de este equipo" });
     }
 
     const existingPending = await prisma.teamInvitation.findFirst({
       where: { playerId: input.playerId, status: "PENDING", teamId: input.teamId },
     });
-    if (existingPending)
-      throw new TRPCError({
-        code: "CONFLICT",
-        message: "Ya tiene invitación pendiente",
+    if (existingPending) throw new TRPCError({ code: "CONFLICT", message: "Ya tiene invitación pendiente" });
+
+    // NUEVO: Transacción para garantizar atomicidad de la notificación
+    return prisma.$transaction(async (tx) => {
+      const invitation = await tx.teamInvitation.create({
+        data: {
+          teamId: input.teamId,
+          playerId: input.playerId,
+          invitedBy: inviterPlayerId,
+          status: "PENDING",
+        },
       });
 
-    return prisma.teamInvitation.create({
-      data: {
-        teamId: input.teamId,
-        playerId: input.playerId,
-        invitedBy: inviterProfile.player.id,
-        status: "PENDING",
-      },
+      const recipient = await tx.player.findUnique({
+        where: { id: input.playerId },
+        select: { profile: { select: { userId: true } } },
+      });
+
+      if (recipient?.profile.userId) {
+        await notificationEngine.create(tx, {
+          userId: recipient.profile.userId,
+          family: "TEAM",
+          type: "INVITATION_RECEIVED",
+          title: "Nueva invitación a equipo",
+          body: `${inviterProfile.displayName ?? "Un capitán"} te ha invitado a unirte a su equipo`,
+          payload: { teamId: input.teamId, invitationId: invitation.id },
+        });
+      }
+
+      return invitation;
     });
   },
-
   async acceptInvitation(
     prisma: PrismaClient,
     invitationId: string,
@@ -154,6 +158,7 @@ export const teamEngine = {
         code: "NOT_FOUND",
         message: "Perfil no encontrado",
       });
+    const acceptingPlayerId = profile.player.id;
 
     const invitation = await prisma.teamInvitation.findUnique({
       where: { id: invitationId },
@@ -208,12 +213,40 @@ export const teamEngine = {
       }
 
       // Creamos la membresía del jugador que acaba de aceptar
+      // Creamos la membresía del jugador que acaba de aceptar
       await tx.teamMembership.create({
         data: {
           playerId: invitation.playerId,
           teamId: teamId,
           isCaptain: false,
         },
+      });
+
+      // NUEVO: Notificaciones de aceptación
+      const team = await tx.team.findUnique({ where: { id: teamId } });
+      const inviter = await tx.player.findUnique({
+        where: { id: invitation.invitedBy },
+        select: { profile: { select: { userId: true } } },
+      });
+
+      if (inviter?.profile.userId) {
+        await notificationEngine.create(tx, {
+          userId: inviter.profile.userId,
+          family: "TEAM",
+          type: "INVITATION_ACCEPTED",
+          title: "Invitación aceptada",
+          body: `${profile.displayName ?? "Un jugador"} ha aceptado unirse a ${team?.name ?? "tu equipo"}`,
+          payload: { teamId, playerId: acceptingPlayerId },
+        });
+      }
+
+      await notificationEngine.create(tx, {
+        userId,
+        family: "TEAM",
+        type: "MEMBERSHIP_JOINED",
+        title: "¡Bienvenido al equipo!",
+        body: `Ahora eres miembro del equipo ${team?.name ?? ""}`,
+        payload: { teamId },
       });
     });
   },
@@ -227,11 +260,12 @@ export const teamEngine = {
     if (!profile?.player) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Perfil de jugador no encontrado" });
     }
+    const playerId = profile.player.id;
 
     const membership = await prisma.teamMembership.findFirst({
       where: {
         teamId,
-        playerId: profile.player.id,
+        playerId,
         leftAt: null,
       },
     });
@@ -243,7 +277,7 @@ export const teamEngine = {
     // Validación: Si es capitán y hay otros miembros, no puede abandonar directamente
     if (membership.isCaptain) {
       const otherMembersCount = await prisma.teamMembership.count({
-        where: { teamId, leftAt: null, playerId: { not: profile.player.id } }
+        where: { teamId, leftAt: null, playerId: { not: playerId } }
       });
 
       if (otherMembersCount > 0) {
@@ -333,6 +367,7 @@ export const teamEngine = {
     }
 
     // 4. Si es >= 3, crear solicitud de votación
+        // 4. Si es >= 3, crear solicitud de votación
     const existingRequest = await prisma.teamDeletionRequest.findFirst({
       where: { teamId, status: "PENDING" }
     });
@@ -340,21 +375,33 @@ export const teamEngine = {
       throw new TRPCError({ code: "CONFLICT", message: "Ya hay una solicitud de eliminación pendiente" });
     }
 
-    const request = await prisma.teamDeletionRequest.create({
-      data: {
-        teamId,
-        requestedBy: membership.playerId,
-        status: "PENDING"
-      }
-    });
+    // NUEVO: Transacción para crear solicitud y notificar a todos
+    const request = await prisma.$transaction(async (tx) => {
+      const newRequest = await tx.teamDeletionRequest.create({
+        data: { teamId, requestedBy: membership.playerId, status: "PENDING" }
+      });
 
-    // El capitán que la solicita vota automáticamente a favor (Corregido: playerId y approve)
-    await prisma.teamDeletionVote.create({
-      data: {
-        requestId: request.id,
-        playerId: membership.playerId,
-        approve: true
-      }
+      await tx.teamDeletionVote.create({
+        data: { requestId: newRequest.id, playerId: membership.playerId, approve: true }
+      });
+
+      const activeMembers = await tx.teamMembership.findMany({
+        where: { teamId, leftAt: null },
+        include: { player: { select: { profile: { select: { userId: true } } } } }
+      });
+
+      await Promise.all(activeMembers.map(m => 
+        notificationEngine.create(tx, {
+          userId: m.player.profile.userId,
+          family: "TEAM",
+          type: "TEAM_DELETE_REQUESTED",
+          title: "Solicitud de eliminación de equipo",
+          body: `El capitán ha solicitado eliminar el equipo ${membership.team.name}. Se requiere tu voto.`,
+          payload: { teamId, requestId: newRequest.id }
+        })
+      ));
+
+      return newRequest;
     });
 
     return { directDelete: false, requestId: request.id };
@@ -368,6 +415,7 @@ export const teamEngine = {
     if (!profile?.player) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Perfil no encontrado" });
     }
+    const voterPlayerId = profile.player.id;
 
     const request = await prisma.teamDeletionRequest.findUnique({
       where: { id: requestId },
@@ -375,13 +423,13 @@ export const teamEngine = {
     });
 
     // Solución ESLint: Optional chaining request?.status
-    if (!request || request.status !== "PENDING") {
+    if (request?.status !== "PENDING") {
       throw new TRPCError({ code: "BAD_REQUEST", message: "Solicitud no encontrada o ya procesada" });
     }
 
     // Validar que el votante es miembro activo del equipo
     const membership = await prisma.teamMembership.findFirst({
-      where: { teamId: request.teamId, playerId: profile.player.id, leftAt: null }
+      where: { teamId: request.teamId, playerId: voterPlayerId, leftAt: null }
     });
     if (!membership) {
       throw new TRPCError({ code: "FORBIDDEN", message: "No eres miembro de este equipo" });

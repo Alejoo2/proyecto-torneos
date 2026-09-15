@@ -1,239 +1,238 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { ClipboardList, Lock, Trophy } from "lucide-react";
 import { api } from "torneos/trpc/react";
-import { TournamentStatsGrid } from "torneos/components/ui/tournament/tournament-stats-grid";
-import { EnrolledTeamCard } from "torneos/components/ui/tournament/enrolled-team-card";
-import { SalaCineModal } from "torneos/components/ui/tournament/sala-cine-modal";
-import { Button } from "torneos/components/ui/button/button";
-
-const DAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-const SLOTS = ["00:00 - 02:00", "02:00 - 04:00", "04:00 - 06:00", "06:00 - 08:00", "08:00 - 10:00", "10:00 - 12:00", "12:00 - 14:00", "14:00 - 16:00", "16:00 - 18:00", "18:00 - 20:00", "20:00 - 22:00", "22:00 - 00:00"];
+import { TournamentHero } from "torneos/components/features/tournament/tournament-hero";
+import { EnrollmentCta } from "torneos/components/features/tournament/enrollment-cta";
+import { BracketView } from "torneos/components/features/tournament/bracket-view";
+import { StandingsTable } from "torneos/components/features/tournament/standings-table";
+import { TabBar } from "torneos/components/ui/tab-bar";
+import { EmptyState } from "torneos/components/ui/empty-state";
+import { Toast } from "torneos/components/ui/toast";
+import { LoadingSkeleton } from "torneos/components/ui/loading-skeleton";
+import { buttonVariants } from "torneos/components/ui/button/button";
+import { cn } from "torneos/lib/utils";
 
 interface TournamentDetailTemplateProps {
   tournamentId: string;
   isLoggedIn: boolean;
+  sessionUserId?: string | null;
 }
 
-export function TournamentDetailTemplate({ tournamentId, isLoggedIn }: TournamentDetailTemplateProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [secondsRemaining, setSecondsRemaining] = useState(300);
-  const [enrollmentResult, setEnrollmentResult] = useState<string | null>(null);
+const TABS = [
+  { id: "fixture", label: "Fixture" },
+  { id: "standings", label: "Posiciones" },
+];
+
+export function TournamentDetailTemplate({
+  tournamentId,
+  isLoggedIn,
+  sessionUserId = null,
+}: TournamentDetailTemplateProps) {
+  const [tab, setTab] = useState<string>("fixture");
   const [selectedTeamId, setSelectedTeamId] = useState<string>("");
 
-  // Detalle ramificado por sesión: anónimo → read-model de vitrina
-  // (solo APPROVED, sin manager ni holds); logueado → getById igual que hoy.
-  const { data: publicTournament, isLoading: publicLoading } = api.tournament.getPublicById.useQuery(
-    { tournamentId },
-    { enabled: !isLoggedIn },
-  );
-  const { data: managedTournament, isLoading: managedLoading } = api.tournament.getById.useQuery(
-    { tournamentId },
-    { enabled: isLoggedIn, retry: false },
-  );
-  const tournament = isLoggedIn ? managedTournament : publicTournament;
-  const isLoading = isLoggedIn ? managedLoading : publicLoading;
+  // Toast (protocolo 4.4): piel única del átomo — el texto informa, no el color.
+  const [toast, setToast] = useState<{ title: string } | null>(null);
+  useEffect(() => {
+    if (!toast) return;
+    const id = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(id);
+  }, [toast]);
+  const notify = useCallback((title: string) => {
+    setToast({ title });
+  }, []);
 
-  // Sala de Cine: SOLO con sesión (§3.4 — nunca en anónimo)
-  const { data: holdData } = api.tournament.checkHold.useQuery(
-    { tournamentId },
-    { enabled: isLoggedIn, retry: false, refetchInterval: 1000 },
-  );
-  const { data: myTeams } = api.team.getMyTeams.useQuery(undefined, {
-    enabled: isLoggedIn,
-    retry: false,
-  });
-
-  // Mutations (solo alcanzables con sesión: los disparan botones gated)
   const utils = api.useUtils();
+  const loginHref = `/login?callbackUrl=${encodeURIComponent(`/torneos/${tournamentId}`)}`;
 
-  const holdSlotMutation = api.tournament.holdSlot.useMutation({
-    onSuccess: () => {
-      setSecondsRemaining(300);
-      setIsModalOpen(true);
-    },
-  });
+  // ── Capa 2: lecturas ramificadas por sesión (frontera RSC en page.tsx) ──
+  const publicQuery = api.tournament.getPublicById.useQuery({ tournamentId }, { enabled: !isLoggedIn });
+  const managedQuery = api.tournament.getById.useQuery({ tournamentId }, { enabled: isLoggedIn, retry: false });
+  const holdQuery = api.tournament.checkHold.useQuery(
+    { tournamentId },
+    // doc 8.3: refetch 15s SOLO mientras exista hold activo
+    { enabled: isLoggedIn, retry: false, refetchInterval: (data) => (data ? 15_000 : false) },
+  );
+  const myTeamsQuery = api.team.getMyTeams.useQuery(undefined, { enabled: isLoggedIn, retry: false });
+  const myStatusQuery = api.enrollment.getMyStatus.useQuery({ tournamentId }, { enabled: isLoggedIn, retry: false });
+  const matchesQuery = api.match.listByTournament.useQuery({ tournamentId }, { enabled: isLoggedIn, retry: false });
+  const standingsAuthQuery = api.stats.getTournamentStandings.useQuery({ tournamentId }, { enabled: isLoggedIn, retry: false });
+  const standingsPublicQuery = api.stats.getTournamentStandingsPublic.useQuery({ tournamentId }, { enabled: !isLoggedIn });
 
-  const enrollMutation = api.enrollment.enroll.useMutation({
-    onSuccess: (data) => {
-      setIsModalOpen(false);
-      if (data.status === "PENDING_PAYMENT") {
-        setEnrollmentResult("SUCCESS");
-      } else if (data.status === "PENDING_AVAILABILITY") {
-        setEnrollmentResult("CONFLICT");
+  const tournament = isLoggedIn ? managedQuery.data : publicQuery.data;
+  const isLoading = isLoggedIn ? managedQuery.isLoading : publicQuery.isLoading;
+  const dataUpdatedAt = isLoggedIn ? managedQuery.dataUpdatedAt : publicQuery.dataUpdatedAt;
+    const standings = (isLoggedIn ? standingsAuthQuery.data : standingsPublicQuery.data) ?? [];
+  const matches = matchesQuery.data ?? [];
+  const teams = useMemo(() => myTeamsQuery.data ?? [], [myTeamsQuery.data]);
+  const myEnrollments = myStatusQuery.data ?? [];
+  const holdData = holdQuery.data ?? null;
+
+  // serverTimestamp exacto sin esperar B-09: expiresAt − secondsRemaining = reloj del servidor
+  const hold = holdData
+    ? {
+        expiresAt: new Date(holdData.expiresAt).getTime(),
+        serverTimestamp: new Date(holdData.expiresAt).getTime() - holdData.secondsRemaining * 1000,
       }
-      utils.tournament.getById.invalidate({ tournamentId });
+    : null;
+
+  const reconcileHold = useCallback(() => {
+    void utils.tournament.checkHold.invalidate({ tournamentId });
+  }, [utils, tournamentId]);
+
+  // ── Capa 4: mutaciones (único punto tRPC del flujo CTA) ──
+  const holdSlot = api.tournament.holdSlot.useMutation({
+    onSuccess: () => reconcileHold(),
+    onError: (e) => notify(e.message),
+  });
+  const enroll = api.enrollment.enroll.useMutation({
+    onSuccess: (data) => {
+      void utils.enrollment.getMyStatus.invalidate({ tournamentId });
+      void utils.tournament.getById.invalidate({ tournamentId });
+      reconcileHold();
+            if (data.status === "PENDING_PAYMENT") notify("Inscripción enviada — pendiente de pago");
+      else if (data.status === "PENDING_AVAILABILITY") notify("Disponibilidad insuficiente en tu plantilla");
     },
+    onError: (e) => notify(e.message),
+  });
+  const reevaluate = api.enrollment.reevaluate.useMutation({
+    onSuccess: () => {
+      void utils.enrollment.getMyStatus.invalidate({ tournamentId });
+      void utils.stats.getTournamentStandings.invalidate({ tournamentId });
+      notify("Disponibilidad reevaluada");
+    },
+    onError: (e) => notify(e.message),
   });
 
-  // Countdown effect
+  // Auto-selección del primer equipo
   useEffect(() => {
-    if (isModalOpen && secondsRemaining > 0) {
-      const timer = setInterval(() => {
-        setSecondsRemaining((prev) => prev - 1);
-      }, 1000);
-      return () => clearInterval(timer);
-    } else if (secondsRemaining === 0) {
-      setIsModalOpen(false);
-    }
-  }, [isModalOpen, secondsRemaining]);
-
-  // Auto-seleccionar el primer equipo si solo tiene uno
-  useEffect(() => {
-    if (myTeams && myTeams.length > 0 && !selectedTeamId) {
-      setSelectedTeamId(myTeams[0].id);
-    }
-  }, [myTeams, selectedTeamId]);
+    if (teams.length > 0 && !selectedTeamId) setSelectedTeamId(teams[0]!.id);
+  }, [teams, selectedTeamId]);
 
   if (isLoading || !tournament) {
-    return <div className="p-6 text-zinc-500">Cargando torneo...</div>;
+    return <LoadingSkeleton variant="card" rows={4} className="pt-14" />;
   }
 
-  // En vitrina el engine ya manda solo APPROVED; en sesión filtra como hoy
-  const activeEnrollments = tournament.enrollments.filter(e =>
-    ["APPROVED", "PENDING_PAYMENT", "PENDING_AVAILABILITY"].includes(e.status)
-  );
+  // Vitrina: solo APPROVED · getById: activas (APPROVED/PENDING_*)
+  const enrolledCount = tournament.enrollments.length;
+  const activeHolds = "slotHolds" in tournament._count ? tournament._count.slotHolds : 0;
+  const isScheduled = tournament.status === "SCHEDULED";
+  // Entry point "Gestionar": el front sugiere por ownership (solo getById trae
+  // manager.profile — de ahí el guard "in"); el backend autoriza por permiso.
+  const canManage =
+    isLoggedIn &&
+    !!sessionUserId &&
+    "manager" in tournament &&
+    tournament.manager.profile.userId === sessionUserId;
 
-  const handleEnroll = () => {
-    if (!selectedTeamId) {
-      alert("Por favor selecciona un equipo.");
-      return;
-    }
-    enrollMutation.mutate({ tournamentId, teamId: selectedTeamId });
+  const ctaCommon = {
+    teams,
+    selectedTeamId,
+    onSelectTeam: setSelectedTeamId,
+    isHolding: holdSlot.isPending,
+    onHold: () => holdSlot.mutate({ tournamentId }),
+    hold,
+    onExpire: reconcileHold,
+    isEnrolling: enroll.isPending,
+    onConfirmEnrollment: () => {
+      if (selectedTeamId) enroll.mutate({ tournamentId, teamId: selectedTeamId });
+    },
+    enrollments: myEnrollments,
+    isReevaluating: reevaluate.isPending,
+    onReevaluate: (enrollmentId: string) => reevaluate.mutate({ enrollmentId }),
   };
 
-  return (
-    <div className="pb-8">
-      {/* Header info */}
-      <div className="px-6 pt-5 pb-4">
-        <h1 className="text-xl font-bold text-zinc-900 mb-1 leading-tight">{tournament.name}</h1>
-        <p className="text-sm text-zinc-500">{tournament.court.name}</p>
-      </div>
+  const showHoldCta = isLoggedIn && isScheduled && hold !== null;
+  const showEnrolledCta = myEnrollments.length > 0;
+  const showReadyCta = isLoggedIn && isScheduled && !holdData && myEnrollments.length === 0 && teams.length > 0;
+  const showNoTeamCta = isLoggedIn && isScheduled && !holdData && myEnrollments.length === 0 && teams.length === 0;
+  const showAnonCta = !isLoggedIn && isScheduled;
 
-      <TournamentStatsGrid
-        enrolledCount={activeEnrollments.length}
+  return (
+    <div className="pb-nav-safe pt-14">
+      {/* ⚠ VERIFICAR contra vitrineCardSelect (nota B-15): si la vitrina no expone
+          dayOfWeek/timeSlot/maxTeams/enrollmentDeadline, este mapeo anónimo es el
+          punto exacto donde el compilador lo dirá. */}
+      <TournamentHero
+        name={tournament.name}
+        status={tournament.status}
+        format={tournament.format}
+        courtName={tournament.court.name}
+        dayOfWeek={tournament.dayOfWeek}
+        timeSlot={tournament.timeSlot}
+        enrollmentDeadline={tournament.enrollmentDeadline}
+        startDate={tournament.startDate ?? null}
+        enrolledCount={enrolledCount}
         maxTeams={tournament.maxTeams}
-        dayOfWeek={DAYS[tournament.dayOfWeek]}
-        timeSlot={SLOTS[tournament.timeSlot]}
-        enrollmentDeadline={new Date(tournament.enrollmentDeadline).toLocaleDateString("es-CO")}
-        format={tournament.format.replace("_", " ")}
+        activeHolds={activeHolds}
+        dataUpdatedAt={dataUpdatedAt}
       />
 
-      {/* Descripción */}
-      <div className="px-6 mb-6">
-        <h2 className="text-sm font-semibold text-zinc-900 uppercase tracking-wide mb-2">Descripción</h2>
-        <p className="text-sm text-zinc-600 leading-relaxed">{tournament.description || "Sin descripción"}</p>
-      </div>
+      {/* Zona CTA — PANTALLA 2: A/B/C/D (estado C inline, decisión D1) */}
+      {(showAnonCta || showNoTeamCta || showReadyCta || showHoldCta || showEnrolledCta) && (
+        <div className="mt-4 space-y-4 px-5">
+          {showHoldCta && <EnrollmentCta variant="HOLDING" {...ctaCommon} />}
+          {showEnrolledCta && <EnrollmentCta variant="ENROLLED" {...ctaCommon} />}
+          {showReadyCta && <EnrollmentCta variant="READY" {...ctaCommon} />}
+          {showNoTeamCta && <EnrollmentCta variant="NO_TEAM" />}
+          {showAnonCta && <EnrollmentCta variant="ANON" loginHref={loginHref} />}
+        </div>
+      )}
 
-      {/* CTA anónimo: el clic prohibido no existe — lo mandamos a login (§3.7) */}
-      {!isLoggedIn && tournament.status === "SCHEDULED" && (
-        <div className="px-6 mb-8">
+            {canManage && (
+        <div className="mt-4 px-5">
           <Link
-            href={`/login?callbackUrl=${encodeURIComponent(`/torneos/${tournamentId}`)}`}
-            className="block w-full rounded-2xl bg-zinc-900 py-4 text-center text-sm font-semibold text-white transition-colors hover:bg-zinc-700"
+            href={`/torneos/${tournamentId}/gestion`}
+            className={cn(buttonVariants({ variant: "secondary" }), "w-full")}
           >
-            Entrar para inscribir tu equipo
+            <ClipboardList className="size-4" />
+            Gestionar inscripciones
           </Link>
-          <p className="mt-2 text-xs text-center text-zinc-400">
-            Inicia sesión con tu equipo para reservar un cupo
-          </p>
         </div>
       )}
-
-      {/* Acción Capitán (myTeams solo carga con sesión) */}
-      {isLoggedIn && tournament.status === "SCHEDULED" && myTeams && myTeams.length > 0 && !holdData && (
-        <div className="px-6 mb-8 space-y-3">
-          {myTeams.length > 1 && (
-            <select
-              value={selectedTeamId}
-              onChange={(e) => setSelectedTeamId(e.target.value)}
-              className="w-full h-12 bg-zinc-50 rounded-xl border border-zinc-200 px-4 focus:border-zinc-400 focus:outline-none"
-            >
-              {myTeams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select>
-          )}
-          <Button
-            className="w-full min-h-[56px]"
-            onClick={() => holdSlotMutation.mutate({ tournamentId })}
-            disabled={holdSlotMutation.isPending}
-          >
-            {holdSlotMutation.isPending ? "Reservando..." : `Inscribir a ${myTeams.find(t => t.id === selectedTeamId)?.name || "equipo"}`}
-          </Button>
-          <p className="text-xs text-center text-zinc-400">Se reservará un cupo por 5 minutos</p>
-        </div>
-      )}
-
-      {/* Mensaje de no-capitán: NUNCA al anónimo (spec Paso D) */}
-      {isLoggedIn && tournament.status === "SCHEDULED" && (!myTeams || myTeams.length === 0) && (
-        <div className="px-6 mb-8">
-          <div className="bg-zinc-50 rounded-2xl p-4 text-center border border-zinc-100">
-            <p className="text-sm text-zinc-500">Solo los capitanes pueden inscribir equipos</p>
-          </div>
-        </div>
-      )}
-
-      {/* Hold activo (requiere sesión por el gate del query) */}
-      {holdData && (
-        <div className="px-6 mb-8">
-          <Button className="w-full min-h-[56px] bg-orange-500 hover:bg-orange-600" onClick={() => setIsModalOpen(true)}>
-            Tienes una reserva activa ({holdData.secondsRemaining}s)
-          </Button>
-        </div>
-      )}
-
-      {/* Equipos Inscritos (en anónimo: solo APPROVED, los manda el engine) */}
-      <div className="px-6 mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-base font-bold text-zinc-900">Equipos inscritos</h2>
-          <span className="text-xs text-zinc-400 font-mono">{activeEnrollments.length}/{tournament.maxTeams}</span>
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          {activeEnrollments.map((env) => (
-            <EnrolledTeamCard
-              key={env.id}
-              teamId={env.team.id}
-              name={env.team.name}
-              abbreviation={env.team.abbreviation}
-              primaryColor={env.team.primaryColor}
-              status={env.status}
-              availabilityNote={env.availabilityNote}
-            />
-          ))}
-        </div>
+      <div className="px-5 pt-6">
+        <TabBar tabs={TABS} active={tab} onChange={setTab} />
       </div>
 
-      {/* Modal Sala de Cine: no se monta sin sesión ni sin hold/flujo propio */}
-      {isLoggedIn && (isModalOpen || !!holdData) && (
-        <SalaCineModal
-          isOpen={isModalOpen}
-          secondsRemaining={secondsRemaining}
-          teamName={myTeams?.find(t => t.id === selectedTeamId)?.name}
-          isEnrolling={enrollMutation.isPending}
-          onConfirm={handleEnroll}
-          onCancel={() => setIsModalOpen(false)}
-        />
-      )}
+      <div className="px-5 pb-8 pt-4">
+        {tab === "fixture" &&
+          (!isLoggedIn ? (
+            // D2: no existe listByTournamentPublic (nota B-13) — honesto: EmptyState + login
+            <EmptyState
+              icon={<Lock className="size-8" />}
+              title="Fixture para usuarios"
+              description="Inicia sesión para ver partidos y fases del torneo."
+              action={
+                <Link href={loginHref} className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}>
+                  Iniciar sesión
+                </Link>
+              }
+            />
+          ) : matches.length === 0 ? (
+            <EmptyState
+              icon={<Trophy className="size-8" />}
+              title="Fixture por definir"
+              description="Los partidos aparecen cuando el gestor realiza el sorteo."
+            />
+          ) : (
+            <BracketView matches={matches} />
+          ))}
+        {tab === "standings" &&
+          (standings.length === 0 ? (
+            <EmptyState
+              icon={<Trophy className="size-8" />}
+              title="Sin posiciones aún"
+              description="La tabla se genera con el primer partido jugado."
+            />
+          ) : (
+            <StandingsTable rows={standings} />
+          ))}
+      </div>
 
-      {/* Modal de Resultado (solo alcanzable tras enroll con sesión) */}
-      {enrollmentResult && (
-        <div className="fixed inset-0 z-[90] bg-black/70 flex items-center justify-center p-6">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-sm text-center">
-            {enrollmentResult === "SUCCESS" ? (
-              <>
-                <h3 className="text-lg font-bold text-zinc-900 mb-2">¡Inscripción enviada!</h3>
-                <p className="text-sm text-zinc-500 mb-4">Tu equipo cumple con la disponibilidad. El gestor debe verificar el pago.</p>
-              </>
-            ) : (
-              <>
-                <h3 className="text-lg font-bold text-zinc-900 mb-2">Disponibilidad insuficiente</h3>
-                <p className="text-sm text-zinc-500 mb-4">No tienes 5 jugadores disponibles en esta franja.</p>
-              </>
-            )}
-            <Button className="w-full" onClick={() => setEnrollmentResult(null)}>Entendido</Button>
-          </div>
-        </div>
-      )}
+            <Toast toast={toast} />
     </div>
   );
 }

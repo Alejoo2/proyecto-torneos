@@ -11,13 +11,13 @@ export const postRouter = createTRPCRouter({
     }),
 
   // Neutralizamos esta query para que no busque la tabla Post que ya no existe
-  getLatest: publicProcedure.query(({ ctx }) => {
+  getLatest: publicProcedure.query(({ ctx: _ctx }) => {
     return null;
   }),
 
   create: protectedProcedure
     .input(z.object({ name: z.string().min(1) }))
-    .mutation(async ({ ctx, input }) => {
+    .mutation(async ({ ctx: _ctx, input: _input }) => {
       return null;
     }),
 });

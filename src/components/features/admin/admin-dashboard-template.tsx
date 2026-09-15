@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { api } from "torneos/trpc/react";
-import { Button } from "torneos/components/ui/button/button";
 import { ManagerCard } from "torneos/components/ui/admin/manager-card";
 import { UserSearchResult } from "torneos/components/ui/admin/user-search-result";
 import { AdminCourtTemplate } from "torneos/components/features/court/admin-court-template"; // Asumiendo que moviste el de canchas aquí
@@ -21,7 +20,7 @@ export function AdminDashboardTemplate() {
   // Mutations
   const promoteMutation = api.admin.promoteToManager.useMutation({
     onSuccess: () => {
-      refetchManagers();
+      void refetchManagers();
       setSearchQuery("");
       setShowResults(false);
     }
@@ -56,7 +55,7 @@ export function AdminDashboardTemplate() {
               {searchResults.map((profile) => (
                 <UserSearchResult 
                   key={profile.id}
-                  name={profile.displayName || profile.user.email}
+                  name={profile.displayName ?? profile.user.email}
                   email={profile.user.email}
                   onSelect={() => promoteMutation.mutate({ profileId: profile.id })}
                 />
@@ -70,7 +69,7 @@ export function AdminDashboardTemplate() {
           {managers?.map((manager) => (
             <ManagerCard 
               key={manager.id}
-              name={manager.profile.displayName || manager.profile.user.email}
+              name={manager.profile.displayName ?? manager.profile.user.email}
               email={manager.profile.user.email}
               isActive={manager.isActive}
               onToggleStatus={() => toggleStatusMutation.mutate({ managerId: manager.id })}

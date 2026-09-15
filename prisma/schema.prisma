@@ -14,18 +14,18 @@ datasource db {
 
 // --- NextAuth.js Models (Estándar) ---
 model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
+  id                       String  @id @default(cuid())
+  userId                   String
+  type                     String
+  provider                 String
+  providerAccountId        String
+  refresh_token            String? @db.Text
+  access_token             String? @db.Text
+  expires_at               Int?
+  token_type               String?
+  scope                    String?
+  id_token                 String? @db.Text
+  session_state            String?
   refresh_token_expires_in Int?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -62,19 +62,24 @@ model User {
   accounts Account[]
   sessions Session[]
   profile  Profile?
+
+  notifications           Notification[]
+  notificationPreferences NotificationPreference[]
+  postponedMatches        Match[]                  @relation("PostponedMatches")
+  markedAbsences          MatchCallUp[]            @relation("MarkedAbsences")
+  loadedResults           MatchResult[]            @relation("LoadedResults")
 }
 
 model Profile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
+  id          String    @id @default(cuid())
+  userId      String    @unique
   displayName String?
   phone       String?
-  bio         String?  @db.Text
+  bio         String?   @db.Text
   birthDate   DateTime?
-  onboarded Boolean @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
+  onboarded   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
   roleAssignments RoleAssignment[]
@@ -138,10 +143,13 @@ model Player {
   profile        Profile              @relation(fields: [profileId], references: [id], onDelete: Cascade)
   availabilities PlayerAvailability[]
 
-  
   teamMemberships TeamMembership[]
   invitations     TeamInvitation[]
-  sentInvitations TeamInvitation[]     @relation("SentInvitations")
+  sentInvitations TeamInvitation[] @relation("SentInvitations")
+
+  matchCallUps MatchCallUp[]
+  matchStats   MatchPlayerStat[]
+  stats        PlayerStats?
 }
 
 model PlayerAvailability {
@@ -168,26 +176,35 @@ model Manager {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  profile     Profile      @relation(fields: [profileId], references: [id], onDelete: Cascade)
   tournaments Tournament[]
 }
 
 model Team {
-  id               String       @id @default(cuid())
-  name             String       @unique
-  abbreviation     String       @unique @db.VarChar(10)
-  primaryColor     String       @db.VarChar(7)
-  secondaryColor   String?      @db.VarChar(7)
-  description      String?      @db.Text
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  status           TeamStatus   @default(DRAFT)
-  deletionRequest  TeamDeletionRequest?
+  id              String               @id @default(cuid())
+  name            String               @unique
+  abbreviation    String               @unique @db.VarChar(10)
+  primaryColor    String               @db.VarChar(7)
+  secondaryColor  String?              @db.VarChar(7)
+  description     String?              @db.Text
+  createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
+  status          TeamStatus           @default(DRAFT)
+  deletionRequest TeamDeletionRequest?
 
   memberships        TeamMembership[]
   invitations        TeamInvitation[]
   captaincyTransfers CaptaincyTransfer[]
   enrollments        TournamentEnrollment[]
+
+  homeMatches         Match[]              @relation("HomeMatches")
+  awayMatches         Match[]              @relation("AwayMatches")
+  walkoverMatches     Match[]              @relation("WalkoverMatches")
+  wonMatches          MatchResult[]        @relation("WonMatches")
+  matchCallUps        MatchCallUp[]
+  matchPlayerStats    MatchPlayerStat[]
+  stats               TeamStats?
+  tournamentStandings TournamentStanding[]
 }
 
 enum TeamStatus {
@@ -217,16 +234,16 @@ model TeamMembership {
 
 model TeamInvitation {
   id          String           @id @default(cuid())
-  teamId      String?          
+  teamId      String?
   playerId    String
   invitedBy   String
   status      InvitationStatus @default(PENDING)
   createdAt   DateTime         @default(now())
   respondedAt DateTime?
 
-  team    Team?   @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  player  Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  inviter Player  @relation("SentInvitations", fields: [invitedBy], references: [id], onDelete: Cascade)
+  team    Team?  @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  player  Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  inviter Player @relation("SentInvitations", fields: [invitedBy], references: [id], onDelete: Cascade)
 
   @@unique([teamId, playerId])
   @@index([playerId, status])
@@ -305,13 +322,14 @@ model Court {
   description String?     @db.Text
   inventory   String?     @db.Text
   status      CourtStatus @default(ENABLED)
-  lat         Float       @default(0)   // ← debe estar
-  lon         Float       @default(0)   // ← debe estar
+  lat         Float       @default(0) // ← debe estar
+  lon         Float       @default(0) // ← debe estar
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
 
   availability CourtAvailability[]
   tournaments  Tournament[]
+  matches      Match[]
 }
 
 enum CourtStatus {
@@ -320,11 +338,11 @@ enum CourtStatus {
 }
 
 model CourtAvailability {
-  id        String   @id @default(cuid())
-  courtId   String
-  date      DateTime @db.Date
-  timeSlot  Int
-  status    CourtAvailabilityStatus @default(AVAILABLE)
+  id       String                  @id @default(cuid())
+  courtId  String
+  date     DateTime                @db.Date
+  timeSlot Int
+  status   CourtAvailabilityStatus @default(AVAILABLE)
 
   court Court @relation(fields: [courtId], references: [id], onDelete: Cascade)
 
@@ -336,33 +354,35 @@ enum CourtAvailabilityStatus {
   AVAILABLE
   UNAVAILABLE
 }
+
 // ==========================================
 // SISTEMA 6: TORNEOS
 // ==========================================
 
 model Tournament {
-  id                 String              @id @default(cuid())
+  id                 String           @id @default(cuid())
   name               String
-  description        String?             @db.Text
+  description        String?          @db.Text
   courtId            String
   managerId          String
-  status             TournamentStatus    @default(DRAFT)
-  format             TournamentFormat    @default(SINGLE_ELIMINATION)
+  status             TournamentStatus @default(DRAFT)
+  format             TournamentFormat @default(SINGLE_ELIMINATION)
   maxTeams           Int
-  type               TournamentType      @default(PUBLIC)
+  type               TournamentType   @default(PUBLIC)
   startDate          DateTime?
   enrollmentDeadline DateTime
   dayOfWeek          Int
   timeSlot           Int
-  createdAt          DateTime            @default(now())
-  updatedAt          DateTime            @updatedAt
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
-  court       Court                 @relation(fields: [courtId], references: [id], onDelete: Restrict)
-  manager     Manager               @relation(fields: [managerId], references: [id], onDelete: Restrict)
+  court       Court                  @relation(fields: [courtId], references: [id], onDelete: Restrict)
+  manager     Manager                @relation(fields: [managerId], references: [id], onDelete: Restrict)
   enrollments TournamentEnrollment[]
   phases      TournamentPhase[]
   slotHolds   TournamentSlotHold[]
-  // matches     Match[] // Descomentar cuando integremos Sistema 7
+  matches     Match[]
+  standings   TournamentStanding[]
 
   @@index([status, enrollmentDeadline])
   @@index([courtId, status])
@@ -390,17 +410,17 @@ enum TournamentType {
 }
 
 model TournamentEnrollment {
-  id                String            @id @default(cuid())
+  id                String           @id @default(cuid())
   tournamentId      String
   teamId            String
-  status            EnrollmentStatus  @default(PENDING_AVAILABILITY)
-  availabilityNote  String?           @db.Text
-  enrolledAt        DateTime          @default(now())
+  status            EnrollmentStatus @default(PENDING_AVAILABILITY)
+  availabilityNote  String?          @db.Text
+  enrolledAt        DateTime         @default(now())
   approvedAt        DateTime?
   approvedBy        String?
   disapprovedAt     DateTime?
   disapprovedBy     String?
-  disapprovedReason String?           @db.Text
+  disapprovedReason String?          @db.Text
 
   tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
   team       Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
@@ -426,21 +446,272 @@ model TournamentPhase {
   createdAt    DateTime @default(now())
 
   tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
-  // matches    Match[]   // Descomentar cuando integremos Sistema 7
+  matches    Match[]
 
   @@index([tournamentId, order])
 }
 
 model TournamentSlotHold {
-  id            String   @id @default(cuid())
-  tournamentId  String
-  heldBy        String   // PlayerId del capitán
-  teamId        String?
-  expiresAt     DateTime
-  createdAt     DateTime @default(now())
+  id           String   @id @default(cuid())
+  tournamentId String
+  heldBy       String // PlayerId del capitán
+  teamId       String?
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
 
   tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
 
   @@index([tournamentId, expiresAt])
   @@index([heldBy])
+}
+
+// ==========================================
+// SISTEMA 7: PARTIDOS Y APLAZAMIENTOS
+// ==========================================
+
+enum MatchStatus {
+  SCHEDULED
+  IN_PROGRESS
+  FINISHED
+  POSTPONED
+  CANCELLED
+  WALKOVER
+}
+
+model Referee {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String?
+  email     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  matches Match[]
+}
+
+model Match {
+  id              String      @id @default(cuid())
+  tournamentId    String
+  phaseId         String
+  homeTeamId      String?
+  awayTeamId      String?
+  courtId         String?
+  scheduledAt     DateTime?
+  date            DateTime?   @db.Date // Para matchear con CourtAvailability
+  timeSlot        Int?
+  status          MatchStatus @default(SCHEDULED)
+  postponedReason String?     @db.Text
+  postponedAt     DateTime?
+  postponedBy     String?
+  walkoverTeamId  String?
+  refereeId       String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  tournament      Tournament      @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  phase           TournamentPhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  homeTeam        Team?           @relation("HomeMatches", fields: [homeTeamId], references: [id], onDelete: SetNull)
+  awayTeam        Team?           @relation("AwayMatches", fields: [awayTeamId], references: [id], onDelete: SetNull)
+  walkoverTeam    Team?           @relation("WalkoverMatches", fields: [walkoverTeamId], references: [id], onDelete: SetNull)
+  court           Court?          @relation(fields: [courtId], references: [id], onDelete: SetNull)
+  referee         Referee?        @relation(fields: [refereeId], references: [id], onDelete: SetNull)
+  postponedByUser User?           @relation("PostponedMatches", fields: [postponedBy], references: [id], onDelete: SetNull)
+
+  callUps     MatchCallUp[]
+  result      MatchResult?
+  playerStats MatchPlayerStat[]
+
+  @@index([tournamentId, phaseId])
+  @@index([status])
+  @@index([courtId, date, timeSlot])
+}
+
+model MatchCallUp {
+  id       String    @id @default(cuid())
+  matchId  String
+  teamId   String
+  playerId String
+  isAbsent Boolean   @default(false)
+  markedBy String?
+  markedAt DateTime?
+  notes    String?   @db.Text
+
+  match  Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  marker User?  @relation("MarkedAbsences", fields: [markedBy], references: [id], onDelete: SetNull)
+
+  @@unique([matchId, teamId, playerId])
+  @@index([matchId, teamId])
+}
+
+model MatchResult {
+  id            String   @id @default(cuid())
+  matchId       String   @unique
+  homeScore     Int
+  awayScore     Int
+  winnerId      String?
+  isWalkover    Boolean  @default(false)
+  notes         String?  @db.Text
+  externalLinks String?  @db.Text
+  loadedAt      DateTime @default(now())
+  loadedBy      String
+
+  match        Match @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  winner       Team? @relation("WonMatches", fields: [winnerId], references: [id], onDelete: SetNull)
+  loadedByUser User  @relation("LoadedResults", fields: [loadedBy], references: [id], onDelete: Restrict)
+}
+
+model MatchPlayerStat {
+  id          String @id @default(cuid())
+  matchId     String
+  playerId    String
+  teamId      String
+  goals       Int    @default(0)
+  blueCards   Int    @default(0)
+  yellowCards Int    @default(0)
+  redCards    Int    @default(0)
+  fouls       Int    @default(0)
+  ownGoals    Int    @default(0)
+
+  match  Match  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  team   Team   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([matchId, playerId])
+  @@index([matchId, teamId])
+}
+
+// ==========================================
+// SISTEMA 10: ESTADÍSTICAS AGREGADAS
+// ==========================================
+
+model PlayerStats {
+  id                     String   @id @default(cuid())
+  playerId               String   @unique
+  matchesWithStats       Int      @default(0)
+  totalGoals             Int      @default(0)
+  avgGoalsLast10         Float    @default(0)
+  totalBlueCardsLast10   Int      @default(0)
+  totalYellowCardsLast10 Int      @default(0)
+  totalRedCardsLast10    Int      @default(0)
+  totalFoulsLast10       Int      @default(0)
+  fairPlayScore          Float    @default(0)
+  lastCalculatedAt       DateTime @default(now())
+
+  player Player @relation(fields: [playerId], references: [id], onDelete: Cascade)
+}
+
+model TeamStats {
+  id               String   @id @default(cuid())
+  teamId           String   @unique
+  matchesPlayed    Int      @default(0)
+  matchesWon       Int      @default(0)
+  matchesDrawn     Int      @default(0)
+  matchesLost      Int      @default(0)
+  goalsFor         Int      @default(0)
+  goalsAgainst     Int      @default(0)
+  goalDifference   Int      @default(0)
+  fairPlayScore    Float    @default(0)
+  lastCalculatedAt DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+}
+
+model TournamentStanding {
+  id             String   @id @default(cuid())
+  tournamentId   String
+  teamId         String
+  position       Int      @default(0)
+  matchesPlayed  Int      @default(0)
+  matchesWon     Int      @default(0)
+  matchesDrawn   Int      @default(0)
+  matchesLost    Int      @default(0)
+  goalsFor       Int      @default(0)
+  goalsAgainst   Int      @default(0)
+  goalDifference Int      @default(0)
+  points         Int      @default(0)
+  fairPlayScore  Float    @default(0)
+  updatedAt      DateTime @updatedAt
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  team       Team       @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([tournamentId, teamId])
+  @@index([tournamentId, position])
+}
+
+// ==========================================
+// SISTEMA 11: NOTIFICACIONES IN-APP
+// ==========================================
+
+enum NotificationFamily {
+  AUTH
+  TEAM
+  RECRUITMENT
+  TOURNAMENT
+  MATCH
+  COURT
+  SYSTEM
+}
+
+enum NotificationStatus {
+  UNREAD
+  READ
+}
+
+enum NotificationType {
+  // Auth
+  // Team
+  INVITATION_RECEIVED
+  INVITATION_ACCEPTED
+  MEMBERSHIP_JOINED
+  TEAM_DELETE_REQUESTED
+  // Recruitment
+  RECRUITMENT_REQUEST_SENT
+  RECRUITMENT_REQUEST_ACCEPTED
+  // Tournament
+  TOURNAMENT_PUBLISHED
+  ENROLLMENT_SUBMITTED
+  ENROLLMENT_APPROVED
+  ENROLLMENT_REJECTED
+  TOURNAMENT_CLOSED_AND_DRAWN
+  // Match
+  MATCH_SCHEDULED
+  MATCH_POSTPONED
+  MATCH_RESCHEDULED
+  MATCH_RESULT_LOADED
+  // Court
+  COURT_DISABLED
+}
+
+model Notification {
+  id          String             @id @default(cuid())
+  userId      String
+  family      NotificationFamily
+  type        NotificationType
+  title       String
+  body        String             @db.Text
+  payload     Json?
+  status      NotificationStatus @default(UNREAD)
+  actionTaken String?
+  createdAt   DateTime           @default(now())
+  readAt      DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([userId, family])
+}
+
+model NotificationPreference {
+  id        String             @id @default(cuid())
+  userId    String
+  family    NotificationFamily
+  isEnabled Boolean            @default(true)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, family])
 }

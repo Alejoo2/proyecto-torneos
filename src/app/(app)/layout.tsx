@@ -1,23 +1,19 @@
 import { auth } from "torneos/server/auth";
-import { AppShell } from "torneos/components/ui/app-shell/app-shell";
-import { BottomNav } from "torneos/components/ui/bottom-nav/bottom-nav";
+import { AppShell } from "torneos/components/app-shell/app-shell";
+import { AppHeader } from "torneos/components/app-shell/app-header";
+import { BottomNav } from "torneos/components/app-shell/bottom-nav";
+import { NotificationCenter } from "torneos/components/app-shell/notification-center";
 import { isOnboarded } from "torneos/lib/session";
 
-/**
- * Zona autenticada. El middleware garantiza sesión aquí; el único path de un
- * usuario !onboarded es /onboarding, y ese no recibe BottomNav (no navega
- * Equipo/Perfil antes de completar el alta).
- */
-export default async function AppLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
 
   return (
     <AppShell>
-      {children}
+      <NotificationCenter>
+        <AppHeader />
+        <main className="relative flex-1 overflow-hidden">{children}</main>
+      </NotificationCenter>
       {isOnboarded(session) && <BottomNav />}
     </AppShell>
   );

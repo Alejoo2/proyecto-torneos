@@ -8,6 +8,10 @@ import { courtRouter } from "torneos/server/api/routers/court"; // <-- NUEVO
 import { tournamentRouter } from "./routers/tournament";
 import { enrollmentRouter } from "./routers/enrollment";
 import { adminRouter } from "./routers/admin";
+import { matchRouter } from "./routers/match";
+import { resultRouter } from "./routers/result";
+import { statsRouter } from "./routers/stats";
+import { notificationRouter } from "./routers/notification";
 
 
 export const appRouter = createTRPCRouter({
@@ -19,7 +23,11 @@ export const appRouter = createTRPCRouter({
   court: courtRouter,
   tournament: tournamentRouter,
   enrollment: enrollmentRouter,
-  admin : adminRouter, // <-- NUEVO
+  admin : adminRouter,
+  match: matchRouter,
+  result: resultRouter,
+  stats: statsRouter,
+  notification: notificationRouter, // <-- NUEVO
 });
 
 export type AppRouter = typeof appRouter;

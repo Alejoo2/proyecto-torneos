@@ -1,8 +1,129 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-}
-/* ============ HUB / MAPA ============ */
 
+  /* ── Superficies: escalera de profundidad (doc 4.2) ── */
+  --color-cypher-5: #141414;
+  --color-cypher-5-1: #1F1F1F;
+  --color-cypher-5-1-1: #2A2A2A;
+
+  /* ── Texto (doc 4.2) ── */
+  --color-cypher-4: #E0E1DD;
+  --color-cypher-4-2: #C6C7C3;
+  --color-cypher-4-2-2: #ACADAA;
+
+  /* ── Acentos quirúrgicos (doc 4.2) ── */
+  --color-cypher-1: #7B2CBF;
+  --color-cypher-2: #CCFF00;
+  --color-cypher-3: #00F5D4;
+
+  /* Derivados — PROPUESTA pendiente de tu validación */
+  --color-cypher-1-1: #A87BD9;
+  --color-cypher-1-2: #2A1B33;
+  --color-cypher-2-1: #E2FF66;
+  --color-cypher-2-2: #2F3611;
+  --color-cypher-3-1: #59F8E3;
+  --color-cypher-3-2: #103B36;
+}
+
+/* ═══════════ HUB — Aurora oficial (doc 4.6) ═══════════
+   ÚNICA definición válida del aurora. Receta: manchas radiales de
+   los 3 acentos en baja opacidad (color-mix 35-55%) sobre cypher-5.
+   El mapa con mix-blend multiply dibuja sus calles encima. */
+/* 1. Ajusta la opacidad del fondo sólido en el aurora (por ejemplo, a 0% o 50%) */
+.hub-aurora {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 18% 12%, color-mix(in srgb, var(--color-cypher-1) 55%, transparent) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 85% 5%, color-mix(in srgb, var(--color-cypher-2) 30%, transparent) 0%, transparent 55%),
+    radial-gradient(ellipse 90% 60% at 50% 105%, color-mix(in srgb, var(--color-cypher-3) 45%, transparent) 0%, transparent 60%),
+    color-mix(in srgb, var(--color-cypher-5) 50%, transparent); /* 👈 Baja este % (o cámbialo a transparent directamente) */
+}
+
+
+/* ═══════════ HUB — Hack de tiles (doc 5.2, excepción registrada) ═══════════
+   POR QUÉ FUNCIONA: grayscale+multiply+opacity sobre el tile-pane convierte el
+   blanco base del tile OSM en transparente sobre el aurora oscuro — solo quedan
+   las calles, sin proveedor de tiles dark. DEPENDE de: (a) estructura interna
+   del DOM de Leaflet (.leaflet-tile-pane), (b) tiles OSM de base blanca.
+   RIESGO aceptado: si OSM cambia su estilo base, degrada. Revisar en cada
+   upgrade de Leaflet. Los pines NO heredan (viven fuera del tile-pane). */
+.leaflet-container {
+  background: transparent !important;
+  font-family: inherit;
+}
+.leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.8) contrast(1.05) saturate(0);
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+}
+/* Atribución discreta (legalmente requerida por OSM) */
+.leaflet-control-attribution {
+  background: rgba(20, 20, 20, 0.8) !important;
+  color: var(--color-cypher-4-2) !important;
+  font-size: 9px;
+  padding: 1px 6px;
+}
+.leaflet-control-attribution a {
+  color: var(--color-cypher-4) !important;
+}
+
+/* ═══════════ HUB — Pines (DOM de Leaflet: fuera de Tailwind) ═══════════ */
+.custom-pin-wrapper { background: transparent; border: none; }
+.custom-pin-inner {
+  transform-origin: bottom center;
+  transition: transform 0.2s ease-out;
+  cursor: pointer;
+}
+.custom-pin-wrapper:hover .custom-pin-inner { transform: scale(1.1); }
+
+/* Burbuja: solo el tail (la entrada/salida es Motion, doc 6) */
+.court-bubble__tail {
+  position: absolute;
+  bottom: -12px;
+  left: 30px;
+  width: 0;
+  height: 0;
+  border-left: 12px solid transparent;
+  border-right: 12px solid transparent;
+  border-top: 12px solid var(--color-cypher-5-1);
+}
+
+/* ═══════════ Utilidades compartidas ═══════════ */
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+/* Escalera de capas z (doc 2.3) */
+@utility z-map         { z-index: 0; }
+@utility z-filters     { z-index: 20; }
+@utility z-search      { z-index: 30; }
+@utility z-controls    { z-index: 30; }
+@utility z-sheet       { z-index: 40; }
+@utility z-modal       { z-index: 44; }
+@utility z-notif-panel { z-index: 45; }
+@utility z-header      { z-index: 46; }
+@utility z-nav         { z-index: 50; }
+@utility z-toast       { z-index: 70; }
+
+/* Safe-area (doc 2.1) */
+@utility pb-nav-safe { padding-bottom: calc(4rem + env(safe-area-inset-bottom)); }
+
+/* ═══════════ Efecto neón (doc 4.4) ═══════════
+   Halo SIEMPRE con derivado -1, jamás el acento base a plena opacidad. */
+@utility glow-lime { text-shadow: 0 0 14px color-mix(in srgb, var(--color-cypher-2-1) 55%, transparent); }
+@utility glow-turquoise { text-shadow: 0 0 14px color-mix(in srgb, var(--color-cypher-3-1) 55%, transparent); }
+/* Para ELEMENTOS (botones, filtros activos) — box-shadow con halo -1 */
+@utility glow-neon {
+  box-shadow:
+    0 0 8px color-mix(in srgb, var(--color-cypher-2-1) 70%, transparent),
+    0 0 22px color-mix(in srgb, var(--color-cypher-2-1) 40%, transparent);
+}

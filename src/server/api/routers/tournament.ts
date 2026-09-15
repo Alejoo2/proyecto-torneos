@@ -5,6 +5,7 @@ import {
   protectedProcedure,
   permissionProcedure,
 } from "torneos/server/api/trpc";
+import type { TournamentStatus } from "@prisma/client";
 import { tournamentEngine } from "torneos/server/core/tournament/tournament.engine";
 import { slotHoldEngine } from "torneos/server/core/tournament/slotHold.engine";
 
@@ -101,7 +102,7 @@ export const tournamentRouter = createTRPCRouter({
       });
 
       // Si es gestor, puede ver los DRAFT. Si no, solo los públicos (SCHEDULED etc)
-      const allowedStatuses = manager
+      const allowedStatuses: TournamentStatus[] = manager
         ? ["DRAFT", "SCHEDULED", "IN_PROGRESS", "GRACE_PERIOD"]
         : ["SCHEDULED", "IN_PROGRESS", "GRACE_PERIOD"];
 

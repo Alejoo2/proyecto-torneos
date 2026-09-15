@@ -26,10 +26,11 @@ export const availabilityRouter = createTRPCRouter({
       if (!profile?.player) {
         throw new Error("Jugador no encontrado para este usuario");
       }
+      const playerId = profile.player.id;
 
       return availabilityEngine.toggleSlot(
         ctx.db,
-        profile.player.id,
+        playerId,
         input.dayOfWeek,
         input.timeSlot
       );

@@ -170,3 +170,33 @@ export const permissionProcedure = (permissionCode: string) =>
     // 3. Si tiene el permiso, procede al mutation/query
     return next({ ctx });
   });
+
+  /**
+ * 👇 NUEVO: Manager Procedure (rol de gestor) 👇
+ * Garantiza que quien llama tiene un perfil Manager ACTIVO.
+ * Inyecta `manager` en el ctx para no repetir el findFirst en cada procedure.
+ *
+ * La validación fina de ownership (¿es el gestor DE ESTE torneo?)
+ * sigue siendo responsabilidad del engine, como ya hace
+ * enrollment.engine (tournament.managerId !== managerId).
+ */
+export const managerProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  const manager = await ctx.db.manager.findFirst({
+    where: {
+      profile: { userId: ctx.session.user.id },
+      isActive: true,
+    },
+    select: { id: true },
+  });
+
+  if (!manager) {
+    throw new TRPCError({
+      code: "FORBIDDEN",
+      message: "Se requiere perfil de gestor (Manager) activo",
+    });
+  }
+
+  return next({
+    ctx: { ...ctx, manager },
+  });
+});

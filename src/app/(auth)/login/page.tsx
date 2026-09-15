@@ -9,16 +9,17 @@ import {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: { callbackUrl?: string };
+  searchParams: Promise<{ callbackUrl?: string }>;
 }) {
   const session = await auth();
+  const params = await searchParams;
 
   if (session?.user) {
     // Paridad con el middleware: sin onboarding no hay callback ni hub
     const user = session.user as { onboarded?: boolean } | undefined;
     if (!user?.onboarded) redirect("/onboarding");
 
-    const requested = searchParams.callbackUrl;
+    const requested = params.callbackUrl;
     redirect(isSafeInternalPath(requested) ? requested : DEFAULT_AUTHENTICATED_PATH);
   }
 

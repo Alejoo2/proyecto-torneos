@@ -21,13 +21,13 @@ function buildPinHtml(court: CourtPin): string {
     <div class="custom-pin-inner">
       <div class="relative flex flex-col items-center">
         <div class="flex h-12 w-12 items-center justify-center rounded-full border-4 shadow-lg ${
-          isEnabled ? "border-white bg-zinc-800" : "border-zinc-200 bg-zinc-400"
+          isEnabled ? "border-cypher-4 bg-cypher-5-1" : "border-cypher-4-2 bg-cypher-5-1-1"
         }">
-          <svg class="h-5 w-5 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="h-5 w-5 ${isEnabled ? "text-cypher-4" : "text-cypher-4-2"}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-1 8h1m-1-4h1m-1 4h1"/>
           </svg>
         </div>
-        ${court.hasTournaments ? `<span class="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-white bg-green-500"></span>` : ""}
+        ${court.hasTournaments ? `<span class="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-cypher-5 bg-green-500"></span>` : ""}
       </div>
     </div>`;
 }
@@ -37,19 +37,17 @@ export function CourtMap({ courts, onSelectCourt, onReady }: CourtMapProps) {
   const mapRef = useRef<L.Map | null>(null);
   const layerRef = useRef<L.LayerGroup | null>(null);
 
-  // Callbacks en refs para no re-crear el mapa en cada render
   const onSelectRef = useRef(onSelectCourt);
   onSelectRef.current = onSelectCourt;
   const onReadyRef = useRef(onReady);
   onReadyRef.current = onReady;
 
-  // Init único del mapa
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
     const map = L.map(containerRef.current, {
       zoomControl: false,
-      attributionControl: false, // TODO producción: OSM exige atribución visible
+      attributionControl: true,
       minZoom: 13,
       maxZoom: 19,
       maxBounds: HUB_BOUNDS,
@@ -71,7 +69,6 @@ export function CourtMap({ courts, onSelectCourt, onReady }: CourtMapProps) {
     };
   }, []);
 
-  // Pines: se reconstruyen cuando cambian datos o filtros
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -90,7 +87,6 @@ export function CourtMap({ courts, onSelectCourt, onReady }: CourtMapProps) {
         keyboard: false,
       });
       marker.on("click", () => {
-        // Empuja la cancha hacia arriba para que la burbuja no la tape
         map.panTo([court.lat + 0.004, court.lon]);
         onSelectRef.current(court.id);
       });
@@ -101,5 +97,5 @@ export function CourtMap({ courts, onSelectCourt, onReady }: CourtMapProps) {
     layerRef.current = group;
   }, [courts]);
 
-  return <div ref={containerRef} className="absolute inset-0 z-0" />;
+  return <div ref={containerRef} className="absolute inset-0 z-map" />;
 }

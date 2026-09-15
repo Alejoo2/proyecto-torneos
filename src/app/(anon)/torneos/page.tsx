@@ -4,7 +4,7 @@ import { DAY_SHORT, slotToLabel } from "torneos/lib/hub";
 
 export default async function TournamentsPage() {
   // Read-model de vitrina: PUBLIC + statuses publicados, cupos = APPROVED.
-  const tournaments = await api.tournament.listPublic.fetch();
+  const tournaments = await api.tournament.listPublic();
 
   return (
     <div className="flex flex-col min-h-full">
@@ -21,7 +21,7 @@ export default async function TournamentsPage() {
         </div>
       ) : (
         <ul className="flex flex-col gap-3 p-4">
-          {tournaments.map((t) => (
+          {tournaments.map((t: (typeof tournaments)[number]) => (
             <li key={t.id}>
               <Link
                 href={`/torneos/${t.id}`}

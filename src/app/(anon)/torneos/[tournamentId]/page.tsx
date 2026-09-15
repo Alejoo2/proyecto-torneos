@@ -11,25 +11,34 @@ export default async function TournamentDetailPage({
   const { tournamentId } = await params;
   const session = await auth();
 
-  // Vitrina: PUBLIC + status publicado. DRAFT/PRIVATE/FINISHED/CANCELLED →
-  // 404 de Next para cualquiera, sin delatar existencia (§2).
+  // Vitrina: PUBLIC + publicado. DRAFT/PRIVATE/FINISHED/CANCELLED → 404 sin delatar (§2).
+  // Un solo await-materialización: si pasa, la caché ya quedó sembrada.
   try {
-    await api.tournament.getPublicById.fetch({ tournamentId });
+    await api.tournament.getPublicById.prefetch({ tournamentId });
   } catch {
     notFound();
   }
-  void api.tournament.getPublicById.prefetch({ tournamentId });
 
-  // Frontera RSC (§3.4): estas lecturas protected SOLO corren con sesión.
-  // El anónimo nunca ejecuta este branch.
+  // Frontera RSC: lecturas protected SOLO con sesión (§3.4).
   if (session) {
+    void api.tournament.getById.prefetch({ tournamentId });
     void api.tournament.checkHold.prefetch({ tournamentId });
     void api.team.getMyTeams.prefetch();
+    void api.enrollment.getMyStatus.prefetch({ tournamentId });
+    void api.match.listByTournament.prefetch({ tournamentId });
+    void api.stats.getTournamentStandings.prefetch({ tournamentId });
+  } else {
+    // La vitrina anónima sí ve posiciones (getTournamentStandingsPublic, B-03 vía pública)
+    void api.stats.getTournamentStandingsPublic.prefetch({ tournamentId });
   }
 
   return (
     <HydrateClient>
-      <TournamentDetailTemplate tournamentId={tournamentId} isLoggedIn={!!session?.user} />
+            <TournamentDetailTemplate
+        tournamentId={tournamentId}
+        isLoggedIn={!!session?.user}
+        sessionUserId={session?.user?.id ?? null}
+      />
     </HydrateClient>
   );
 }

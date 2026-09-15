@@ -50,6 +50,7 @@ export const captaincyEngine = {
       include: { player: true },
     });
     if (!toProfile?.player) throw new TRPCError({ code: "NOT_FOUND", message: "Perfil no encontrado" });
+    const toPlayerId = toProfile.player.id;
 
     const transferRecord = await prisma.captaincyTransfer.findUnique({
       where: { id: transferId },
@@ -57,7 +58,7 @@ export const captaincyEngine = {
     });
 
     if (!transferRecord) throw new TRPCError({ code: "NOT_FOUND", message: "Transferencia no encontrada" });
-    if (transferRecord.to.playerId !== toProfile.player.id) throw new TRPCError({ code: "FORBIDDEN", message: "Esta transferencia no es para ti" });
+    if (transferRecord.to.playerId !== toPlayerId) throw new TRPCError({ code: "FORBIDDEN", message: "Esta transferencia no es para ti" });
     if (transferRecord.status !== "PENDING") throw new TRPCError({ code: "BAD_REQUEST", message: "Ya fue procesada" });
 
     return prisma.$transaction(async (tx) => {
@@ -84,6 +85,7 @@ export const captaincyEngine = {
       include: { player: true },
     });
     if (!toProfile?.player) throw new TRPCError({ code: "NOT_FOUND", message: "Perfil no encontrado" });
+    const toPlayerId = toProfile.player.id;
 
     const transferRecord = await prisma.captaincyTransfer.findUnique({
       where: { id: transferId },
@@ -91,7 +93,7 @@ export const captaincyEngine = {
     });
 
     if (!transferRecord) throw new TRPCError({ code: "NOT_FOUND", message: "Transferencia no encontrada" });
-    if (transferRecord.to.playerId !== toProfile.player.id) throw new TRPCError({ code: "FORBIDDEN", message: "Esta transferencia no es para ti" });
+    if (transferRecord.to.playerId !== toPlayerId) throw new TRPCError({ code: "FORBIDDEN", message: "Esta transferencia no es para ti" });
     if (transferRecord.status !== "PENDING") throw new TRPCError({ code: "BAD_REQUEST", message: "Ya fue procesada" });
 
     return prisma.captaincyTransfer.update({
@@ -106,11 +108,12 @@ export const captaincyEngine = {
       include: { player: true },
     });
     if (!profile?.player) return [];
+    const playerId = profile.player.id;
 
     return prisma.captaincyTransfer.findMany({
       where: {
         status: "PENDING",
-        to: { playerId: profile.player.id }
+        to: { playerId }
       },
       include: {
         from: { include: { team: true, player: { include: { profile: true } } } }

@@ -1,48 +1,43 @@
-import { cva, type VariantProps } from "class-variance-authority";
 import Link from "next/link";
-
-const teamBadgeVariants = cva("px-2 py-0.5 rounded-full text-[10px] font-semibold", {
-  variants: {
-    status: {
-      APPROVED: "bg-green-100 text-green-700",
-      PENDING_PAYMENT: "bg-orange-100 text-orange-700",
-      PENDING_AVAILABILITY: "bg-red-100 text-red-700",
-    },
-  },
-});
+import { Badge } from "torneos/components/ui/badge";
+import { ENROLLMENT_STATUS } from "torneos/domain/status-labels";
+import { cn } from "torneos/lib/utils";
 
 interface EnrolledTeamCardProps {
   teamId: string;
   name: string;
   abbreviation: string;
   primaryColor: string;
-  status: "APPROVED" | "PENDING_PAYMENT" | "PENDING_AVAILABILITY";
+  status: string;
   availabilityNote?: string | null;
+  className?: string;
 }
 
-export function EnrolledTeamCard({ 
-  teamId, name, abbreviation, primaryColor, status, availabilityNote 
+export function EnrolledTeamCard({
+  teamId, name, abbreviation, primaryColor, status, availabilityNote, className,
 }: EnrolledTeamCardProps) {
+  const meta = ENROLLMENT_STATUS[status as keyof typeof ENROLLMENT_STATUS];
   return (
-    <Link href={`/equipos/${teamId}`} className="bg-white rounded-2xl p-4 border border-zinc-100 shadow-sm hover:shadow-md active:shadow-sm transition-all block">
-      <div className="flex items-center justify-between mb-2">
-        <div 
-          className="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-sm" 
-          style={{ backgroundColor: primaryColor }}
+    <Link
+      href={`/equipos/${teamId}`}
+      className={cn(
+        "block rounded-2xl border border-cypher-5-1-1/60 bg-cypher-5-1 p-4 transition-colors hover:border-cypher-4-2-2/40 active:bg-cypher-5-1-1",
+        className,
+      )}
+    >
+      <div className="mb-2 flex items-center justify-between gap-2">
+        {/* Excepción 3.2: color dinámico de BD como CSS var (patrón TeamChip) */}
+        <span
+          className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-(--team-color) text-sm font-bold text-cypher-5"
+          style={{ "--team-color": primaryColor } as React.CSSProperties}
         >
           {abbreviation.slice(0, 3)}
-        </div>
-        <span className={teamBadgeVariants({ status })}>
-          {status === "APPROVED" && "✓ APROBADO"}
-          {status === "PENDING_PAYMENT" && "⏳ PAGO"}
-          {status === "PENDING_AVAILABILITY" && "⚠ CONFLICTO"}
         </span>
+        <Badge variant={meta?.variant ?? "neutral"} status={meta?.label ?? status} />
       </div>
-      <div className="text-sm font-semibold text-zinc-900 truncate">{name}</div>
+      <p className="truncate text-sm font-semibold text-cypher-4">{name}</p>
       {availabilityNote && status === "PENDING_AVAILABILITY" && (
-        <div className="text-xs text-red-500 mt-1 truncate" title={availabilityNote || ""}>
-          {availabilityNote}
-        </div>
+        <p className="mt-1 truncate text-xs text-red-400">{availabilityNote}</p>
       )}
     </Link>
   );

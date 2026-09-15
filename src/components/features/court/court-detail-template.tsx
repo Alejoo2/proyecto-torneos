@@ -57,7 +57,7 @@ export function CourtDetailTemplate({ courtId, isLoggedIn }: CourtDetailTemplate
     <div className="pb-8">
       {/* Header Cancha */}
       <div className="px-6 pt-5 pb-4">
-        <h1 className="text-xl font-bold text-zinc-900 mb-1">{court?.name || "Cancha"}</h1>
+        <h1 className="text-xl font-bold text-zinc-900 mb-1">{court?.name ?? "Cancha"}</h1>
         <p className="text-sm text-zinc-500">{court?.address}</p>
       </div>
 
@@ -99,7 +99,7 @@ export function CourtDetailTemplate({ courtId, isLoggedIn }: CourtDetailTemplate
                 </div>
 
                 <div className="flex items-center gap-4 text-xs text-zinc-500 mb-3">
-                  <span>👥 {t._count.enrollments}/{t.maxTeams} equipos</span>
+                  <span>👥 {"_count" in t && t._count ? t._count.enrollments : 0}/{t.maxTeams} equipos</span>
                   <span>⏳ Cierra: {new Date(t.enrollmentDeadline).toLocaleDateString()}</span>
                 </div>
 
@@ -137,7 +137,7 @@ export function CourtDetailTemplate({ courtId, isLoggedIn }: CourtDetailTemplate
         courtId={courtId}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onCreate={(data) => createMutation.mutate(data)}
+        onCreate={(data: Parameters<typeof createMutation.mutate>[0]) => createMutation.mutate(data)}
       />
     </div>
   );

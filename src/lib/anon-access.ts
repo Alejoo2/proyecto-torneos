@@ -21,7 +21,7 @@ export function isAnonymousPath(pathname: string): boolean {
 }
 
 /** callbackUrl: solo path interno relativo. Rechaza //, /\, esquemas absolutos. */
-export function isSafeInternalPath(url: string | null | undefined): boolean {
+export function isSafeInternalPath(url: string | null | undefined): url is string {
   if (!url) return false;
   return url.startsWith("/") && !url.startsWith("//") && !url.startsWith("/\\");
 }

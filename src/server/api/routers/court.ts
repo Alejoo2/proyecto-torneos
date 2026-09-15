@@ -21,6 +21,8 @@ export const courtRouter = createTRPCRouter({
       address: z.string().min(5).max(300),
       description: z.string().max(1000).optional(),
       inventory: z.string().max(1000).optional(),
+      lat: z.number().min(-90).max(90).optional(),
+      lon: z.number().min(-180).max(180).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       return courtEngine.create(ctx.db, input);
@@ -34,6 +36,8 @@ export const courtRouter = createTRPCRouter({
       address: z.string().min(5).max(300).optional(),
       description: z.string().max(1000).optional().nullable(),
       inventory: z.string().max(1000).optional().nullable(),
+      lat: z.number().min(-90).max(90).optional(),
+      lon: z.number().min(-180).max(180).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       return courtEngine.update(ctx.db, input);
@@ -104,6 +108,31 @@ export const courtRouter = createTRPCRouter({
           },
         },
         orderBy: { date: "asc" },
+      });
+    }),
+
+      // ─── B-04: Grilla de disponibilidad pública (anónimos) ───
+  // Decisión aplicada: pública si la cancha está ENABLED.
+  // Espeja getAvailability (misma ventana de 14 días) para no divergir.
+  getAvailabilityPublic: publicProcedure
+    .input(z.object({ courtId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const court = await ctx.db.court.findUnique({
+        where: { id: input.courtId },
+        select: { status: true },
+      });
+      if (court?.status !== "ENABLED") {
+        throw new TRPCError({ code: "NOT_FOUND", message: "Cancha no disponible" });
+      }
+
+      const today = new Date();
+      today.setUTCHours(0, 0, 0, 0);
+      const inTwoWeeks = new Date(today);
+      inTwoWeeks.setUTCDate(today.getUTCDate() + 14);
+
+      return ctx.db.courtAvailability.findMany({
+        where: { courtId: input.courtId, date: { gte: today, lt: inTwoWeeks } },
+        orderBy: [{ date: "asc" }, { timeSlot: "asc" }],
       });
     }),
 

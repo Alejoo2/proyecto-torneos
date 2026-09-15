@@ -1,6 +1,7 @@
 import { cn } from "torneos/lib/utils";
 import { type ButtonHTMLAttributes } from "react";
 import { buttonVariants, type ButtonVariantProps } from "./button.variants";
+export { buttonVariants, type ButtonVariantProps };
 
 // Usamos el patrón de interfaz local para satisfacer a ESLint estricto
 interface ButtonComponentProps extends ButtonHTMLAttributes<HTMLButtonElement>, ButtonVariantProps {

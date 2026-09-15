@@ -3,11 +3,24 @@
 import { useState } from "react";
 import { Button } from "torneos/components/ui/button/button";
 
+interface CreateTournamentInput {
+  courtId: string;
+  name: string;
+  maxTeams: number;
+  dayOfWeek: number;
+  timeSlot: number;
+  enrollmentDeadline: Date;
+  format?: "SINGLE_ELIMINATION" | "LEAGUE" | "LEAGUE_PLUS_ELIMINATION";
+  type?: "PUBLIC" | "PRIVATE";
+  description?: string;
+  startDate?: Date;
+}
+
 interface CreateTournamentModalProps {
   courtId: string;
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (data: any) => void;
+  onCreate: (data: CreateTournamentInput) => void;
 }
 
 const DAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];

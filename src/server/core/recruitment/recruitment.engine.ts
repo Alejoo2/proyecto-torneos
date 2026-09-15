@@ -2,6 +2,7 @@
 
 import { AvailabilityStatus, InvitationStatus, type PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
+import { notificationEngine } from "../notification/notification.engine";
 
 // Helper interno para validar que el usuario es capitán del equipo
 async function assertActiveCaptain(prisma: PrismaClient, teamId: string, userId: string) {
@@ -111,11 +112,9 @@ export const recruitmentEngine = {
     input: { teamId: string; playerId: string },
     userId: string
   ) {
-    // 1. Validaciones de Capitán y Equipo
     await assertActiveCaptain(prisma, input.teamId, userId);
     await assertTeamNotSaturated(prisma, input.teamId);
 
-    // 2. Validar límites del jugador receptor
     const playerTeamsCount = await prisma.teamMembership.count({
       where: { playerId: input.playerId, leftAt: null },
     });
@@ -123,7 +122,6 @@ export const recruitmentEngine = {
       throw new TRPCError({ code: "FORBIDDEN", message: "El jugador ya pertenece a 15 equipos" });
     }
 
-    // 3. Validar que no exista una invitación PENDING previa
     const existingPending = await prisma.teamInvitation.findFirst({
       where: { teamId: input.teamId, playerId: input.playerId, status: "PENDING" },
     });
@@ -131,12 +129,9 @@ export const recruitmentEngine = {
       throw new TRPCError({ code: "CONFLICT", message: "Ya tiene una invitación pendiente" });
     }
 
-    // 4. Validar Cooldown de 24h post-rechazo
     const recentRejected = await prisma.teamInvitation.findFirst({
       where: {
-        teamId: input.teamId,
-        playerId: input.playerId,
-        status: "REJECTED",
+        teamId: input.teamId, playerId: input.playerId, status: "REJECTED",
         respondedAt: { gt: new Date(Date.now() - 24 * 60 * 60 * 1000) },
       },
     });
@@ -144,29 +139,44 @@ export const recruitmentEngine = {
       throw new TRPCError({ code: "CONFLICT", message: "Debe esperar 24 horas para reinvitar a este jugador" });
     }
 
-    // 5. Obtener ID del invitador (Capitán)
     const inviterProfile = await prisma.profile.findUnique({
       where: { userId },
       include: { player: true },
     });
-
     if (!inviterProfile?.player) {
       throw new TRPCError({ code: "NOT_FOUND", message: "Tu perfil de jugador no existe" });
     }
+    const inviterPlayerId = inviterProfile.player.id;
 
-    // 6. Crear invitación
-    const invitation = await prisma.teamInvitation.create({
-      data: {
-        teamId: input.teamId,
-        playerId: input.playerId,
-        invitedBy: inviterProfile.player.id,
-        status: "PENDING",
-      },
+    // NUEVO: Transacción atómica con notificación
+    return prisma.$transaction(async (tx) => {
+      const invitation = await tx.teamInvitation.create({
+        data: {
+          teamId: input.teamId,
+          playerId: input.playerId,
+          invitedBy: inviterPlayerId,
+          status: "PENDING",
+        },
+      });
+
+      const recipient = await tx.player.findUnique({
+        where: { id: input.playerId },
+        select: { profile: { select: { userId: true } } },
+      });
+
+      if (recipient?.profile.userId) {
+        await notificationEngine.create(tx, {
+          userId: recipient.profile.userId,
+          family: "RECRUITMENT",
+          type: "RECRUITMENT_REQUEST_SENT",
+          title: "Nueva respuesta de reclutamiento",
+          body: `${inviterProfile.displayName ?? "Un capitán"} te ha invitado a unirte a su equipo`,
+          payload: { teamId: input.teamId, invitationId: invitation.id },
+        });
+      }
+
+      return invitation;
     });
-
-    // TODO: Sistema 11 - Emitir notificación de nueva invitación al jugador
-
-    return invitation;
   },
 
   async revokeInvitation(
@@ -211,10 +221,11 @@ export const recruitmentEngine = {
       include: { player: true },
     });
     if (!profile?.player) return [];
+    const playerId = profile.player.id;
 
     return prisma.teamInvitation.findMany({
       where: {
-        playerId: profile.player.id,
+        playerId,
         status: "PENDING",
       },
       include: {

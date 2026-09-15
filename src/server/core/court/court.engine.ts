@@ -1,5 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
+import { notificationEngine } from "../notification/notification.engine"; // NUEVO: Importación del motor de notificaciones
 
 function normalizeDate(date: Date): Date {
   const d = new Date(date);
@@ -15,6 +16,8 @@ export const courtEngine = {
       address: string;
       description?: string;
       inventory?: string;
+      lat?: number;
+      lon?: number;
     }
   ) {
     const exists = await prisma.court.findFirst({
@@ -31,6 +34,8 @@ export const courtEngine = {
           address: input.address,
           description: input.description,
           inventory: input.inventory,
+          lat: input.lat ?? 0,
+          lon: input.lon ?? 0,
           status: "ENABLED",
         },
       });
@@ -66,6 +71,8 @@ export const courtEngine = {
       address?: string;
       description?: string | null;
       inventory?: string | null;
+      lat?: number;
+      lon?: number;
     }
   ) {
     const court = await prisma.court.findUnique({ where: { id: input.courtId } });
@@ -85,6 +92,8 @@ export const courtEngine = {
         address: input.address,
         description: input.description,
         inventory: input.inventory,
+        lat: input.lat,
+        lon: input.lon,
       },
     });
   },
@@ -141,8 +150,25 @@ export const courtEngine = {
         data: { status: "UNAVAILABLE" },
       });
 
-      // Punto de acoplamiento Sistema 6:
-      // tx.tournament.updateMany({ where: { courtId, status: { in: ["IN_PROGRESS", "SCHEDULED"] } }, data: { status: "SUSPENDED" } })
+      // NUEVO: Notificar a gestores de torneos activos en esta cancha
+      const affectedTournaments = await tx.tournament.findMany({
+        where: { 
+          courtId, 
+          status: { in: ["SCHEDULED", "GRACE_PERIOD", "IN_PROGRESS"] } 
+        },
+        include: { manager: { include: { profile: true } } }
+      });
+
+      await Promise.all(affectedTournaments.map(t => 
+        notificationEngine.create(tx, {
+          userId: t.manager.profile.userId,
+          family: "COURT",
+          type: "COURT_DISABLED",
+          title: "Cancha inhabilitada",
+          body: `La cancha ${court.name} ha sido inhabilitada. Revisa tus torneos programados.`,
+          payload: { courtId, tournamentId: t.id }
+        })
+      ));
 
       return updated;
     });

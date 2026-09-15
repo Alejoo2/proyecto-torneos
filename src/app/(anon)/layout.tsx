@@ -1,25 +1,20 @@
 import { auth } from "torneos/server/auth";
-import { AppShell } from "torneos/components/ui/app-shell/app-shell";
-import { BottomNav } from "torneos/components/ui/bottom-nav/bottom-nav";
+import { AppShell } from "torneos/components/app-shell/app-shell";
+import { AppHeader } from "torneos/components/app-shell/app-header";
+import { BottomNav } from "torneos/components/app-shell/bottom-nav";
+import { NotificationCenter } from "torneos/components/app-shell/notification-center";
 import { isOnboarded } from "torneos/lib/session";
 
-/**
- * Vitrina. Chrome por sesión: anónimo navega sin nav; el público que cae
- * aquí (hub, canchas, torneos) conserva su BottomNav — misma URL `/`,
- * distinto chrome.
- */
-export default async function AnonLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
-  const showAppNav = isOnboarded(session);
 
   return (
     <AppShell>
-      {children}
-      {showAppNav && <BottomNav />}
+      <NotificationCenter>
+        <AppHeader />
+        <main className="relative flex-1 overflow-hidden">{children}</main>
+      </NotificationCenter>
+      {isOnboarded(session) && <BottomNav />}
     </AppShell>
   );
 }
