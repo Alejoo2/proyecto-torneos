@@ -135,6 +135,10 @@ export const resultEngine = {
       ));
 
       return { success: true };
-    });
+      },
+      // D-1: la cascada (recalc por jugador + notificaciones) supera el timeout
+      // default de 5s en dev con ~30 convocados (runtime WASM). Explícito.
+      { timeout: 30000, maxWait: 10000 },
+    );
   }
 };

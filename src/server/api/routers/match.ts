@@ -92,26 +92,48 @@ export const matchRouter = createTRPCRouter({
         },
       });
 
-      // t3 estándar: en publicProcedure ctx.session es Session | null (verificador: confirmar contra trpc.ts)
+      // t3 estándar: en publicProcedure ctx.session es Session | null
       const userId = ctx.session?.user?.id ?? null;
       if (!match || !userId) return { match, viewer: null };
 
       const profile = await ctx.db.profile.findUnique({
         where: { userId },
-        select: { player: { select: { id: true } } },
+        select: { id: true, player: { select: { id: true } } },
       });
-      const playerId = profile?.player?.id ?? null;
-      if (!playerId) return { match, viewer: null };
+      if (!profile) return { match, viewer: null };
 
-      // Mismo criterio que markAbsent: capitán VIGENTE (isCaptain + leftAt null) — B-14 cerrado por esta vía
-      const memberships = await ctx.db.teamMembership.findMany({
-        where: { playerId, isCaptain: true, leftAt: null },
-        select: { teamId: true },
-      });
+      const playerId = profile.player?.id ?? null;
+
+      // Capitanía VIGENTE — mismo criterio que markAbsent (B-14 cerrado por esta vía)
+      const memberships = playerId
+        ? await ctx.db.teamMembership.findMany({
+            where: { playerId, isCaptain: true, leftAt: null },
+            select: { teamId: true },
+          })
+        : [];
+
+      // "Gestionar" solo al gestor de ESTE torneo (front sugiere por ownership;
+      // el backend autoriza por permiso en cada mutación)
+      const [managerRow, tournamentRow] = await Promise.all([
+        ctx.db.manager.findUnique({
+          where: { profileId: profile.id },
+          select: { id: true, isActive: true },
+        }),
+        ctx.db.tournament.findUnique({
+          where: { id: match.tournamentId },
+          select: { managerId: true },
+        }),
+      ]);
+      const isManager = !!managerRow?.isActive && managerRow.id === tournamentRow?.managerId;
 
       return {
         match,
-        viewer: { userId, playerId, captainOfTeamIds: memberships.map((m) => m.teamId) },
+        viewer: {
+          userId,
+          playerId,
+          captainOfTeamIds: memberships.map((m) => m.teamId),
+          isManager,
+        },
       };
     }),
 

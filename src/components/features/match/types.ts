@@ -1,7 +1,9 @@
 // Shapes puros de PANTALLA 6 (espejo del include de match.getById/getByIdPublic).
+// Nullabilidad tomada del PAYLOAD REAL de Prisma (tsc pas 1): homeTeamId/awayTeamId
+// son nullable (matches TBD del bracket), Profile.displayName es nullable.
 
 export interface PlayerRef {
-  profile: { displayName: string; user: { image: string | null } };
+  profile: { displayName: string | null; user: { image: string | null } };
 }
 
 export interface CallUpItem {

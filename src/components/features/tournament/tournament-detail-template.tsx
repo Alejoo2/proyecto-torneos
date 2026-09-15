@@ -218,8 +218,7 @@ export function TournamentDetailTemplate({
               description="Los partidos aparecen cuando el gestor realiza el sorteo."
             />
           ) : (
-            <BracketView matches={matches} />
-          ))}
+<BracketView matches={matches} matchHrefBase={`/torneos/${tournamentId}/partidos`} />          ))}
         {tab === "standings" &&
           (standings.length === 0 ? (
             <EmptyState

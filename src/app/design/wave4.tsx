@@ -5,9 +5,9 @@ import { MatchHero } from "torneos/components/features/match/match-hero";
 import { CallupList, type CallupSection } from "torneos/components/features/match/callup-list";
 import { CaptainAbsenteePanel } from "torneos/components/features/match/captain-absentee-panel";
 import { RefereeSelect } from "torneos/components/features/match/referee-select";
-import { ResultForm } from "torneos/components/features/match/result-form";
 import { ResultReadout } from "torneos/components/features/match/result-readout";
 import type { CallUpItem, PlayerStatItem } from "torneos/components/features/match/types";
+import { ResultWizard } from "torneos/components/features/match/result-wizard";
 
 // Época FIJA (convención W0): jamás Date.now() a nivel de módulo. Los fixtures
 // usan fechas literales; el engine normaliza `date` a medianoche UTC (H4).
@@ -89,7 +89,8 @@ function ManagerScene() {
         valueId={null}
         onChange={() => undefined}
       />
-      <ResultForm
+      <ResultWizard
+        matchId="fx-wizard"
         homeTeam={HOME}
         awayTeam={AWAY}
         callUps={CALLOPS}

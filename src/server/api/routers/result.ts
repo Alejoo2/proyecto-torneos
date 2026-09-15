@@ -15,21 +15,31 @@ const playerStatSchema = z.object({
 
 export const resultRouter = createTRPCRouter({
   load: managerProcedure
-    .input(z.object({
+        .input(z.object({
       matchId: z.string(),
       homeScore: z.number().min(0),
       awayScore: z.number().min(0),
+      // D3 (aditivo): observaciones del gestor → MatchResult.notes (@db.Text)
+      notes: z.string().max(500).optional(),
       playerStats: z.array(playerStatSchema),
     }))
-    .mutation(({ ctx, input }) => {
-      return resultEngine.loadResult(
-        ctx.db, 
-        input.matchId, 
-        input.homeScore, 
-        input.awayScore, 
-        input.playerStats, 
+    .mutation(async ({ ctx, input }) => {
+      const result = await resultEngine.loadResult(
+        ctx.db,
+        input.matchId,
+        input.homeScore,
+        input.awayScore,
+        input.playerStats,
         ctx.session.user.id
       );
+      // Escritura aditiva posterior al engine: firma y lógica del engine intactas
+      if (input.notes?.trim()) {
+        await ctx.db.matchResult.update({
+          where: { matchId: input.matchId },
+          data: { notes: input.notes.trim() },
+        });
+      }
+      return result;
     }),
 
   getByMatch: protectedProcedure

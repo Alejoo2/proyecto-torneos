@@ -546,6 +546,8 @@ async function seedFinishedTournament() {
   await seedFinishedTournament();
   await seedPendingResultsTournament();
   await seedAggregatedStats();
+  await seedPendingResultsTournament();
+  await seedMatchScreenScenarios();
 
   const [users, matches, results, standings] = await Promise.all([
     prisma.user.count(), prisma.match.count(), prisma.matchResult.count(), prisma.tournamentStanding.count(),
@@ -650,8 +652,57 @@ async function seedInscriptionsTournament() {
   }
 
   console.log("✅ Copa Test Inscripciones: SCHEDULED · Alfa APPROVED · Bravo PENDING_AVAILABILITY · bracket 3 partidos (2 TBD)");
-}
 
+  
+}
+async function seedMatchScreenScenarios() {
+  const tournamentId = db.tournamentIds.pending!; // Copa Test En Curso
+  const phase = await prisma.tournamentPhase.findFirst({ where: { tournamentId, order: 1 } });
+  const tournament = await prisma.tournament.findUnique({
+    where: { id: tournamentId },
+    select: { courtId: true },
+  });
+  if (!phase || !tournament) return;
+
+  // Idempotencia: el bloque crea exactamente un POSTPONED; si ya existe, ya corrió
+  const already = await prisma.match.findFirst({ where: { tournamentId, status: "POSTPONED" } });
+  if (already) return;
+
+  const refereeId = (await prisma.referee.findFirst({ where: { name: "Árbitro Test" } }))?.id;
+  const alfa = db.teamIdByName.get("Alfa FC")!;
+  const bravo = db.teamIdByName.get("Bravo FC")!;
+
+  // Escenario 1: futuro cercano con convocatoria viva (Capitán B-06a + hero "próximo")
+  const upcoming = futureMatchDate(3);
+  const upcomingMatch = await prisma.match.create({
+    data: {
+      tournamentId, phaseId: phase.id,
+      homeTeamId: alfa, awayTeamId: bravo,
+      courtId: tournament.courtId, refereeId,
+      scheduledAt: upcoming, date: dateOnly(upcoming), timeSlot: 9,
+      status: "SCHEDULED",
+    },
+  });
+  await createCallUps(upcomingMatch.id, "Alfa FC", upcoming, ["test30@test"]);
+  await createCallUps(upcomingMatch.id, "Bravo FC", upcoming, []);
+
+  // Escenario 2: aplazado — fecha original pasada, sin resultado; POSTPONED no es
+  // terminal para el engine → el front mantiene árbitro/ausentes/carga vivos
+  const original = pastMatchDate(2);
+  const postponedMatch = await prisma.match.create({
+    data: {
+      tournamentId, phaseId: phase.id,
+      homeTeamId: bravo, awayTeamId: alfa,
+      courtId: tournament.courtId, refereeId,
+      scheduledAt: original, date: dateOnly(original), timeSlot: 9,
+      status: "POSTPONED",
+    },
+  });
+  await createCallUps(postponedMatch.id, "Alfa FC", original, []);
+  await createCallUps(postponedMatch.id, "Bravo FC", original, ["test15@test"]);
+
+  console.log("✅ Escenarios Partido (W4): 1 SCHEDULED futuro + 1 POSTPONED (Copa Test En Curso)");
+}
 main()
   .catch((e) => { console.error("❌ Error en seed:", e); process.exit(1); })
   .finally(async () => { await prisma.$disconnect(); });

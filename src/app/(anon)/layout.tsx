@@ -12,7 +12,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <AppShell>
       <NotificationCenter>
         <AppHeader />
-        <main className="relative flex-1 overflow-hidden">{children}</main>
+        <main className="relative flex-1 overflow-y-auto overflow-scroll">{children}</main>
       </NotificationCenter>
       {isOnboarded(session) && <BottomNav />}
     </AppShell>

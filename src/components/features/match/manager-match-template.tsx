@@ -10,15 +10,16 @@ import { EmptyState } from "torneos/components/ui/empty-state";
 import { LoadingSkeleton } from "torneos/components/ui/loading-skeleton";
 import { Toast } from "torneos/components/ui/toast";
 import { MatchHero } from "./match-hero";
-import { CallupList, type CallupSection } from "./callup-list";
 import { RefereeSelect } from "./referee-select";
-import { ResultForm, type ResultPayload } from "./result-form";
+import { ResultWizard, resultDraftKey, type ResultPayload } from "./result-wizard";
 import { ResultReadout } from "./result-readout";
 import { TERMINAL_MATCH_STATUS } from "./types";
 
 export function ManagerMatchTemplate({ matchId }: { matchId: string }) {
   const utils = api.useUtils();
   const [toast, setToast] = useState<{ title: string } | null>(null);
+  // Paso del wizard: el selector de árbitro solo vive en el paso score
+  const [wizardStep, setWizardStep] = useState<"score" | "stats">("score");
 
   useEffect(() => {
     if (!toast) return;
@@ -28,8 +29,8 @@ export function ManagerMatchTemplate({ matchId }: { matchId: string }) {
   const notify = useCallback((title: string) => setToast({ title }), []);
 
   const matchQuery = api.match.getById.useQuery({ id: matchId }, { retry: false });
-  // managerProcedure: doble función — datos del selector Y sonda RBAC honesta.
-  // FORBIDDEN aquí = el usuario no es gestor → "Sin acceso" (patrón W3).
+  // managerProcedure: datos del selector Y sonda RBAC honesta — el FORBIDDEN de un
+  // no-gestor solo llega por acá (getById es protected: pasa cualquier autenticado).
   const refereesQuery = api.match.listReferees.useQuery(undefined, { retry: false });
 
   const match = matchQuery.data ?? null;
@@ -39,16 +40,10 @@ export function ManagerMatchTemplate({ matchId }: { matchId: string }) {
     onMutate: async ({ refereeId }) => {
       await utils.match.getById.cancel({ id: matchId });
       const prev = utils.match.getById.getData({ id: matchId });
-      const refereeName = refereesQuery.data?.find((r) => r.id === refereeId)?.name ?? "Árbitro";
+      // Optimistic honesto: no fabricamos la fila Referee; referee=null + refereeId
+      // → el hero resuelve el nombre desde listReferees durante la ventana.
       utils.match.getById.setData({ id: matchId }, (old) =>
-        old
-          ? {
-              ...old,
-              referee: refereeId
-                ? { id: refereeId, name: refereeName, phone: old.referee?.phone ?? null, email: old.referee?.email ?? null, isActive: true }
-                : null,
-            }
-          : old,
+        old ? { ...old, referee: null, refereeId } : old,
       );
       return { prev };
     },
@@ -60,19 +55,18 @@ export function ManagerMatchTemplate({ matchId }: { matchId: string }) {
     onSettled: () => void utils.match.getById.invalidate({ id: matchId }),
   });
 
-  // Carga de resultado: commit-style como el sorteo de W3 (no optimistic — el engine
-  // recalcula standings/stats/bracket en cascada). Reconciliación GRUESA al asentarse.
+  // Carga de resultado: commit-style (el engine recalcula standings/stats/bracket en
+  // cascada). Reconciliación GRUESA al asentarse (protocolo 4.4).
   const loadResultMutation = api.result.load.useMutation({
     onSuccess: () => {
+      window.localStorage.removeItem(resultDraftKey(matchId)); // limpia el borrador
       notify("Resultado cargado — tabla y estadísticas actualizadas");
       void utils.match.getById.invalidate({ id: matchId });
       void utils.match.getByIdPublic.invalidate({ id: matchId });
       if (match) {
         void utils.match.listByTournament.invalidate({ tournamentId: match.tournamentId });
         void utils.tournament.getById.invalidate({ tournamentId: match.tournamentId });
-        // Verificador: si tsc rechaza este procedure, pásame el nombre real de la
-        // query de standings (W2) y ajusto la key.
-        void utils.tournament.getStandings.invalidate({ tournamentId: match.tournamentId });
+        void utils.stats.getTournamentStandings.invalidate({ tournamentId: match.tournamentId });
       }
     },
     onError: (e) => notify(e.message),
@@ -82,7 +76,9 @@ export function ManagerMatchTemplate({ matchId }: { matchId: string }) {
     return <LoadingSkeleton variant="card" rows={4} className="pt-14" />;
   }
 
-  if (matchQuery.error?.data?.code === "FORBIDDEN") {
+  // getById (protected) no rechaza a un jugador-logueado: el FORBIDDEN real de un
+  // no-gestor llega por listReferees. Ambos errores cuentan para el gate.
+  if (matchQuery.error?.data?.code === "FORBIDDEN" || refereesQuery.error?.data?.code === "FORBIDDEN") {
     return (
       <div className="pb-nav-safe pt-14">
         <div className="px-5 pt-10">
@@ -125,10 +121,20 @@ export function ManagerMatchTemplate({ matchId }: { matchId: string }) {
     );
   }
 
-  const sections: CallupSection[] = [
-    { teamId: match.homeTeamId, teamName: match.homeTeam.name, players: match.callUps.filter((c) => c.teamId === match.homeTeamId) },
-    { teamId: match.awayTeamId, teamName: match.awayTeam.name, players: match.callUps.filter((c) => c.teamId === match.awayTeamId) },
-  ].filter((s) => s.players.length > 0);
+  // Sin equipos aún no hay árbitro, convocatoria ni resultado que gestionar
+  if (!match.homeTeam || !match.awayTeam) {
+    return (
+      <div className="pb-nav-safe pt-14">
+        <div className="px-5 pt-10">
+          <EmptyState
+            icon={<SearchX className="size-8" />}
+            title="Partido por definir"
+            description="Los equipos se confirman cuando se jueguen las fases anteriores."
+          />
+        </div>
+      </div>
+    );
+  }
 
   const showForm = editable && !match.result;
 
@@ -160,15 +166,7 @@ export function ManagerMatchTemplate({ matchId }: { matchId: string }) {
           timeSlot={match.timeSlot}
           phaseName={match.phase?.name ?? null}
           courtName={match.court?.name ?? null}
-          refereeName={match.referee?.name ?? null}
-        />
-
-        <RefereeSelect
-          referees={refereesQuery.data ?? []}
-          valueId={match.refereeId}
-          disabled={!editable || assignRefereeMutation.isPending}
-          isPending={assignRefereeMutation.isPending}
-          onChange={(refereeId) => assignRefereeMutation.mutate({ matchId: match.id, refereeId })}
+          refereeName={match.referee?.name ?? (match.refereeId ? refereesQuery.data?.find((r) => r.id === match.refereeId)?.name ?? null : null)}
         />
 
         {match.result ? (
@@ -176,28 +174,42 @@ export function ManagerMatchTemplate({ matchId }: { matchId: string }) {
             homeScore={match.result.homeScore}
             awayScore={match.result.awayScore}
             notes={match.result.notes}
-            sections={match.playerStats.map((s) => ({
-              teamId: s.teamId,
-              teamName: s.team.name,
-              stats: match.playerStats.filter((x) => x.teamId === s.teamId),
-            })).filter((section, i, arr) => arr.findIndex((x) => x.teamId === section.teamId) === i)}
+            sections={match.playerStats
+              .map((s) => ({
+                teamId: s.teamId,
+                teamName: s.team.name,
+                stats: match.playerStats.filter((x) => x.teamId === s.teamId),
+              }))
+              .filter((section, i, arr) => arr.findIndex((x) => x.teamId === section.teamId) === i)}
           />
         ) : showForm ? (
-          <ResultForm
-            key={match.id}
-            homeTeam={match.homeTeam}
-            awayTeam={match.awayTeam}
-            callUps={match.callUps}
-            isPending={loadResultMutation.isPending}
-            onSubmit={(payload: ResultPayload) => loadResultMutation.mutate({ matchId: match.id, ...payload })}
-          />
+          <>
+            {/* Árbitro solo en el paso score (QA: no se repite en la zona de stats) */}
+            {wizardStep === "score" && (
+              <RefereeSelect
+                referees={refereesQuery.data ?? []}
+                valueId={match.refereeId}
+                disabled={!editable || assignRefereeMutation.isPending}
+                isPending={assignRefereeMutation.isPending}
+                onChange={(refereeId) => assignRefereeMutation.mutate({ matchId: match.id, refereeId })}
+              />
+            )}
+            <ResultWizard
+              key={match.id}
+              matchId={match.id}
+              homeTeam={match.homeTeam}
+              awayTeam={match.awayTeam}
+              callUps={match.callUps}
+              isPending={loadResultMutation.isPending}
+              onStepChange={setWizardStep}
+              onSubmit={(payload: ResultPayload) => loadResultMutation.mutate({ matchId: match.id, ...payload })}
+            />
+          </>
         ) : (
           <div className="rounded-2xl bg-cypher-5-1 p-4 text-center">
             <Badge variant="warning" status="Partido sin resultado cargable" />
           </div>
         )}
-
-        {sections.length > 0 && <CallupList sections={sections} />}
       </div>
 
       <Toast toast={toast} />

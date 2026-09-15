@@ -33,8 +33,16 @@ export function BracketView({ matches, matchHrefBase, className }: BracketViewPr
             </h3>
             <div className="space-y-2">
               {phaseMatches.map((m) => (
-                <MatchRow key={m.id} match={m} href={matchHrefBase ? `${matchHrefBase}/${m.id}` : undefined} />
-              ))}
+                <MatchRow
+                  key={m.id}
+                  match={m}
+                  href={
+                    matchHrefBase && m.homeTeam && m.awayTeam
+                      ? `${matchHrefBase}/${m.id}`
+                      : undefined
+                  }
+                />
+                ))}
             </div>
           </section>
         );

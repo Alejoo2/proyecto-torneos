@@ -1,862 +1,588 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cargar Resultado — Wireframe</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-<base target="_blank">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Wireframe · Gestión de Partido (Refactor)</title>
+<!--
+  WIREFRAME · REFACTOR GESTIÓN DE PARTIDO (2 pantallas)
+  ─────────────────────────────────────────────────────────────
+  PANTALLA 1 · RESULTADO
+   - Carga del score por equipo (steppers).
+   - Botón "Confirmar resultado" con DOBLE CONFIRMACIÓN (modal paso 1 → paso 2).
+   - Tras confirmar se habilita la carga de estadísticas.
+
+  PANTALLA 2 · ESTADÍSTICAS
+   - Acordeón = grid de avatares + nombre (trimado con ellipsis).
+   - Click en un jugador → despliega debajo de su fila los campos de stats.
+   - COMENTARIO: mantener en LOCAL la sumatoria de goles para comprobar en
+     tiempo real la cantidad de goles vs el score confirmado.
+   - COMENTARIO: al cerrar el acordeón o navegar a otro lado → persistir en
+     localStorage los valores de ese jugador (borrador automático).
+   - Se permiten stats en 0 absoluto (sin validación bloqueante).
+   - Botón "Guardar" → envía el formulario con la plantilla COMPLETA del partido.
+-->
+<style>
+  /* ============ BASE ============ */
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#050505;color:#ececec;font-family:"Segoe UI",system-ui,sans-serif;
+       display:flex;flex-direction:column;align-items:center;padding:20px 10px 70px;font-size:14px}
+  button{font-family:inherit;color:inherit;background:none;border:none;cursor:pointer}
+  input,select{font-family:inherit}
+  .hidden{display:none!important}
+  input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  input[type=number]{-moz-appearance:textfield;appearance:textfield}
+
+  /* ============ TOOLBAR WIREFRAME (fuera del phone, solo para iterar) ============ */
+  .wf-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;justify-content:center}
+  .wf-tab{border:1px solid #333;background:#141414;color:#bbb;padding:7px 12px;border-radius:999px;font-size:12px}
+  .wf-tab.active{background:#ececec;color:#111;border-color:#ececec;font-weight:600}
+  .wf-tab.danger{color:#ff7b7b}
+
+  /* ============ FRAME PHONE ============ */
+  .phone{width:100%;max-width:400px;background:#141414;border:1px solid #262626;border-radius:26px;
+         padding:14px 14px 20px;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  .screen{display:none}
+  .screen.active{display:block}
+  .topbar{display:flex;justify-content:space-between;margin-bottom:12px}
+  .icon{width:34px;height:34px;border-radius:50%;background:#1e1e1e;border:1px solid #2c2c2c;
+        font-size:15px;display:flex;align-items:center;justify-content:center}
+
+  .eyebrow-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .eyebrow{font-size:10px;letter-spacing:.14em;color:#8f8f8f;font-weight:600}
+  .link{font-size:11px;color:#bdbdbd;text-decoration:underline}
+  .title{font-size:20px;font-weight:700;margin-bottom:12px}
+
+  .card{background:#1d1d1d;border:1px solid #2a2a2a;border-radius:14px;padding:12px;margin-bottom:12px}
+  .sec-label{font-size:10px;letter-spacing:.12em;color:#8f8f8f;font-weight:700;margin-bottom:10px}
+  .muted{color:#8f8f8f}
+  .row-between{display:flex;justify-content:space-between;align-items:center;gap:8px}
+
+  .chip{font-size:10px;padding:3px 8px;border-radius:999px;background:#2b2b2b;color:#bdbdbd;white-space:nowrap}
+  .chip.green{background:#123524;color:#4ade80}
+  .badge{width:20px;height:20px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+         font-size:7px;font-weight:700;color:#fff;flex-shrink:0}
+  .badge.alf{background:#1d8f81}
+  .badge.brv{background:#4f5bc0}
+  .team{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;min-width:0}
+  .team.small{font-size:11px}
+
+  /* partido */
+  .teams-row{display:flex;align-items:center;justify-content:space-between;margin:12px 0}
+  .vs{font-size:11px;color:#8f8f8f;font-weight:700}
+  .match-foot{font-size:10px;text-align:center;border-top:1px solid #2a2a2a;padding-top:8px}
+
+  .select{width:100%;background:#111;border:1px solid #333;color:#eee;border-radius:10px;padding:10px;font-size:13px}
+
+  /* score */
+  .score-row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:10px}
+  .score-box{display:flex;align-items:center;gap:4px}
+  .score-box button{width:28px;height:28px;border-radius:8px;background:#2a2a2a;border:1px solid #3a3a3a;font-size:15px}
+  .score-box input{width:46px;height:34px;text-align:center;background:#101010;border:1px solid #333;border-radius:8px;
+                   color:#fff;font-size:17px;font-weight:700}
+  .dash{color:#8f8f8f;font-weight:700}
+
+  /* ============ STATS ============ */
+  .mini-score{display:flex;align-items:center;justify-content:center;gap:14px}
+  .mini-num{font-size:22px;font-weight:800;letter-spacing:.05em}
+  .gline{font-size:11px;padding:5px 8px;border-radius:8px;margin-bottom:5px;background:#181818}
+  .gline.ok{color:#4ade80}
+  .gline.warn{color:#ffb300}
+
+  .pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .pcell{display:flex;flex-direction:column;align-items:center;gap:5px;padding:8px 4px;
+         background:#191919;border:1px solid #2a2a2a;border-radius:12px}
+  .pcell.open{border-color:#3ddc84;background:#1c2420}
+  .avatar{width:42px;height:42px;border-radius:50%;background:#2e2e2e;border:1px solid #3c3c3c;
+          display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#ccc}
+  .avatar.mini{width:24px;height:24px;font-size:8px}
+  /* nombres trimados */
+  .pname{font-size:9px;color:#bbb;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* panel desplegable del acordeón: ocupa el ancho completo, se ubica
+     automáticamente en la fila inmediatamente debajo del jugador seleccionado */
+  .spanel{grid-column:1/-1;display:none;background:#222;border:1px solid #3a3a3a;border-radius:12px;padding:10px;margin-bottom:2px}
+  .spanel.open{display:block}
+  .spanel-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+  .spanel-head b{flex:1;font-size:13px}
+  .spanel-head .x{color:#888;font-size:13px;padding:4px 6px}
+  .stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .stat{background:#1a1a1a;border:1px solid #2c2c2c;border-radius:10px;padding:7px 6px}
+  .stat-l{display:block;font-size:9px;letter-spacing:.1em;color:#8f8f8f;text-align:center;font-weight:700}
+  .stepper{display:flex;align-items:center;justify-content:center;gap:4px;margin-top:5px}
+  .stepper button{width:22px;height:22px;border-radius:6px;background:#2c2c2c;border:1px solid #3a3a3a;font-size:13px;line-height:1}
+  .stepper input{width:32px;text-align:center;background:#101010;border:1px solid #333;border-radius:6px;
+                 color:#eee;font-size:12px;padding:3px 0}
+  .hint{font-size:9px;color:#7c7c4e;font-style:italic;margin-top:8px}
+
+  /* ============ SAVE BAR (sticky) ============ */
+  .savebar{position:sticky;bottom:10px;background:#1d1d1d;border:1px solid #2f2f2f;border-radius:14px;
+           padding:10px;display:flex;flex-direction:column;gap:8px;box-shadow:0 10px 30px rgba(0,0,0,.55)}
+  .savebar-row{display:flex;align-items:center;gap:10px}
+  #savebarWarn{font-size:10px;color:#ffb300}
+
+  /* ============ BOTONES ============ */
+  .btn{padding:11px 14px;border-radius:10px;font-size:13px;font-weight:600}
+  .btn.primary{background:#3ddc84;color:#08130c}
+  .btn.ghost{border:1px solid #3a3a3a;color:#ccc}
+  .btn.danger{background:#e5484d;color:#fff}
+  .btn.block{width:100%;margin-top:10px}
+
+  /* ============ NOTAS DEL WIREFRAME (📌 se pueden ocultar) ============ */
+  .note{background:#3d3413;border:1px dashed #8a7a2a;color:#e8d98a;font-size:11px;
+        padding:8px 10px;border-radius:8px;margin-top:10px;line-height:1.45}
+  .note::before{content:"📌 "}
+  body.no-notes .note{display:none}
+
+  /* ============ MODAL / TOAST ============ */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;z-index:50;padding:16px}
+  .modal{background:#1d1d1d;border:1px solid #333;border-radius:16px;padding:18px;width:min(340px,94vw)}
+  .modal h3{font-size:16px;margin-bottom:8px}
+  .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+  .confirm-score{text-align:center;padding:10px;background:#141414;border-radius:10px;margin:10px 0;font-size:13px}
+  .payload{background:#101010;border:1px solid #2c2c2c;border-radius:10px;padding:10px;font-size:10px;line-height:1.4;
+           max-height:180px;overflow:auto;white-space:pre;margin-top:10px;text-align:left}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#262626;border:1px solid #3a3a3a;
+         padding:8px 14px;border-radius:999px;font-size:12px;z-index:60}
+</style>
 </head>
-<body class="bg-gray-950 min-h-[100dvh] flex items-center justify-center">
+<body>
 
-    <!-- APP SHELL -->
-    <div class="w-full max-w-lg min-h-[100dvh] bg-white md:min-h-[90vh] md:my-[5vh] md:rounded-[2rem] md:border-[10px] md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col relative">
+<!-- Toolbar solo para iterar el wireframe (no forma parte del producto) -->
+<div class="wf-bar">
+  <button id="tab1" class="wf-tab active" onclick="goScreen('score')">1 · Resultado</button>
+  <button id="tab2" class="wf-tab" onclick="goScreen('stats')">2 · Estadísticas</button>
+  <button id="tabNotes" class="wf-tab" onclick="toggleNotes()">Notas: ON</button>
+  <button class="wf-tab danger" onclick="resetLocal()">Reset local</button>
+</div>
 
-        <!-- SKELETON LOADING -->
-        <div id="app-loading" class="absolute inset-0 z-[60] bg-white flex flex-col transition-opacity duration-500">
-            <div class="px-4 py-3 flex items-center justify-between border-b border-gray-100">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-gray-200 rounded-full animate-pulse"></div>
-                    <div class="h-4 bg-gray-200 rounded w-48 animate-pulse"></div>
-                </div>
-                <div class="w-16 h-6 bg-gray-200 rounded-full animate-pulse"></div>
-            </div>
-            <div class="px-6 pt-4 pb-2">
-                <div class="bg-gray-100 rounded-2xl p-1.5 flex h-12">
-                    <div class="flex-1 bg-gray-200 rounded-xl animate-pulse mx-0.5"></div>
-                    <div class="flex-1 bg-gray-200 rounded-xl animate-pulse mx-0.5"></div>
-                    <div class="flex-1 bg-gray-200 rounded-xl animate-pulse mx-0.5"></div>
-                </div>
-            </div>
-            <div class="px-6 pt-4">
-                <div class="h-4 bg-gray-200 rounded w-32 animate-pulse mb-3"></div>
-                <div class="bg-gray-100 rounded-2xl p-4 h-20 animate-pulse"></div>
-            </div>
-            <div class="px-6 pt-4">
-                <div class="bg-gray-200 rounded-2xl p-5 h-24 animate-pulse"></div>
-            </div>
-            <div class="px-6 pt-4 grid grid-cols-2 gap-4">
-                <div class="bg-gray-100 rounded-2xl p-4 h-64 animate-pulse"></div>
-                <div class="bg-gray-100 rounded-2xl p-4 h-64 animate-pulse"></div>
-            </div>
-        </div>
+<div class="phone">
 
-        <!-- HEADER -->
-        <header class="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
-            <div class="flex items-center justify-between px-4 py-3">
-                <div class="flex items-center gap-3">
-                    <a href="/gestor/torneos/[tournamentId]" class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-[44px] min-h-[44px]" aria-label="Volver al panel del torneo">
-                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                        </svg>
-                    </a>
-                    <div>
-                        <h1 class="text-base font-semibold text-gray-900">Cargar Resultado</h1>
-                    </div>
-                </div>
-                <div class="bg-gray-800 text-white px-3 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5">
-                    <span class="w-2 h-2 bg-green-400 rounded-full"></span>
-                    <span>Gestor</span>
-                </div>
-            </div>
-        </header>
+  <!-- ================================================================
+       PANTALLA 1 · SCORE DEL PARTIDO + CONFIRMACIÓN (doble)
+  ================================================================= -->
+  <section id="screen-score" class="screen active">
+    <header class="topbar">
+      <button class="icon">←</button>
+      <button class="icon">🔔</button>
+    </header>
 
-        <!-- CONTENIDO PRINCIPAL -->
-        <main id="main-content" class="flex-1 overflow-y-auto overflow-x-hidden pb-24 opacity-0 transition-opacity duration-500">
+    <div class="eyebrow-row">
+      <span class="eyebrow">GESTIÓN · PARTIDO</span>
+      <a class="link">Inscripciones</a>
+    </div>
+    <h1 class="title">ALF vs BRV</h1>
 
-            <!-- BREADCRUMB -->
-            <nav class="px-6 pt-4 pb-2" aria-label="Breadcrumb">
-                <ol class="flex flex-wrap items-center gap-1 text-xs text-gray-500">
-                    <li><a href="/gestor/torneos" class="hover:text-gray-700 transition-colors">Torneo</a></li>
-                    <li><span class="text-gray-300">/</span></li>
-                    <li><a href="/gestor/torneos/[tournamentId]/fases" class="hover:text-gray-700 transition-colors">Fase</a></li>
-                    <li><span class="text-gray-300">/</span></li>
-                    <li><a href="/gestor/torneos/[tournamentId]/partidos" class="hover:text-gray-700 transition-colors">Partido</a></li>
-                    <li><span class="text-gray-300">/</span></li>
-                    <li class="text-gray-800 font-medium">Cargar Resultado</li>
-                </ol>
-            </nav>
-
-            <!-- HEADER DEL PARTIDO (contexto) -->
-            <section class="px-6 pt-2 pb-4">
-                <div class="bg-gray-50 rounded-2xl p-4 space-y-2">
-                    <div class="flex items-center gap-2 text-sm text-gray-700">
-                        <span>🏆</span>
-                        <span class="font-medium" id="ctx-tournament-name">[Nombre Torneo]</span>
-                        <span class="text-gray-300">|</span>
-                        <span>🏟️</span>
-                        <span id="ctx-phase-name">[Fase: Octavos de Final]</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-sm text-gray-700">
-                        <span>📅</span>
-                        <span id="ctx-match-date">[Fecha + Franja]</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-sm text-gray-700">
-                        <span>📍</span>
-                        <span id="ctx-court-name">[Cancha]</span>
-                        <span class="text-gray-300">|</span>
-                        <span>🏁</span>
-                        <span id="ctx-referee-name">Árbitro: [Nombre o "Sin asignar"]</span>
-                    </div>
-                    <div class="flex items-center gap-2 pt-1">
-                        <span class="text-xs text-gray-500">Estado:</span>
-                        <span id="ctx-match-status" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">SCHEDULED</span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- MARCADOR + ESTADO DEL PARTIDO -->
-            <section class="px-6 pt-2 pb-4">
-                <div class="bg-gray-800 rounded-2xl p-5">
-                    <!-- Marcador -->
-                    <div class="flex items-center justify-center gap-4 mb-4">
-                        <!-- Team A -->
-                        <div class="flex flex-col items-center">
-                            <div class="w-12 h-12 bg-gray-600 rounded-xl mb-2 flex items-center justify-center">
-                                <span class="text-xl">⚽</span>
-                            </div>
-                            <span class="text-xs text-gray-300 font-medium text-center" id="team-a-name">Equipo A</span>
-                        </div>
-                        <!-- Inputs de marcador -->
-                        <div class="flex items-center gap-2">
-                            <button class="w-10 h-10 bg-gray-700 hover:bg-gray-600 active:bg-gray-500 rounded-xl flex items-center justify-center transition-colors min-h-[44px]" onclick="ajustarMarcador('a', -1)" aria-label="Disminuir gol equipo A" id="btn-marcador-a-minus">
-                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
-                                </svg>
-                            </button>
-                            <div class="w-14 h-14 bg-gray-700 rounded-xl flex items-center justify-center border-2 border-gray-600">
-                                <span class="text-2xl font-bold text-white" id="marcador-a">0</span>
-                            </div>
-                            <span class="text-xl font-bold text-gray-400">-</span>
-                            <div class="w-14 h-14 bg-gray-700 rounded-xl flex items-center justify-center border-2 border-gray-600">
-                                <span class="text-2xl font-bold text-white" id="marcador-b">0</span>
-                            </div>
-                            <button class="w-10 h-10 bg-gray-700 hover:bg-gray-600 active:bg-gray-500 rounded-xl flex items-center justify-center transition-colors min-h-[44px]" onclick="ajustarMarcador('b', -1)" aria-label="Disminuir gol equipo B" id="btn-marcador-b-minus">
-                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/>
-                                </svg>
-                            </button>
-                        </div>
-                        <!-- Team B -->
-                        <div class="flex flex-col items-center">
-                            <div class="w-12 h-12 bg-gray-600 rounded-xl mb-2 flex items-center justify-center">
-                                <span class="text-xl">⚽</span>
-                            </div>
-                            <span class="text-xs text-gray-300 font-medium text-center" id="team-b-name">Equipo B</span>
-                        </div>
-                    </div>
-                    <!-- Botones + -->
-                    <div class="flex items-center justify-center gap-8 mb-4">
-                        <button class="w-10 h-10 bg-gray-700 hover:bg-gray-600 active:bg-gray-500 rounded-xl flex items-center justify-center transition-colors min-h-[44px]" onclick="ajustarMarcador('a', 1)" aria-label="Aumentar gol equipo A">
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                            </svg>
-                        </button>
-                        <button class="w-10 h-10 bg-gray-700 hover:bg-gray-600 active:bg-gray-500 rounded-xl flex items-center justify-center transition-colors min-h-[44px]" onclick="ajustarMarcador('b', 1)" aria-label="Aumentar gol equipo B">
-                            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                            </svg>
-                        </button>
-                    </div>
-                    <!-- Estado del partido -->
-                    <div class="border-t border-gray-700 pt-4">
-                        <div class="flex items-center justify-center gap-4 text-sm">
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="match-state" value="normal" checked class="accent-gray-400" onchange="cambiarEstadoPartido('normal')">
-                                <span class="text-gray-300">Normal</span>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="match-state" value="draw" class="accent-gray-400" onchange="cambiarEstadoPartido('draw')">
-                                <span class="text-gray-300">Empate</span>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="match-state" value="walkover" class="accent-gray-400" onchange="cambiarEstadoPartido('walkover')">
-                                <span class="text-gray-300">Walkover</span>
-                            </label>
-                        </div>
-                        <!-- Selector de ganador (solo si Normal y no empate) -->
-                        <div id="winner-selector" class="mt-3 hidden">
-                            <label class="block text-xs text-gray-400 mb-1">Ganador:</label>
-                            <select id="winner-select" class="w-full bg-gray-700 text-white rounded-xl px-3 py-2 text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500" onchange="actualizarGanador()">
-                                <option value="">Seleccionar ganador</option>
-                                <option value="team-a" id="opt-team-a">Equipo A</option>
-                                <option value="team-b" id="opt-team-b">Equipo B</option>
-                            </select>
-                        </div>
-                        <!-- Selector de equipo ausente (solo si Walkover) -->
-                        <div id="walkover-selector" class="mt-3 hidden">
-                            <label class="block text-xs text-gray-400 mb-1">Equipo ausente:</label>
-                            <select id="absent-select" class="w-full bg-gray-700 text-white rounded-xl px-3 py-2 text-sm border border-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500" onchange="actualizarWalkover()">
-                                <option value="">Seleccionar equipo ausente</option>
-                                <option value="team-a" id="abs-team-a">Equipo A</option>
-                                <option value="team-b" id="abs-team-b">Equipo B</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- ESTADÍSTICAS INDIVIDUALES — ESTRUCTURA "CANCHA + BANCA" -->
-            <section class="px-6 pt-2 pb-4" id="stats-section">
-
-                <!-- EQUIPO A -->
-                <div class="bg-gray-50 rounded-2xl p-4 mb-4">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
-                            <span class="text-sm">⚽</span>
-                        </div>
-                        <h2 class="font-semibold text-gray-800 text-sm" id="stats-team-a-name">NOMBRE DEL EQUIPO A</h2>
-                    </div>
-
-                    <!-- EN CANCHA (5 primeros) -->
-                    <div class="mb-4">
-                        <div class="flex items-center gap-2 mb-3">
-                            <span>🏟️</span>
-                            <span class="text-xs font-medium text-gray-600 uppercase tracking-wide">En Cancha</span>
-                            <span class="text-xs text-gray-400">(5)</span>
-                        </div>
-                        <div id="cancha-a" class="space-y-3">
-                            <!-- Jugadores en cancha se inyectan por JS -->
-                        </div>
-                    </div>
-
-                    <!-- EN BANCA (resto) -->
-                    <details class="group">
-                        <summary class="flex items-center justify-between cursor-pointer list-none py-2 border-t border-gray-200">
-                            <div class="flex items-center gap-2">
-                                <span>🪑</span>
-                                <span class="text-xs font-medium text-gray-600 uppercase tracking-wide">En Banca</span>
-                                <span class="text-xs text-gray-400" id="banca-a-count">(7)</span>
-                            </div>
-                            <svg class="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </summary>
-                        <div id="banca-a" class="space-y-3 pt-3">
-                            <!-- Jugadores en banca se inyectan por JS -->
-                        </div>
-                    </details>
-                </div>
-
-                <!-- EQUIPO B -->
-                <div class="bg-gray-50 rounded-2xl p-4 mb-4">
-                    <div class="flex items-center gap-2 mb-4">
-                        <div class="w-8 h-8 bg-gray-200 rounded-lg flex items-center justify-center">
-                            <span class="text-sm">⚽</span>
-                        </div>
-                        <h2 class="font-semibold text-gray-800 text-sm" id="stats-team-b-name">NOMBRE DEL EQUIPO B</h2>
-                    </div>
-
-                    <!-- EN CANCHA (5 primeros) -->
-                    <div class="mb-4">
-                        <div class="flex items-center gap-2 mb-3">
-                            <span>🏟️</span>
-                            <span class="text-xs font-medium text-gray-600 uppercase tracking-wide">En Cancha</span>
-                            <span class="text-xs text-gray-400">(5)</span>
-                        </div>
-                        <div id="cancha-b" class="space-y-3">
-                            <!-- Jugadores en cancha se inyectan por JS -->
-                        </div>
-                    </div>
-
-                    <!-- EN BANCA (resto) -->
-                    <details class="group">
-                        <summary class="flex items-center justify-between cursor-pointer list-none py-2 border-t border-gray-200">
-                            <div class="flex items-center gap-2">
-                                <span>🪑</span>
-                                <span class="text-xs font-medium text-gray-600 uppercase tracking-wide">En Banca</span>
-                                <span class="text-xs text-gray-400" id="banca-b-count">(7)</span>
-                            </div>
-                            <svg class="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-                            </svg>
-                        </summary>
-                        <div id="banca-b" class="space-y-3 pt-3">
-                            <!-- Jugadores en banca se inyectan por JS -->
-                        </div>
-                    </details>
-                </div>
-            </section>
-
-            <!-- OBSERVACIONES -->
-            <section class="px-6 pt-2 pb-4">
-                <div class="bg-gray-50 rounded-2xl p-4">
-                    <div class="flex items-center gap-2 mb-3">
-                        <span>📝</span>
-                        <h2 class="text-sm font-semibold text-gray-800">Observaciones</h2>
-                    </div>
-                    <textarea id="observaciones" rows="4" maxlength="2000" placeholder="Escribe observaciones sobre el partido..." class="w-full bg-white rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300 resize-none"></textarea>
-                    <div class="text-right text-xs text-gray-400 mt-1">
-                        <span id="obs-count">0</span>/2000
-                    </div>
-                </div>
-            </section>
-
-            <!-- LINKS EXTERNOS -->
-            <section class="px-6 pt-2 pb-4">
-                <div class="bg-gray-50 rounded-2xl p-4">
-                    <div class="flex items-center gap-2 mb-3">
-                        <span>🔗</span>
-                        <h2 class="text-sm font-semibold text-gray-800">Links Externos</h2>
-                    </div>
-                    <div id="links-container" class="space-y-2 mb-3">
-                        <!-- Links se inyectan por JS -->
-                    </div>
-                    <div class="flex gap-2">
-                        <input type="url" id="new-link-input" placeholder="https://..." class="flex-1 bg-white rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300">
-                        <button onclick="agregarLink()" class="bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors min-h-[44px]">
-                            + Agregar
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- BOTÓN GUARDAR -->
-            <div class="px-6 pt-4 pb-6">
-                <button id="btn-guardar" class="w-full bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 shadow-lg min-h-[56px] relative overflow-hidden" onclick="guardarResultado()">
-                    <span id="btn-guardar-text">Guardar Resultado</span>
-                </button>
-            </div>
-
-        </main>
-
-        <!-- NAVBAR INFERIOR DE GESTOR -->
-        <nav class="absolute bottom-0 w-full z-50 bg-white border-t border-gray-200" style="padding-bottom: env(safe-area-inset-bottom);">
-            <div class="grid grid-cols-4 h-16">
-                <a href="/gestor/inicio" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 active:text-gray-800 transition-colors min-h-[44px]" aria-label="Inicio">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
-                    </svg>
-                    <span class="text-[10px]">Inicio</span>
-                </a>
-                <a href="/gestor/torneos" class="flex flex-col items-center justify-center gap-1 text-gray-800 min-h-[44px]" aria-label="Mis Torneos">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                    </svg>
-                    <span class="text-[10px]">Mis Torneos</span>
-                </a>
-                <a href="/gestor/notificaciones" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 active:text-gray-800 transition-colors min-h-[44px]" aria-label="Notificaciones">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                    </svg>
-                    <span class="text-[10px]">Notificaciones</span>
-                </a>
-                <a href="/gestor/perfil" class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-gray-600 active:text-gray-800 transition-colors min-h-[44px]" aria-label="Perfil">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                    </svg>
-                    <span class="text-[10px]">Perfil</span>
-                </a>
-            </div>
-        </nav>
-
-        <!-- TOAST -->
-        <div id="toast" class="absolute top-20 left-4 right-4 z-[70] pointer-events-none opacity-0 transition-all duration-300 transform -translate-y-2">
-            <div class="bg-gray-800 text-white px-4 py-3 rounded-2xl shadow-lg flex items-center gap-3">
-                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shrink-0">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                    </svg>
-                </div>
-                <div class="flex-1">
-                    <p class="text-sm font-medium" id="toast-title"></p>
-                    <p class="text-xs text-gray-400" id="toast-subtitle"></p>
-                </div>
-            </div>
-        </div>
-
-        <!-- MODAL DE CONFIRMACIÓN -->
-        <div id="confirmar-modal" class="absolute inset-0 z-[80] bg-gray-950/60 flex items-end justify-center hidden opacity-0 transition-opacity duration-300">
-            <div class="bg-white rounded-t-3xl p-6 w-full transform translate-y-full transition-transform duration-300" id="confirmar-modal-content">
-                <div class="w-12 h-1 bg-gray-300 rounded-full mx-auto mb-6"></div>
-                <h2 class="text-lg font-semibold text-gray-900 text-center mb-1">Confirmar resultado</h2>
-                <p class="text-sm text-gray-500 text-center mb-6">Revisa los datos antes de guardar</p>
-
-                <!-- Resumen -->
-                <div class="bg-gray-100 rounded-2xl p-4 mb-6">
-                    <div class="flex items-center justify-center gap-4 mb-3">
-                        <div class="flex flex-col items-center">
-                            <div class="w-10 h-10 bg-gray-200 rounded-lg mb-1 flex items-center justify-center">
-                                <span class="text-lg">⚽</span>
-                            </div>
-                            <span class="text-xs text-gray-600" id="resumen-team-a">Equipo A</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <span class="text-2xl font-bold text-gray-900" id="resumen-marcador-a">0</span>
-                            <span class="text-lg text-gray-400">-</span>
-                            <span class="text-2xl font-bold text-gray-900" id="resumen-marcador-b">0</span>
-                        </div>
-                        <div class="flex flex-col items-center">
-                            <div class="w-10 h-10 bg-gray-200 rounded-lg mb-1 flex items-center justify-center">
-                                <span class="text-lg">⚽</span>
-                            </div>
-                            <span class="text-xs text-gray-600" id="resumen-team-b">Equipo B</span>
-                        </div>
-                    </div>
-                    <div class="text-center space-y-1">
-                        <p class="text-sm text-gray-600">Ganador: <span class="font-medium text-gray-900" id="resumen-ganador">—</span></p>
-                        <p class="text-sm text-gray-600">Estado: <span class="font-medium text-gray-900" id="resumen-estado">Normal</span></p>
-                    </div>
-                </div>
-
-                <div class="flex gap-3">
-                    <button class="flex-1 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="closeConfirmarModal()">
-                        Cancelar
-                    </button>
-                    <button class="flex-1 bg-gray-800 hover:bg-gray-700 active:bg-gray-900 text-white py-4 rounded-2xl font-medium transition-all duration-200 min-h-[56px]" onclick="confirmarGuardado()">
-                        Confirmar y guardar
-                    </button>
-                </div>
-            </div>
-        </div>
-
+    <div class="card">
+      <div class="row-between">
+        <span class="muted" style="font-size:11px">jue. 10 de sept., 01:00 p. m.</span>
+        <span class="chip" id="statusChip">Programado</span>
+      </div>
+      <div class="teams-row">
+        <div class="team"><span class="badge alf">ALF</span> Alfa FC</div>
+        <span class="vs">VS</span>
+        <div class="team">Bravo FC <span class="badge brv">BRV</span></div>
+      </div>
+      <div class="match-foot muted">Liga Regular · Cancha La Villa · Árbitro: Árbitro Test</div>
     </div>
 
-    <script>
-        // ============================================================
-        // DATOS DE MOCK (simulan la respuesta de tRPC)
-        // ============================================================
-        const mockData = {
-            match: {
-                id: "match-001",
-                tournamentId: "t-001",
-                phaseName: "Octavos de Final",
-                tournamentName: "Torneo de Verano 2026",
-                date: "Sábado 30 Ago 2026",
-                timeSlot: "18:00 - 19:45",
-                courtName: "Cancha Principal - Complejo Deportivo Norte",
-                refereeName: "Carlos Méndez",
-                status: "SCHEDULED",
-                homeTeamId: "team-a",
-                awayTeamId: "team-b",
-                homeTeamName: "Los Galácticos",
-                awayTeamName: "Furia Roja",
-                planillaGuardada: false,
-            },
-            callUps: {
-                home: [
-                    { playerId: "p-001", playerName: "Juan Pérez", avatar: "JP", isAbsent: false, notes: "" },
-                    { playerId: "p-002", playerName: "Carlos López", avatar: "CL", isAbsent: false, notes: "" },
-                    { playerId: "p-003", playerName: "Miguel Torres", avatar: "MT", isAbsent: false, notes: "" },
-                    { playerId: "p-004", playerName: "Andrés Silva", avatar: "AS", isAbsent: false, notes: "" },
-                    { playerId: "p-005", playerName: "Diego Ramírez", avatar: "DR", isAbsent: false, notes: "" },
-                    { playerId: "p-006", playerName: "Luis Fernández", avatar: "LF", isAbsent: false, notes: "Lesión" },
-                    { playerId: "p-007", playerName: "Pedro Gómez", avatar: "PG", isAbsent: true, notes: "Trabajo" },
-                    { playerId: "p-008", playerName: "Roberto Díaz", avatar: "RD", isAbsent: false, notes: "" },
-                    { playerId: "p-009", playerName: "Fernando Ruiz", avatar: "FR", isAbsent: false, notes: "" },
-                    { playerId: "p-010", playerName: "Javier Morales", avatar: "JM", isAbsent: false, notes: "" },
-                    { playerId: "p-011", playerName: "Sergio Vargas", avatar: "SV", isAbsent: false, notes: "" },
-                    { playerId: "p-012", playerName: "Martín Castro", avatar: "MC", isAbsent: false, notes: "" },
-                ],
-                away: [
-                    { playerId: "p-101", playerName: "Alejandro Ruiz", avatar: "AR", isAbsent: false, notes: "" },
-                    { playerId: "p-102", playerName: "Bruno Núñez", avatar: "BN", isAbsent: false, notes: "" },
-                    { playerId: "p-103", playerName: "Cristian Vega", avatar: "CV", isAbsent: false, notes: "" },
-                    { playerId: "p-104", playerName: "Daniel Herrera", avatar: "DH", isAbsent: false, notes: "" },
-                    { playerId: "p-105", playerName: "Esteban Flores", avatar: "EF", isAbsent: false, notes: "" },
-                    { playerId: "p-106", playerName: "Gabriel Soto", avatar: "GS", isAbsent: false, notes: "" },
-                    { playerId: "p-107", playerName: "Hugo Reyes", avatar: "HR", isAbsent: true, notes: "Vacaciones" },
-                    { playerId: "p-108", playerName: "Iván Campos", avatar: "IC", isAbsent: false, notes: "" },
-                    { playerId: "p-109", playerName: "Jorge Paredes", avatar: "JP2", isAbsent: false, notes: "" },
-                    { playerId: "p-110", playerName: "Kevin Bravo", avatar: "KB", isAbsent: false, notes: "" },
-                    { playerId: "p-111", playerName: "Leonardo Arias", avatar: "LA", isAbsent: false, notes: "" },
-                ]
-            }
-        };
+    <div class="card">
+      <div class="sec-label">ÁRBITRO</div>
+      <select class="select">
+        <option>Árbitro Test</option><option>Árbitro Secundario</option>
+      </select>
+    </div>
 
-        // ============================================================
-        // ESTADO GLOBAL
-        // ============================================================
-        let marcador = { a: 0, b: 0 };
-        let playerStats = {}; // { "team-a-p-001": { goals: 0, ownGoals: 0, blueCards: 0, yellowCards: 0, redCards: 0, fouls: 0 } }
-        let matchState = "normal"; // "normal" | "draw" | "walkover"
-        let winnerId = null;
-        let absentTeamId = null;
-        let planillaGuardada = mockData.match.planillaGuardada;
-        let externalLinks = [];
+    <div class="card">
+      <div class="row-between">
+        <div class="sec-label" style="margin:0">CARGAR RESULTADO</div>
+        <span class="chip green hidden" id="confirmedChip">Confirmado ✓</span>
+      </div>
 
-        // ============================================================
-        // INICIALIZACIÓN
-        // ============================================================
-        document.addEventListener('DOMContentLoaded', () => {
-            initContext();
-            initPlayerStats();
-            renderPlayers();
-            updateBancaCounts();
-            initObservaciones();
-            initGuardarButton();
+      <div class="score-row" style="margin-top:12px">
+        <div class="team small"><span class="badge alf">ALF</span> Alfa</div>
+        <div class="score-box">
+          <button onclick="changeScore('alf',-1)">−</button>
+          <input id="score-alf" type="number" inputmode="numeric" value="0">
+          <button onclick="changeScore('alf',1)">+</button>
+        </div>
+        <span class="dash">–</span>
+        <div class="score-box">
+          <button onclick="changeScore('brv',-1)">−</button>
+          <input id="score-brv" type="number" inputmode="numeric" value="0">
+          <button onclick="changeScore('brv',1)">+</button>
+        </div>
+        <div class="team small">Bravo <span class="badge brv">BRV</span></div>
+      </div>
 
-            setTimeout(() => {
-                const appLoading = document.getElementById('app-loading');
-                const mainContent = document.getElementById('main-content');
-                appLoading.style.opacity = '0';
-                mainContent.style.opacity = '1';
-                setTimeout(() => {
-                    appLoading.style.display = 'none';
-                }, 500);
-            }, 1200);
-        });
+      <div class="note">
+        Doble confirmación: botón → modal resumen (paso 1) → modal de advertencia
+        (paso 2, notifica a los equipos y bloquea edición del score). Al confirmar
+        se habilita la carga de estadísticas.
+      </div>
 
-        function initContext() {
-            document.getElementById('ctx-tournament-name').textContent = mockData.match.tournamentName;
-            document.getElementById('ctx-phase-name').textContent = mockData.match.phaseName;
-            document.getElementById('ctx-match-date').textContent = mockData.match.date + " — " + mockData.match.timeSlot;
-            document.getElementById('ctx-court-name').textContent = mockData.match.courtName;
-            document.getElementById('ctx-referee-name').textContent = "Árbitro: " + (mockData.match.refereeName || "Sin asignar");
+      <button class="btn primary block" id="btnConfirm" onclick="openConfirm()">Confirmar resultado</button>
+      <button class="btn ghost block hidden" id="btnGoStats" onclick="goScreen('stats')">Cargar estadísticas →</button>
+    </div>
+  </section>
 
-            const statusEl = document.getElementById('ctx-match-status');
-            statusEl.textContent = mockData.match.status;
-            if (mockData.match.status === "SCHEDULED") {
-                statusEl.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800";
-            } else if (mockData.match.status === "IN_PROGRESS") {
-                statusEl.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800";
-            } else if (mockData.match.status === "FINISHED") {
-                statusEl.className = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800";
-            }
+  <!-- ================================================================
+       PANTALLA 2 · STATS POR JUGADOR (acordeón de avatares)
+  ================================================================= -->
+  <section id="screen-stats" class="screen">
+    <header class="topbar">
+      <button class="icon" onclick="goScreen('score')">←</button>
+      <button class="icon">🔔</button>
+    </header>
 
-            document.getElementById('team-a-name').textContent = mockData.match.homeTeamName;
-            document.getElementById('team-b-name').textContent = mockData.match.awayTeamName;
-            document.getElementById('stats-team-a-name').textContent = mockData.match.homeTeamName;
-            document.getElementById('stats-team-b-name').textContent = mockData.match.awayTeamName;
-            document.getElementById('opt-team-a').textContent = mockData.match.homeTeamName;
-            document.getElementById('opt-team-b').textContent = mockData.match.awayTeamName;
-            document.getElementById('abs-team-a').textContent = mockData.match.homeTeamName;
-            document.getElementById('abs-team-b').textContent = mockData.match.awayTeamName;
-            document.getElementById('resumen-team-a').textContent = mockData.match.homeTeamName;
-            document.getElementById('resumen-team-b').textContent = mockData.match.awayTeamName;
-        }
+    <div class="eyebrow-row" style="margin-bottom:10px">
+      <span class="eyebrow">ESTADÍSTICAS · PARTIDO</span>
+      <span class="chip" id="statsStatus">Programado</span>
+    </div>
 
-        function initPlayerStats() {
-            const allPlayers = [...mockData.callUps.home, ...mockData.callUps.away];
-            allPlayers.forEach(p => {
-                const teamKey = mockData.callUps.home.includes(p) ? "team-a" : "team-b";
-                playerStats[`${teamKey}-${p.playerId}`] = {
-                    goals: 0, ownGoals: 0, blueCards: 0, yellowCards: 0, redCards: 0, fouls: 0
-                };
-            });
-        }
+    <div class="card mini-score">
+      <div class="team small"><span class="badge alf">ALF</span> Alfa</div>
+      <div class="mini-num"><span id="ms-alf">0</span> – <span id="ms-brv">0</span></div>
+      <div class="team small">Bravo <span class="badge brv">BRV</span></div>
+    </div>
 
-        function initObservaciones() {
-            const textarea = document.getElementById('observaciones');
-            const counter = document.getElementById('obs-count');
-            textarea.addEventListener('input', () => {
-                counter.textContent = textarea.value.length;
-            });
-        }
+    <!-- COMENTARIO: sumatoria local de goles (GO de cada jugador) vs score confirmado -->
+    <div class="card">
+      <div class="sec-label">COMPROBACIÓN EN TIEMPO REAL (LOCAL)</div>
+      <div class="gline" id="gA"></div>
+      <div class="gline" id="gB"></div>
+      <div class="note">
+        La suma de GO de los jugadores se mantiene en local y se compara en tiempo
+        real con el score confirmado. Si difiere, se advierte pero NO bloquea el guardado.
+      </div>
+    </div>
 
-        function initGuardarButton() {
-            if (planillaGuardada) {
-                const btn = document.getElementById('btn-guardar');
-                const text = document.getElementById('btn-guardar-text');
-                btn.classList.remove('bg-gray-800', 'hover:bg-gray-700', 'active:bg-gray-900');
-                btn.classList.add('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
-                btn.disabled = true;
-                btn.setAttribute('aria-disabled', 'true');
-                text.textContent = "✓ Guardado";
-            }
-        }
+    <div class="card">
+      <div class="sec-label">ALFA FC</div>
+      <div class="pgrid" id="grid-alf"></div>
+    </div>
 
-        // ============================================================
-        // RENDER JUGADORES
-        // ============================================================
-        function renderPlayers() {
-            renderTeamPlayers('home', 'cancha-a', 'banca-a');
-            renderTeamPlayers('away', 'cancha-b', 'banca-b');
-        }
+    <div class="card">
+      <div class="sec-label">BRAVO FC</div>
+      <div class="pgrid" id="grid-brv"></div>
+    </div>
 
-        function renderTeamPlayers(teamKey, canchaId, bancaId) {
-            const players = mockData.callUps[teamKey];
-            const teamId = teamKey === 'home' ? 'team-a' : 'team-b';
-            const canchaContainer = document.getElementById(canchaId);
-            const bancaContainer = document.getElementById(bancaId);
+    <div class="note" style="margin-bottom:10px">
+      Acordeón: la grid muestra avatares + nombre (trimado con ellipsis). Click en un
+      jugador → despliega debajo de su fila los campos de stats. Un jugador abierto a
+      la vez. Al cerrar el panel o navegar fuera → persistir en localStorage. Stats en
+      0 absoluto son válidas.
+    </div>
 
-            canchaContainer.innerHTML = '';
-            bancaContainer.innerHTML = '';
+    <!-- Barra de guardado: envía el formulario con la plantilla completa -->
+    <div class="savebar">
+      <span id="savebarWarn" class="hidden"></span>
+      <div class="savebar-row">
+        <span class="muted" style="font-size:10px;flex:1" id="savebarInfo"></span>
+        <button class="btn primary" style="padding:10px 16px" onclick="openSave()">Guardar estadísticas</button>
+      </div>
+    </div>
+  </section>
+</div>
 
-            players.forEach((p, index) => {
-                const isCancha = index < 5;
-                const card = crearPlayerCard(p, teamId, index);
-                if (isCancha) {
-                    canchaContainer.appendChild(card);
-                } else {
-                    bancaContainer.appendChild(card);
-                }
-            });
-        }
+<!-- Modal genérico (doble confirmación / guardado) -->
+<div id="overlay" class="overlay hidden"><div class="modal" id="modalBox"></div></div>
+<div id="toast" class="toast hidden"></div>
 
-        function crearPlayerCard(player, teamId, index) {
-            const key = `${teamId}-${player.playerId}`;
-            const isAbsent = player.isAbsent;
-            const opacityClass = isAbsent ? 'opacity-60' : '';
-            const absentBadge = isAbsent ? '<span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-gray-200 text-gray-600">Ausente</span>' : '';
-            const noteLine = player.notes ? `<p class="text-[10px] text-gray-400 mt-0.5">${player.notes}</p>` : '';
+<script>
+/* =====================================================================
+   ESTADO + PERSISTENCIA LOCAL
+   - Sincroniza: score confirmado, stats por jugador.
+   - Se guarda al: cerrar acordeón, cambiar de pantalla, editar cualquier
+     valor y antes de enviar el formulario.
+===================================================================== */
+const KEY = 'wf_partido_v1';
+const FIELDS = ['GO','TA','AM','RO','FA','GG'];
+const state = { score:{alf:0,brv:0}, confirmed:false, openPlayer:null, players:[] };
+let warnedOnce = false;
 
-            const div = document.createElement('div');
-            div.className = `bg-white rounded-xl p-3 border border-gray-200 ${opacityClass}`;
-            div.id = `card-${key}`;
+function makePlayers(){
+  const mk = (team,n)=>Array.from({length:n},(_,i)=>({
+    id: team+i, team, name:'Jugador Test '+(i+1),
+    stats:{GO:0,TA:0,AM:0,RO:0,FA:0,GG:0}
+  }));
+  state.players = [...mk('alf',8), ...mk('brv',8)];
+}
 
-            div.innerHTML = `
-                <div class="flex items-center gap-2 mb-3">
-                    <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-xs font-medium text-gray-600 shrink-0 min-w-[32px] min-h-[32px]">
-                        ${player.avatar}
-                    </div>
-                    <div class="min-w-0">
-                        <p class="text-sm font-medium text-gray-800 truncate">${player.playerName}${absentBadge}</p>
-                        ${noteLine}
-                    </div>
-                </div>
-                <div class="grid grid-cols-3 gap-2">
-                    ${crearStatControl(key, 'goals', '⚽', 'goles')}
-                    ${crearStatControl(key, 'ownGoals', '🥅', 'autogoles')}
-                    ${crearStatControl(key, 'blueCards', '🔵', 'azules')}
-                    ${crearStatControl(key, 'yellowCards', '🟡', 'amarillas')}
-                    ${crearStatControl(key, 'redCards', '🔴', 'rojas')}
-                    ${crearStatControl(key, 'fouls', '⚠️', 'faltas')}
-                </div>
-            `;
-            return div;
-        }
+function saveLocal(silent){
+  const data = {
+    score: state.score, confirmed: state.confirmed,
+    players: state.players.map(p=>({id:p.id, stats:p.stats}))
+  };
+  localStorage.setItem(KEY, JSON.stringify(data));
+  if(!silent) toast('✓ Guardado en local');
+}
 
-        function crearStatControl(key, statKey, emoji, label) {
-            return `
-                <div class="flex items-center gap-1">
-                    <span class="text-xs" title="${label}">${emoji}</span>
-                    <button class="w-6 h-6 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg flex items-center justify-center transition-colors text-gray-500 text-xs font-bold" onclick="ajustarStat('${key}', '${statKey}', -1)" aria-label="Disminuir ${label}">-</button>
-                    <span class="text-sm font-semibold text-gray-800 w-5 text-center" id="stat-${key}-${statKey}">0</span>
-                    <button class="w-6 h-6 bg-gray-100 hover:bg-gray-200 active:bg-gray-300 rounded-lg flex items-center justify-center transition-colors text-gray-500 text-xs font-bold" onclick="ajustarStat('${key}', '${statKey}', 1)" aria-label="Aumentar ${label}">+</button>
-                </div>
-            `;
-        }
+function loadLocal(){
+  try{
+    const d = JSON.parse(localStorage.getItem(KEY));
+    if(!d) return false;
+    state.score = d.score || state.score;
+    state.confirmed = !!d.confirmed;
+    (d.players||[]).forEach(s=>{
+      const p = state.players.find(x=>x.id===s.id);
+      if(p) p.stats = {...p.stats, ...s.stats};
+    });
+    return true;
+  }catch(e){ return false; }
+}
 
-        function updateBancaCounts() {
-            const homeBanca = Math.max(0, mockData.callUps.home.length - 5);
-            const awayBanca = Math.max(0, mockData.callUps.away.length - 5);
-            document.getElementById('banca-a-count').textContent = `(${homeBanca})`;
-            document.getElementById('banca-b-count').textContent = `(${awayBanca})`;
-        }
+/* =====================================================================
+   RENDER
+===================================================================== */
+function initials(n){ return n.split(' ').map(w=>w[0]).slice(0,2).join(''); }
 
-        // ============================================================
-        // MARCADOR
-        // ============================================================
-        function ajustarMarcador(equipo, delta) {
-            if (matchState === 'walkover') return;
-            const nuevoValor = marcador[equipo] + delta;
-            if (nuevoValor < 0) return;
-            marcador[equipo] = nuevoValor;
-            document.getElementById(`marcador-${equipo}`).textContent = nuevoValor;
-            if (navigator.vibrate) navigator.vibrate(20);
-        }
+function panelHTML(p){
+  const stats = FIELDS.map(f=>`
+    <div class="stat">
+      <span class="stat-l">${f}</span>
+      <div class="stepper">
+        <button data-p="${p.id}" data-s="${f}" data-step="-1">−</button>
+        <input type="number" inputmode="numeric" data-val="${p.id}|${f}" value="${p.stats[f]||0}">
+        <button data-p="${p.id}" data-s="${f}" data-step="1">+</button>
+      </div>
+    </div>`).join('');
+  return `
+    <div class="spanel-head">
+      <span class="avatar mini">${initials(p.name)}</span>
+      <b>${p.name}</b>
+      <span class="chip">${p.team==='alf'?'ALFA FC':'BRAVO FC'}</span>
+      <button class="x" onclick="togglePlayer('${p.id}')">✕</button>
+    </div>
+    <div class="stat-grid">${stats}</div>
+    <div class="hint">Al cerrar este panel o salir de la pantalla se persiste en local · GO alimenta la comprobación de goles</div>`;
+}
 
-        // ============================================================
-        // ESTADO DEL PARTIDO
-        // ============================================================
-        function cambiarEstadoPartido(estado) {
-            matchState = estado;
-            const winnerSel = document.getElementById('winner-selector');
-            const walkoverSel = document.getElementById('walkover-selector');
-            const statsSection = document.getElementById('stats-section');
+function renderGrids(){
+  const COLS = 4;
+  ['alf','brv'].forEach(team=>{
+    const c = document.getElementById('grid-'+team);
+    c.innerHTML = '';
+    const teamPlayers = state.players.filter(p=>p.team===team);
+    const selIdx = teamPlayers.findIndex(p=>p.id===state.openPlayer);
 
-            if (estado === 'walkover') {
-                winnerSel.classList.add('hidden');
-                walkoverSel.classList.remove('hidden');
-                statsSection.classList.add('hidden');
-                marcador = { a: 0, b: 0 };
-                document.getElementById('marcador-a').textContent = '0';
-                document.getElementById('marcador-b').textContent = '0';
-                winnerId = null;
-            } else if (estado === 'draw') {
-                winnerSel.classList.add('hidden');
-                walkoverSel.classList.add('hidden');
-                statsSection.classList.remove('hidden');
-                winnerId = null;
-            } else {
-                winnerSel.classList.remove('hidden');
-                walkoverSel.classList.add('hidden');
-                statsSection.classList.remove('hidden');
-            }
-        }
+    const cells = teamPlayers.map(p=>{
+      const cell = document.createElement('button');
+      cell.className = 'pcell' + (state.openPlayer===p.id ? ' open' : '');
+      cell.innerHTML = `<span class="avatar">${initials(p.name)}</span><span class="pname">${p.name}</span>`;
+      cell.onclick = ()=>togglePlayer(p.id);
+      return cell;
+    });
 
-        function actualizarGanador() {
-            const select = document.getElementById('winner-select');
-            const val = select.value;
-            winnerId = val === 'team-a' ? mockData.match.homeTeamId : (val === 'team-b' ? mockData.match.awayTeamId : null);
-        }
+    if(selIdx < 0){
+      cells.forEach(el=>c.appendChild(el));
+    } else {
+      // El panel va después del ÚLTIMO jugador de la fila del seleccionado,
+      // para que la fila superior (J1–J4) siempre se vea completa.
+      const row = Math.floor(selIdx / COLS);
+      const lastOfRow = Math.min((row+1)*COLS - 1, cells.length-1);
+      cells.slice(0, lastOfRow+1).forEach(el=>c.appendChild(el));
 
-        function actualizarWalkover() {
-            const select = document.getElementById('absent-select');
-            const val = select.value;
-            absentTeamId = val === 'team-a' ? mockData.match.homeTeamId : (val === 'team-b' ? mockData.match.awayTeamId : null);
-        }
+      const panel = document.createElement('div');
+      panel.className = 'spanel open';
+      panel.id = 'panel-'+teamPlayers[selIdx].id;
+      panel.innerHTML = panelHTML(teamPlayers[selIdx]);
+      c.appendChild(panel);
 
-        // ============================================================
-        // STATS INDIVIDUALES
-        // ============================================================
-        function ajustarStat(key, statKey, delta) {
-            if (!playerStats[key]) return;
-            const nuevoValor = playerStats[key][statKey] + delta;
-            if (nuevoValor < 0) return;
-            playerStats[key][statKey] = nuevoValor;
-            const el = document.getElementById(`stat-${key}-${statKey}`);
-            if (el) el.textContent = nuevoValor;
-            if (navigator.vibrate) navigator.vibrate(15);
-        }
+      cells.slice(lastOfRow+1).forEach(el=>c.appendChild(el));
+    }
+  });
+}
 
-        // ============================================================
-        // LINKS EXTERNOS
-        // ============================================================
-        function agregarLink() {
-            const input = document.getElementById('new-link-input');
-            const url = input.value.trim();
-            if (!url) return;
-            if (!url.startsWith('http')) {
-                showToast('Error', 'El link debe comenzar con http:// o https://');
-                return;
-            }
-            externalLinks.push(url);
-            input.value = '';
-            renderLinks();
-        }
+function renderAll(){
+  document.getElementById('score-alf').value = state.score.alf;
+  document.getElementById('score-brv').value = state.score.brv;
+  renderGrids();
+  refreshConfirmUI();
+  updateGoalsUI();
+}
 
-        function eliminarLink(index) {
-            externalLinks.splice(index, 1);
-            renderLinks();
-        }
+/* =====================================================================
+   ACORDEÓN — abre/cierra y persiste al cerrar o cambiar de jugador
+===================================================================== */
+function togglePlayer(id){
+  const wasOpen = state.openPlayer === id;
+  state.openPlayer = wasOpen ? null : id;
+  renderGrids();
+  saveLocal(); // ← persistir al cerrar (o al moverse a otro jugador)
+  if(!wasOpen){
+    const el = document.getElementById('panel-'+id);
+    if(el) el.scrollIntoView({block:'nearest', behavior:'smooth'});
+  }
+}
 
-        function renderLinks() {
-            const container = document.getElementById('links-container');
-            container.innerHTML = '';
-            externalLinks.forEach((url, index) => {
-                const div = document.createElement('div');
-                div.className = 'flex items-center gap-2 bg-white rounded-xl border border-gray-200 px-3 py-2';
-                div.innerHTML = `
-                    <a href="${url}" target="_blank" rel="noopener noreferrer" class="flex-1 text-sm text-blue-600 truncate hover:underline">${url}</a>
-                    <button onclick="eliminarLink(${index})" class="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 transition-colors" aria-label="Eliminar link">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                        </svg>
-                    </button>
-                `;
-                container.appendChild(div);
-            });
-        }
+/* =====================================================================
+   STATS — edición de valores (0 absoluto permitido)
+===================================================================== */
+function changeStat(pid, stat, delta){
+  const p = state.players.find(x=>x.id===pid); if(!p) return;
+  p.stats[stat] = Math.max(0, (p.stats[stat]||0) + delta);
+  const inp = document.querySelector(`input[data-val="${pid}|${stat}"]`);
+  if(inp) inp.value = p.stats[stat];
+  updateGoalsUI(); saveLocal();
+}
 
-        // ============================================================
-        // GUARDAR RESULTADO
-        // ============================================================
-        function guardarResultado() {
-            if (planillaGuardada) {
-                showToast('Planilla guardada', 'Los resultados ya fueron registrados');
-                return;
-            }
+document.addEventListener('click', e=>{
+  const b = e.target.closest('button[data-p]');
+  if(b) changeStat(b.dataset.p, b.dataset.s, parseInt(b.dataset.step));
+});
 
-            // Validaciones
-            if (matchState === 'normal') {
-                if (marcador.a === marcador.b) {
-                    showToast('Error', 'El marcador no puede ser empate en estado Normal. Selecciona Empate o define un ganador.');
-                    return;
-                }
-                if (!winnerId) {
-                    showToast('Error', 'Selecciona un ganador para el partido.');
-                    return;
-                }
-            }
-            if (matchState === 'walkover' && !absentTeamId) {
-                showToast('Error', 'Selecciona el equipo ausente para Walkover.');
-                return;
-            }
+/* edición directa por teclado (score y stats) */
+document.addEventListener('input', e=>{
+  const t = e.target;
+  if(t.dataset.val){
+    const [pid,stat] = t.dataset.val.split('|');
+    const p = state.players.find(x=>x.id===pid);
+    if(p){ p.stats[stat] = Math.max(0, parseInt(t.value)||0); updateGoalsUI(); saveLocal(); }
+  }
+  if(t.id==='score-alf' || t.id==='score-brv'){
+    const team = t.id==='score-alf' ? 'alf' : 'brv';
+    state.score[team] = Math.max(0, parseInt(t.value)||0);
+    updateGoalsUI(); saveLocal();
+  }
+});
 
-            // Actualizar resumen modal
-            document.getElementById('resumen-marcador-a').textContent = marcador.a;
-            document.getElementById('resumen-marcador-b').textContent = marcador.b;
+/* =====================================================================
+   COMPROBACIÓN EN TIEMPO REAL: sum(GO) vs score
+===================================================================== */
+function goalsOf(team){
+  return state.players.filter(p=>p.team===team).reduce((a,p)=>a+(p.stats.GO||0),0);
+}
+function setLine(id, team, g, s){
+  const el = document.getElementById(id);
+  el.textContent = `${team} · goles jugadores: ${g} · score: ${s} ${g===s?'✓ coincide':'⚠ difiere'}`;
+  el.classList.toggle('ok', g===s);
+  el.classList.toggle('warn', g!==s);
+}
+function updateGoalsUI(){
+  document.getElementById('ms-alf').textContent = state.score.alf;
+  document.getElementById('ms-brv').textContent = state.score.brv;
+  const gA = goalsOf('alf'), gB = goalsOf('brv');
+  setLine('gA','ALF', gA, state.score.alf);
+  setLine('gB','BRV', gB, state.score.brv);
+  const mismatch = gA!==state.score.alf || gB!==state.score.brv;
+  const warn = document.getElementById('savebarWarn');
+  warn.classList.toggle('hidden', !mismatch);
+  if(mismatch) warn.textContent = `⚠ Goles de jugadores (${gA}–${gB}) difieren del score (${state.score.alf}–${state.score.brv}). Se puede guardar igual.`;
+  document.getElementById('savebarInfo').textContent = `Goles locales: ALF ${gA} · BRV ${gB}`;
+}
 
-            let ganadorText = '—';
-            if (matchState === 'draw') ganadorText = 'Empate (sin ganador)';
-            else if (matchState === 'walkover') {
-                const absName = absentTeamId === mockData.match.homeTeamId ? mockData.match.homeTeamName : mockData.match.awayTeamName;
-                ganadorText = `Walkover — ${absName} ausente`;
-            } else if (winnerId) {
-                ganadorText = winnerId === mockData.match.homeTeamId ? mockData.match.homeTeamName : mockData.match.awayTeamName;
-            }
-            document.getElementById('resumen-ganador').textContent = ganadorText;
+/* =====================================================================
+   PANTALLA 1 · score + doble confirmación
+===================================================================== */
+function changeScore(team, delta){
+  state.score[team] = Math.max(0, state.score[team] + delta);
+  document.getElementById('score-'+team).value = state.score[team];
+  updateGoalsUI(); saveLocal();
+}
 
-            let estadoText = 'Normal';
-            if (matchState === 'draw') estadoText = 'Empate';
-            else if (matchState === 'walkover') estadoText = 'Walkover';
-            document.getElementById('resumen-estado').textContent = estadoText;
+function openConfirm(){
+  showModal(`
+    <h3>Confirmar resultado</h3>
+    <p class="muted">Resultado a confirmar:</p>
+    <div class="confirm-score">Alfa FC <b>${state.score.alf} – ${state.score.brv}</b> Bravo FC</div>
+    <p class="muted" style="font-size:12px">Esta acción <b>notificará a los equipos</b>,
+    bloqueará la edición del score y habilitará la carga de estadísticas.</p>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeModal()">Volver</button>
+      <button class="btn danger" onclick="doConfirm()">Sí, confirmar</button>
+    </div>`);
+}
 
-            // Abrir modal
-            const modal = document.getElementById('confirmar-modal');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.style.opacity = '1';
-                document.getElementById('confirmar-modal-content').style.transform = 'translateY(0)';
-            }, 10);
-            if (navigator.vibrate) navigator.vibrate(50);
-        }
+function doConfirm(){
+  state.confirmed = true;
+  closeModal(); refreshConfirmUI(); saveLocal(true);
+  toast('✓ Resultado confirmado');
+}
+function refreshConfirmUI(){
+  document.getElementById('confirmedChip').classList.toggle('hidden', !state.confirmed);
+  document.getElementById('btnConfirm').classList.toggle('hidden', state.confirmed);
+  document.getElementById('btnGoStats').classList.toggle('hidden', !state.confirmed);
+  const txt = state.confirmed ? 'Resultado confirmado' : 'Programado';
+  [['statusChip'],['statsStatus']].forEach(([id])=>{
+    const c = document.getElementById(id);
+    c.textContent = txt; c.classList.toggle('green', state.confirmed);
+  });
+}
 
-        function closeConfirmarModal() {
-            const modal = document.getElementById('confirmar-modal');
-            modal.style.opacity = '0';
-            document.getElementById('confirmar-modal-content').style.transform = 'translateY(100%)';
-            setTimeout(() => modal.classList.add('hidden'), 300);
-        }
+/* =====================================================================
+   GUARDAR → envía formulario con la plantilla completa del partido
+===================================================================== */
+function buildPayload(){
+  return {
+    partido:'ALF-vs-BRV', arbitro:'Árbitro Test',
+    score:{...state.score}, scoreConfirmado: state.confirmed,
+    jugadores: state.players.map(p=>({equipo:p.team, nombre:p.name, stats:{...p.stats}}))
+  };
+}
+function openSave(){
+  showModal(`
+    <h3>Guardar estadísticas</h3>
+    <p class="muted">Se envía el formulario con la <b>plantilla completa del partido</b>
+    (score + stats de todos los jugadores). Los valores en 0 absoluto se envían tal cual.</p>
+    <pre class="payload">${esc(JSON.stringify(buildPayload(),null,2))}</pre>
+    <div class="modal-actions">
+      <button class="btn ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn primary" onclick="submitStats()">Enviar formulario</button>
+    </div>`);
+}
+function submitStats(){
+  saveLocal(true);
+  showModal(`
+    <h3>✓ Formulario enviado</h3>
+    <p class="muted">Plantilla del partido actualizada (demo). En producción: POST + feedback de éxito.</p>
+    <div class="modal-actions"><button class="btn primary" onclick="closeModal()">Listo</button></div>`);
+  toast('✓ Estadísticas guardadas');
+}
 
-        function confirmarGuardado() {
-            planillaGuardada = true;
-            closeConfirmarModal();
+/* =====================================================================
+   NAVEGACIÓN / UTILIDADES
+===================================================================== */
+function goScreen(name){
+  saveLocal(true); // ← "pasar a otro lado" persiste el borrador local
+  document.getElementById('screen-score').classList.toggle('active', name==='score');
+  document.getElementById('screen-stats').classList.toggle('active', name==='stats');
+  document.getElementById('tab1').classList.toggle('active', name==='score');
+  document.getElementById('tab2').classList.toggle('active', name==='stats');
+  window.scrollTo({top:0});
+  if(name==='stats' && !state.confirmed && !warnedOnce){
+    toast('Nota: en el flujo real, las stats se habilitan tras confirmar el score');
+    warnedOnce = true;
+  }
+}
+function toggleNotes(){
+  document.body.classList.toggle('no-notes');
+  document.getElementById('tabNotes').textContent =
+    'Notas: ' + (document.body.classList.contains('no-notes') ? 'OFF' : 'ON');
+}
+function resetLocal(){
+  localStorage.removeItem(KEY);
+  state.score = {alf:0,brv:0}; state.confirmed = false; state.openPlayer = null;
+  makePlayers(); renderAll(); toast('Local reseteado');
+}
+function showModal(html){
+  document.getElementById('modalBox').innerHTML = html;
+  document.getElementById('overlay').classList.remove('hidden');
+}
+function closeModal(){ document.getElementById('overlay').classList.add('hidden'); }
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+let toastT;
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.remove('hidden');
+  clearTimeout(toastT); toastT = setTimeout(()=>t.classList.add('hidden'), 1600);
+}
 
-            const btn = document.getElementById('btn-guardar');
-            const text = document.getElementById('btn-guardar-text');
-            btn.classList.remove('bg-gray-800', 'hover:bg-gray-700', 'active:bg-gray-900');
-            btn.classList.add('bg-gray-200', 'text-gray-400', 'cursor-not-allowed');
-            btn.disabled = true;
-            btn.setAttribute('aria-disabled', 'true');
-            text.textContent = "✓ Guardado";
-
-            setTimeout(() => {
-                showToast('Resultado cargado exitosamente', `${mockData.match.homeTeamName} ${marcador.a} - ${marcador.b} ${mockData.match.awayTeamName}`);
-            }, 300);
-        }
-
-        // ============================================================
-        // TOAST
-        // ============================================================
-        let toastTimeout;
-        function showToast(title, subtitle) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toast-title').textContent = title;
-            document.getElementById('toast-subtitle').textContent = subtitle;
-            clearTimeout(toastTimeout);
-            toast.style.opacity = '0.95';
-            toast.style.transform = 'translateY(0)';
-            toastTimeout = setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateY(-8px)';
-            }, 3000);
-        }
-
-        // ============================================================
-        // TECLADO / SWIPE
-        // ============================================================
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') closeConfirmarModal();
-        });
-
-        function setupSwipeModal(contentId, closeFn) {
-            let touchStartY = 0;
-            const content = document.getElementById(contentId);
-            if (content) {
-                content.addEventListener('touchstart', (e) => {
-                    touchStartY = e.touches[0].clientY;
-                }, { passive: true });
-                content.addEventListener('touchend', (e) => {
-                    const touchEndY = e.changedTouches[0].clientY;
-                    if (touchEndY - touchStartY > 80) closeFn();
-                }, { passive: true });
-            }
-        }
-        setupSwipeModal('confirmar-modal-content', closeConfirmarModal);
-    </script>
-
+/* INIT */
+makePlayers();
+const restored = loadLocal();
+renderAll();
+if(restored) toast('Estado restaurado desde localStorage');
+</script>
 </body>
 </html>

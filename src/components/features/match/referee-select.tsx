@@ -11,7 +11,7 @@ interface RefereeSelectProps {
 
 /** Selector de árbitro del gestor (B-06b). null = desasignar. Optimistic en el template. */
 export function RefereeSelect({
-  referees, valueId, disabled, isPending, onChange, className,
+  referees, valueId, disabled = false, isPending = false, onChange, className,
 }: RefereeSelectProps) {
   return (
     <label className={cn("block rounded-2xl bg-cypher-5-1 p-4", className)}>
