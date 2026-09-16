@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Minus, Plus, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Minus, Plus, X } from "lucide-react";
 import { Badge } from "torneos/components/ui/badge";
 import { Button } from "torneos/components/ui/button/button";
 import { ConfirmModal } from "torneos/components/ui/confirm-modal/confirm-modal";
@@ -9,6 +9,7 @@ import { PlayerAvatar } from "torneos/components/ui/player-avatar";
 import { TeamChip } from "torneos/components/ui/team-chip";
 import { STAT_FIELDS, expectedGoals, type StatFieldKey } from "torneos/domain/stat-fields";
 import { cn } from "torneos/lib/utils";
+import { PlayerGrid } from "./player-grid";
 import type { CallUpItem } from "./types";
 
 export type ResultStats = Record<StatFieldKey, number>;
@@ -30,7 +31,6 @@ const zeroStats = (): ResultStats => ({
   goals: 0, blueCards: 0, yellowCards: 0, redCards: 0, fouls: 0, ownGoals: 0,
 });
 const clamp = (v: number) => Math.min(99, Math.max(0, Number.isFinite(v) ? v : 0));
-const GRID_COLS = 4;
 
 interface ResultWizardProps {
   matchId: string;
@@ -45,12 +45,16 @@ interface ResultWizardProps {
 }
 
 function Stepper({
-  label, value, onChange, accent,
+  label, value, onChange, accent, disablePlus = false, max,
 }: {
   label: string;
   value: number;
   onChange: (v: number) => void;
   accent?: boolean;
+  /** Capacidad agotada: bloquea SOLO sumar; restar siempre habilitado. */
+  disablePlus?: boolean;
+  /** Tope también para el input tecleado (value + capacidad restante). */
+  max?: number;
 }) {
   return (
     <div className={cn(
@@ -74,14 +78,18 @@ function Stepper({
           inputMode="numeric"
           value={value}
           aria-label={label}
-          onChange={(e) => onChange(clamp(Number(e.target.value.replace(/[^\d]/g, "").slice(0, 2) || "0")))}
+          onChange={(e) => {
+            const parsed = Number(e.target.value.replace(/[^\d]/g, "").slice(0, 2) || "0");
+            onChange(clamp(max !== undefined ? Math.min(parsed, max) : parsed));
+          }}
           className="w-8 rounded-md border border-cypher-5-1-1 bg-cypher-5 py-0.5 text-center font-mono text-xs tabular-nums text-cypher-4 outline-none focus:border-cypher-2"
         />
         <button
           type="button"
           aria-label={`Sumar ${label}`}
+          disabled={disablePlus}
           onClick={() => onChange(value + 1)}
-          className="flex size-6 items-center justify-center rounded-md border border-cypher-5-1-1 bg-cypher-5 text-cypher-4 active:bg-cypher-5-1-1"
+          className="flex size-6 items-center justify-center rounded-md border border-cypher-5-1-1 bg-cypher-5 text-cypher-4 active:bg-cypher-5-1-1 disabled:opacity-40 disabled:active:bg-cypher-5"
         >
           <Plus className="size-3" />
         </button>
@@ -91,15 +99,23 @@ function Stepper({
 }
 
 /** Panel acordeón de un jugador. El switch de autogol redirige el stepper "Goles"
- *  a ownGoals; es efímero (remount por key al cambiar de jugador → default off). */
+ *  a ownGoals; es efímero (remount por key al cambiar de jugador → default off).
+ *  Goles y autogol comparten la capacidad de su lado: sumar se bloquea al agotarse;
+ *  restar jamás. "Aceptar" marca la celda (no toggle) y cierra. */
 function PlayerStatPanel({
-  callUp, teamAbbreviation, values, onChange, onClose,
+  callUp, teamAbbreviation, values, onChange, onAccept, onClose,
+  goalsRemaining, rivalGoalsRemaining,
 }: {
   callUp: CallUpItem;
   teamAbbreviation: string;
   values: ResultStats;
   onChange: (field: StatFieldKey, v: number) => void;
+  onAccept: () => void;
   onClose: () => void;
+  /** Capacidad restante del equipo del jugador (para goles). */
+  goalsRemaining: number;
+  /** Capacidad restante del rival (los autogoles suman al marcador rival). */
+  rivalGoalsRemaining: number;
 }) {
   const [isOwnGoal, setIsOwnGoal] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -110,6 +126,9 @@ function PlayerStatPanel({
 
   const name = callUp.player.profile.displayName ?? "Jugador";
   const editableFields = STAT_FIELDS.filter((f) => f.field !== "ownGoals");
+  // El switch solo se bloquea si el rival no tiene capacidad Y este jugador no
+  // registra autogoles (si registra, volver al modo goles debe seguir posible).
+  const ogSwitchDisabled = rivalGoalsRemaining <= 0 && values.ownGoals === 0;
 
   return (
     <div
@@ -141,11 +160,19 @@ function PlayerStatPanel({
                 value={isOwnGoal ? values.ownGoals : values.goals}
                 onChange={(v) => onChange(isOwnGoal ? "ownGoals" : "goals", v)}
                 accent={isOwnGoal}
+                disablePlus={isOwnGoal ? rivalGoalsRemaining <= 0 : goalsRemaining <= 0}
+                max={isOwnGoal
+                  ? values.ownGoals + Math.max(0, rivalGoalsRemaining)
+                  : values.goals + Math.max(0, goalsRemaining)}
               />
-              <label className="mt-1 flex items-center justify-center gap-1 text-[9px] text-cypher-4-2">
+              <label className={cn(
+                "mt-1 flex items-center justify-center gap-1 text-[9px]",
+                ogSwitchDisabled ? "text-cypher-4-2-2 opacity-50" : "text-cypher-4-2",
+              )}>
                 <input
                   type="checkbox"
                   checked={isOwnGoal}
+                  disabled={ogSwitchDisabled}
                   onChange={(e) => setIsOwnGoal(e.target.checked)}
                   className="size-3 accent-cypher-2"
                 />
@@ -162,6 +189,10 @@ function PlayerStatPanel({
           ),
         )}
       </div>
+
+      <Button size="sm" className="mt-2.5 w-full" onClick={onAccept}>
+        Aceptar
+      </Button>
     </div>
   );
 }
@@ -175,8 +206,13 @@ export function ResultWizard({
   const [notes, setNotes] = useState("");
   const [stats, setStats] = useState<Record<string, ResultStats>>({});
   const [openPlayerId, setOpenPlayerId] = useState<string | null>(null);
+  const [openTeamIds, setOpenTeamIds] = useState<Set<string>>(new Set());
+  // "Aceptar" por jugador: NO toggle (una vez marcado, queda marcado aunque edite)
+  const [readys, setReadys] = useState<Set<string>>(new Set());
   const [confirmScoreOpen, setConfirmScoreOpen] = useState(false);
   const [saveConfirmOpen, setSaveConfirmOpen] = useState(false);
+  // Gate de restauración por ESTADO, jamás por ref (lección 5: StrictMode monta 2×)
+  const [hydrated, setHydrated] = useState(false);
   const saveConfirmRef = useRef<HTMLDivElement>(null);
 
   // Ausentes NO aparecen (decisión): ni en la grilla ni en el payload.
@@ -196,20 +232,23 @@ export function ResultWizard({
 
   // ── Borrador: restaurar UNA vez al montar (merge por playerId; lo que ya no
   //    está en la convocatoria se descarta, lo nuevo entra en ceros) ──
-  const hydrated = useRef(false);
   useEffect(() => {
     try {
       const raw = window.localStorage.getItem(resultDraftKey(matchId));
       if (raw) {
         const d = JSON.parse(raw) as Partial<{
+          step: "score" | "stats";
           score: { home: number; away: number };
           confirmed: boolean;
           notes: string;
+          readys: string[];
           stats: Record<string, Partial<ResultStats>>;
         }>;
         if (d.score) setScore({ home: clamp(d.score.home ?? 0), away: clamp(d.score.away ?? 0) });
         if (d.confirmed) setConfirmed(true);
         if (d.notes) setNotes(d.notes);
+        const presentIds = new Set(present.map((c) => c.playerId));
+        if (Array.isArray(d.readys)) setReadys(new Set(d.readys.filter((id) => presentIds.has(id))));
         if (d.stats) {
           setStats((prev) => {
             const next = { ...prev };
@@ -220,21 +259,27 @@ export function ResultWizard({
             return next;
           });
         }
+        // step se restaura solo si el flujo lo permite (stats exige marcador confirmado)
+        if (d.step === "stats" && d.confirmed) {
+          setStep("stats");
+          onStepChange?.("stats");
+        }
       }
     } catch {
       /* borrador corrupto o storage no disponible: se ignora, nunca bloquea */
     }
-    hydrated.current = true;
+    setHydrated(true);
     // Restauración única por montaje (el template usa key={match.id})
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Borrador: persistir en cada cambio ──
+  // ── Borrador: persistir en cada cambio (solo tras hydration commit) ──
   useEffect(() => {
-    if (!hydrated.current) return;
+    if (!hydrated) return;
     try {
       const payload = {
-        score, confirmed, notes,
+        step, score, confirmed, notes,
+        readys: [...readys],
         stats: Object.fromEntries(
           present.map((c) => [c.playerId, stats[c.playerId] ?? zeroStats()]),
         ),
@@ -243,9 +288,12 @@ export function ResultWizard({
     } catch {
       /* enhancement: sin storage el wizard funciona igual */
     }
-  }, [score, confirmed, notes, stats, present, matchId]);
+  }, [hydrated, step, score, confirmed, notes, readys, stats, present, matchId]);
 
-  // ── Comprobación de goles: solo informa en la confirmación final ──
+  // ── Capacidad de goles: SIEMPRE derivada, nunca almacenada. Fuente única de
+  //    verdad = marcador confirmado − suma asignada (fórmula expectedGoals del
+  //    dominio). El exceso es imposible de construir (steppers limitados); el
+  //    déficit bloquea el guardado. ──
   const goalRows = useMemo(
     () =>
       present.map((c) => {
@@ -256,7 +304,35 @@ export function ResultWizard({
   );
   const homeExpected = expectedGoals(homeTeam.id, awayTeam.id, goalRows);
   const awayExpected = expectedGoals(awayTeam.id, homeTeam.id, goalRows);
-  const mismatch = homeExpected !== score.home || awayExpected !== score.away;
+  const homeRemaining = score.home - homeExpected;
+  const awayRemaining = score.away - awayExpected;
+  const remainingOf = (teamId: string) =>
+    teamId === homeTeam.id ? homeRemaining : awayRemaining;
+  // Convocatoria vacía: no hay stats que reconciliar → el marcador es la verdad.
+  const goalsComplete = present.length === 0 || (homeRemaining === 0 && awayRemaining === 0);
+
+  // ── Summary en vivo: dos columnas (izq = suma al marcador local, der = visitante).
+  //    El autogol de un jugador aparece en la columna del RIVAL. ──
+  interface SummaryEntry { key: string; label: string; }
+  const { homeEntries, awayEntries } = useMemo(() => {
+    const homeEntries: SummaryEntry[] = [];
+    const awayEntries: SummaryEntry[] = [];
+    for (const c of present) {
+      const s = stats[c.playerId] ?? zeroStats();
+      const name = c.player.profile.displayName ?? "Jugador";
+      if (s.goals > 0) {
+        (c.teamId === homeTeam.id ? homeEntries : awayEntries).push({
+          key: `${c.playerId}:g`, label: `${name} ×${s.goals}`,
+        });
+      }
+      if (s.ownGoals > 0) {
+        (c.teamId === homeTeam.id ? awayEntries : homeEntries).push({
+          key: `${c.playerId}:og`, label: `${name} (OG) ×${s.ownGoals}`,
+        });
+      }
+    }
+    return { homeEntries, awayEntries };
+  }, [present, stats, homeTeam.id]);
 
   // La confirmación inline vive al final del formulario: llevarla a la vista
   useEffect(() => {
@@ -267,6 +343,28 @@ export function ResultWizard({
 
   const changeScore = (side: "home" | "away", delta: number) =>
     setScore((s) => ({ ...s, [side]: clamp(s[side] + delta) }));
+
+  const toggleTeam = (teamId: string) => {
+    const willOpen = !openTeamIds.has(teamId);
+    setOpenTeamIds((prev) => {
+      const n = new Set(prev);
+      if (willOpen) n.add(teamId);
+      else n.delete(teamId);
+      return n;
+    });
+    if (!willOpen && present.some((c) => c.teamId === teamId && c.playerId === openPlayerId)) {
+      setOpenPlayerId(null);
+    }
+  };
+
+  const acceptPlayer = (playerId: string) => {
+    setReadys((prev) => {
+      const n = new Set(prev);
+      n.add(playerId);
+      return n;
+    });
+    setOpenPlayerId(null);
+  };
 
   const handleSave = () => {
     setSaveConfirmOpen(false);
@@ -279,6 +377,34 @@ export function ResultWizard({
       })),
     });
   };
+
+  // Razón de bloqueo del guardado (déficit o exceso legacy de un draft viejo)
+  const saveBlockReason = (() => {
+    if (homeRemaining < 0 || awayRemaining < 0) {
+      return "Los goles exceden el marcador · ajusta la plantilla";
+    }
+    const parts: string[] = [];
+    if (homeRemaining > 0) parts.push(`${homeTeam.abbreviation} +${homeRemaining}`);
+    if (awayRemaining > 0) parts.push(`${awayTeam.abbreviation} +${awayRemaining}`);
+    return parts.length > 0 ? `Goles por asignar — ${parts.join(" · ")}` : "";
+  })();
+
+  const renderEntries = (entries: SummaryEntry[], align: "start" | "end") => (
+    <div className={cn("flex max-w-[45%] flex-col gap-0.5", align === "end" ? "items-end" : "items-start")}>
+      {entries.length === 0 ? (
+        <span className="text-[10px] text-cypher-4-2-2">—</span>
+      ) : (
+        entries.map((e) => (
+          <span
+            key={e.key}
+            className="max-w-[150px] truncate rounded-full bg-cypher-5-1-1 px-2 py-0.5 text-[9px] text-cypher-4-2"
+          >
+            {e.label}
+          </span>
+        ))
+      )}
+    </div>
+  );
 
   return (
     <section className={cn("rounded-2xl bg-cypher-5-1 p-4", className)}>
@@ -371,72 +497,102 @@ export function ResultWizard({
         </>
       ) : (
         <>
-          {/* Mini-marcador fijo: ancla del paso stats */}
-          <div className="flex items-center justify-center gap-3 rounded-xl bg-cypher-5 py-2.5">
-            <span className="text-xs font-semibold text-cypher-4">{homeTeam.abbreviation}</span>
-            <span className="font-mono text-xl font-bold tabular-nums text-cypher-4">
-              {score.home} – {score.away}
-            </span>
-            <span className="text-xs font-semibold text-cypher-4">{awayTeam.abbreviation}</span>
+          {/* Marcador vivo: sumatoria en blanco, verde por lado al completarse.
+              Debajo, placeholder del marcador fijado (referencia). */}
+          <div className="rounded-xl bg-cypher-5 px-3 py-2.5">
+            <div className="flex items-center justify-center gap-3">
+              <span className="text-xs font-semibold text-cypher-4">{homeTeam.abbreviation}</span>
+              <span className={cn(
+                "font-mono text-xl font-bold tabular-nums",
+                homeRemaining === 0 ? "text-emerald-400" : "text-cypher-4",
+              )}>
+                {homeExpected}
+              </span>
+              <span className="font-mono text-sm text-cypher-4-2-2">–</span>
+              <span className={cn(
+                "font-mono text-xl font-bold tabular-nums",
+                awayRemaining === 0 ? "text-emerald-400" : "text-cypher-4",
+              )}>
+                {awayExpected}
+              </span>
+              <span className="text-xs font-semibold text-cypher-4">{awayTeam.abbreviation}</span>
+            </div>
+            <p className="mt-0.5 text-center text-[10px] text-cypher-4-2-2">
+              Marcador fijado: {score.home} – {score.away}
+            </p>
           </div>
 
-          {/* Grillas por equipo (solo presentes; un panel abierto a la vez) */}
-          <div className="mt-4 space-y-4">
+          {/* Summary de anotadores: izq suma al local, der al visitante; el
+              autogol aparece en la columna contraria */}
+          {(homeEntries.length > 0 || awayEntries.length > 0) && (
+            <div className="mt-2 flex items-start justify-center gap-6 rounded-xl bg-cypher-5 px-3 py-2">
+              {renderEntries(homeEntries, "start")}
+              {renderEntries(awayEntries, "end")}
+            </div>
+          )}
+
+          {/* Acordeones por equipo: colapsados al entrar, header bg-cypher-3,
+              apertura independiente (un solo panel de jugador en toda la pantalla) */}
+          <div className="mt-3 space-y-3">
             {[homeTeam, awayTeam].map((team) => {
               const teamPlayers = present.filter((c) => c.teamId === team.id);
-              // FIX QA: la selección guarda playerId (no el id de la fila callUp)
-              const selIdx = teamPlayers.findIndex((p) => p.playerId === openPlayerId);
-              // ReactElement y no ReactNode: ReactNode incluye Promise<ReactNode>
-              // (React 19 / RSC) y eso dispara no-floating-promises sobre el splice.
-              const nodes: React.ReactElement[] = teamPlayers.map((c) => {
-                const open = c.playerId === openPlayerId;
-                const name = c.player.profile.displayName ?? "Jugador";
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => setOpenPlayerId(open ? null : c.playerId)}
-                    className={cn(
-                      "flex flex-col items-center gap-1.5 rounded-xl border bg-cypher-5 px-1 py-2",
-                      open ? "border-cypher-2" : "border-cypher-5-1-1",
-                    )}
-                  >
-                    <PlayerAvatar profile={{ displayName: name, image: c.player.profile.user.image }} size="sm" />
-                    <span className="w-full truncate text-center text-[9px] text-cypher-4-2">{name}</span>
-                  </button>
-                );
-              });
-              if (selIdx >= 0) {
-                const lastOfRow = Math.min(
-                  (Math.floor(selIdx / GRID_COLS) + 1) * GRID_COLS - 1,
-                  teamPlayers.length - 1,
-                );
-                const sel = teamPlayers[selIdx];
-                if (sel) {
-                  nodes.splice(lastOfRow + 1, 0,
-                    <PlayerStatPanel
-                      key="panel"
-                      callUp={sel}
-                      teamAbbreviation={team.abbreviation}
-                      values={statOf(sel.playerId)}
-                      onChange={(field, v) => setStat(sel.playerId, field, v)}
-                      onClose={() => setOpenPlayerId(null)}
-                    />
-                  );
-                }
-              }
+              const teamOpen = openTeamIds.has(team.id);
+              const rivalTeamId = team.id === homeTeam.id ? awayTeam.id : homeTeam.id;
 
               return (
                 <div key={team.id}>
-                  <h4 className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-cypher-4-2-2">
-                    {team.name} · {teamPlayers.length}
-                  </h4>
-                  {teamPlayers.length === 0 ? (
-                    <p className="rounded-lg bg-cypher-5 px-3 py-2 text-[11px] text-cypher-4-2-2">
-                      Sin convocados presentes.
-                    </p>
-                  ) : (
-                    <div className="grid grid-cols-4 gap-2">{nodes}</div>
+                  <button
+                    type="button"
+                    aria-expanded={teamOpen}
+                    onClick={() => toggleTeam(team.id)}
+                    className="flex w-full items-center justify-between rounded-xl bg-cypher-1 px-3 py-2 text-left"
+                  >
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-cypher-4">
+                      {team.name} · {teamPlayers.length}
+                    </span>
+                    {teamOpen
+                      ? <ChevronUp className="size-3.5 text-cypher-4-2" />
+                      : <ChevronDown className="size-3.5 text-cypher-4-2" />}
+                  </button>
+
+                  {teamOpen && (
+                    <div className="mt-2">
+                      {teamPlayers.length === 0 ? (
+                        <p className="rounded-lg bg-cypher-5 px-3 py-2 text-[11px] text-cypher-4-2-2">
+                          Sin convocados presentes.
+                        </p>
+                      ) : (
+                        <PlayerGrid
+                          players={teamPlayers.map((c) => ({
+                            playerId: c.playerId,
+                            name: c.player.profile.displayName ?? "Jugador",
+                            image: c.player.profile.user.image,
+                            ready: readys.has(c.playerId),
+                          }))}
+                          openPlayerId={openPlayerId}
+                          onTogglePlayer={(pid) =>
+                            setOpenPlayerId((cur) => (cur === pid ? null : pid))
+                          }
+                          columns={4}
+                          renderPanel={(p) => {
+                            const callUp = teamPlayers.find((c) => c.playerId === p.playerId);
+                            if (!callUp) return null;
+                            return (
+                              <PlayerStatPanel
+                                callUp={callUp}
+                                teamAbbreviation={team.abbreviation}
+                                values={statOf(p.playerId)}
+                                goalsRemaining={remainingOf(team.id)}
+                                rivalGoalsRemaining={remainingOf(rivalTeamId)}
+                                onChange={(field, v) => setStat(p.playerId, field, v)}
+                                onAccept={() => acceptPlayer(p.playerId)}
+                                onClose={() => setOpenPlayerId(null)}
+                              />
+                            );
+                          }}
+                        />
+                      )}
+                    </div>
                   )}
                 </div>
               );
@@ -454,17 +610,24 @@ export function ResultWizard({
             className="mt-3 w-full resize-none rounded-xl border border-cypher-5-1-1 bg-cypher-5 px-3 py-2 text-xs text-cypher-4 outline-none placeholder:text-cypher-4-2-2 focus:border-cypher-2"
           />
 
-          {/* SaveBar sticky: conteo + única acción que inicia el envío */}
+          {/* SaveBar sticky: el guardado exige sumas completas (0 restantes por lado) */}
           <div className="sticky bottom-4 z-20 mt-4 rounded-2xl border border-cypher-5-1-1 bg-cypher-5-1/95 p-3 shadow-lg shadow-black/40">
             <div className="flex items-center gap-3">
-              <p className="flex-1 text-[10px] text-cypher-4-2">{present.length} jugadores en la plantilla</p>
-              <Button size="sm" disabled={isPending} onClick={() => setSaveConfirmOpen(true)}>
+              <p className="flex-1 text-[10px] text-cypher-4-2">
+                {goalsComplete ? `${present.length} jugadores en la plantilla` : saveBlockReason}
+              </p>
+              <Button
+                size="sm"
+                disabled={isPending || !goalsComplete}
+                onClick={() => setSaveConfirmOpen(true)}
+              >
                 {isPending ? "Guardando…" : "Guardar"}
               </Button>
             </div>
           </div>
 
-          {/* Confirmación de guardado: inline al final del formulario, no flotante */}
+          {/* Confirmación de guardado: inline al final del formulario, no flotante.
+              (Inalcanzable con goles incompletos: el botón está bloqueado.) */}
           {saveConfirmOpen && (
             <div ref={saveConfirmRef} className="mt-3 rounded-2xl border border-cypher-5-1-1 bg-cypher-5 p-4">
               <p className="text-sm font-semibold text-cypher-4">
@@ -472,7 +635,6 @@ export function ResultWizard({
               </p>
               <p className="mt-1 text-[11px] leading-relaxed text-cypher-4-2">
                 {present.length} jugadores · el partido pasará a Finalizado; la acción es definitiva.
-                {mismatch ? " Los goles por jugador difieren del marcador." : ""}
               </p>
               <div className="mt-3 flex gap-2">
                 <Button size="sm" disabled={isPending} onClick={handleSave}>

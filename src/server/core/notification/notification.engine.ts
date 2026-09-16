@@ -37,6 +37,42 @@ export const notificationEngine = {
     });
   },
 
+    /**
+   * D-1 v2 — Variante batch de create() para emisión masiva (result.load con ~30 convocados).
+   * MISMA semántica de preferencias que create(): se omite solo a quien tenga la fila con
+   * isEnabled=false; sin fila = habilitado (default true, igual que getPreferences()).
+   * 2 viajes en total (1 findMany de prefs + 1 createMany) en vez de 2 por notificación.
+   * NOTA: a diferencia de create(), no retorna las filas creadas (createMany no las devuelve);
+   * los consumidores actuales ignoran el retorno de create().
+   */
+  async createManyForMatch(tx: PrismaTx, inputs: CreateNotificationInput[]) {
+    if (inputs.length === 0) return;
+
+    const userIds = [...new Set(inputs.map((i) => i.userId))];
+    const families = [...new Set(inputs.map((i) => i.family))];
+
+    const prefs = await tx.notificationPreference.findMany({
+      where: { userId: { in: userIds }, family: { in: families } },
+    });
+    const muted = new Set(
+      prefs.filter((p) => !p.isEnabled).map((p) => `${p.userId}:${p.family}`),
+    );
+
+    const allowed = inputs.filter((i) => !muted.has(`${i.userId}:${i.family}`));
+    if (allowed.length === 0) return;
+
+    await tx.notification.createMany({
+      data: allowed.map((i) => ({
+        userId: i.userId,
+        family: i.family,
+        type: i.type,
+        title: i.title,
+        body: i.body,
+        payload: i.payload ?? Prisma.JsonNull,
+      })),
+    });
+  },
+
   async list(db: PrismaClient, userId: string) {
     return db.notification.findMany({
       where: { 

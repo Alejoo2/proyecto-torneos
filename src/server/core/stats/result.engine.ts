@@ -1,4 +1,5 @@
 import type { PrismaClient } from "@prisma/client";
+import { NotificationFamily, NotificationType } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { statsEngine } from "./stats.engine";
 import { notificationEngine } from "../notification/notification.engine";
@@ -16,11 +17,11 @@ interface PlayerStatInput {
 
 export const resultEngine = {
   async loadResult(
-    db: PrismaClient, 
-    matchId: string, 
-    homeScore: number, 
-    awayScore: number, 
-    playerStats: PlayerStatInput[], 
+    db: PrismaClient,
+    matchId: string,
+    homeScore: number,
+    awayScore: number,
+    playerStats: PlayerStatInput[],
     userId: string
   ) {
     return db.$transaction(async (tx) => {
@@ -67,34 +68,29 @@ export const resultEngine = {
         });
 
         if (nextPhase) {
-          // Lógica simplificada para encontrar el partido hijo en el bracket.
-          // Asumiendo que el partido actual es el índice N en su fase, 
-          // alimentará al partido Math.floor(N/2) en la siguiente fase.
           const currentPhaseMatches = await tx.match.findMany({
             where: { phaseId: match.phaseId },
-            orderBy: { createdAt: "asc" } // El orden de creación dicta el bracket
+            orderBy: { createdAt: "asc" }
           });
-          
+
           const matchIndex = currentPhaseMatches.findIndex(m => m.id === matchId);
           const nextMatchIndex = Math.floor(matchIndex / 2);
-          
+
           const nextMatches = await tx.match.findMany({
             where: { phaseId: nextPhase.id },
             orderBy: { createdAt: "asc" }
           });
-          
+
           const nextMatch = nextMatches[nextMatchIndex];
           if (nextMatch) {
-            // Si es par, va al homeTeam, si es impar al awayTeam (convención típica de brackets)
             const isEven = matchIndex % 2 === 0;
             await tx.match.update({
               where: { id: nextMatch.id },
               data: isEven ? { homeTeamId: winnerId } : { awayTeamId: winnerId }
             });
 
-            // Crear convocatorias para los jugadores del equipo que avanza
-            const players = await tx.teamMembership.findMany({ 
-              where: { teamId: winnerId, leftAt: null } 
+            const players = await tx.teamMembership.findMany({
+              where: { teamId: winnerId, leftAt: null }
             });
             await tx.matchCallUp.createMany({
               data: players.map(p => ({ matchId: nextMatch.id, teamId: winnerId, playerId: p.playerId })),
@@ -104,40 +100,44 @@ export const resultEngine = {
         }
       }
 
-      // 6. Recálculo Atómico de Estadísticas (Sistema 10)
-      const teamIds = [match.homeTeamId, match.awayTeamId].filter(Boolean) as string[];
-      const playerIds = playerStats.map(ps => ps.playerId);
+      // 6. Recálculo Atómico de Estadísticas (Sistema 10) — D-1 v2: batch secuencial.
+      // Orden jugadores → equipos → standings NO es cosmético: el fair play del equipo
+      // lee los PlayerStats recién escritos (read-your-own-writes en tx). Elimina la
+      // carrera latente del Promise.all original, que mezclaba lectores y escritores
+      // de PlayerStats en paralelo.
+      const teamIds = [...new Set([match.homeTeamId, match.awayTeamId].filter(Boolean) as string[])];
+      const playerIds = [...new Set(playerStats.map(ps => ps.playerId))];
       const isWalkover = false;
 
       if (!isWalkover) {
-        await Promise.all([
-          ...playerIds.map(pid => statsEngine.recalculatePlayerStats(tx, pid)),
-          ...teamIds.map(tid => statsEngine.recalculateTeamStats(tx, tid)),
-          statsEngine.recalculateTournamentStandings(tx, match.tournamentId)
-        ]);
+        await statsEngine.recalculatePlayerStatsBatch(tx, playerIds);
+        await statsEngine.recalculateTeamStatsBatch(tx, teamIds);
+        await statsEngine.recalculateTournamentStandings(tx, match.tournamentId);
       }
 
-      // 7. Emitir Notificaciones (Sistema 11)
+      // 7. Emitir Notificaciones (Sistema 11) — D-1 v2: loteadas vía método aditivo
+      // del engine (mantiene la semántica de preferencias: sin fila = habilitado).
       const usersToNotify = await tx.player.findMany({
         where: { id: { in: playerIds } },
         select: { profile: { select: { userId: true } } }
       });
 
-      await Promise.all(usersToNotify.map(u => 
-        notificationEngine.create(tx, {
+      await notificationEngine.createManyForMatch(
+        tx,
+        usersToNotify.map(u => ({
           userId: u.profile.userId,
-          family: "MATCH",
-          type: "MATCH_RESULT_LOADED",
+          family: NotificationFamily.MATCH,
+          type: NotificationType.MATCH_RESULT_LOADED,
           title: "Resultado Cargado",
           body: `El resultado de tu partido ha sido cargado. ${homeScore} - ${awayScore}`,
-          payload: { matchId, tournamentId: match.tournamentId }
-        })
-      ));
+          payload: { matchId, tournamentId: match.tournamentId },
+        })),
+      );
 
       return { success: true };
       },
-      // D-1: la cascada (recalc por jugador + notificaciones) supera el timeout
-      // default de 5s en dev con ~30 convocados (runtime WASM). Explícito.
+      // Cinturón: la cascada batch debería resolver en <10s incluso en dev WASM,
+      // pero el timeout explícito se conserva como decisión ya tomada.
       { timeout: 30000, maxWait: 10000 },
     );
   }
