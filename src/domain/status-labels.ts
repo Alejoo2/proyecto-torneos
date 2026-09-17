@@ -53,3 +53,19 @@ export const COURT_STATUS: Record<CourtStatus, StatusLabel> = {
   ENABLED: { label: "Habilitada", variant: "success" },
   DISABLED: { label: "Deshabilitada", variant: "error" },
 };
+// ─── W5 (aditivo) — Dominio Cancha ───
+
+export type StatusBadgeVariant = "success" | "warning" | "error" | "neutral";
+
+export const TOURNAMENT_STATUS_LABEL: Record<string, { label: string; variant: StatusBadgeVariant }> = {
+  DRAFT:        { label: "Borrador",   variant: "neutral" },
+  SCHEDULED:    { label: "Programado", variant: "neutral" },
+  GRACE_PERIOD: { label: "En gracia",  variant: "warning" },
+  IN_PROGRESS:  { label: "En curso",   variant: "success" },
+  FINISHED:     { label: "Finalizado", variant: "neutral" },
+};
+
+export const COURT_STATUS_LABEL: Record<string, { label: string; variant: StatusBadgeVariant }> = {
+  ENABLED:  { label: "Habilitada",   variant: "success" },
+  DISABLED: { label: "Deshabilitada", variant: "error" },
+};

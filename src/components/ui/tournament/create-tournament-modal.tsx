@@ -1,9 +1,24 @@
 "use client";
 
 import { useState } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { Button } from "torneos/components/ui/button/button";
+import { DAY_LABELS, SLOT_LABELS } from "torneos/domain/schedule/labels";
 
-interface CreateTournamentInput {
+// W5 — Re-skin del modal de creación de torneo (bottom sheet Cypher).
+// Contrato INTACTO: { courtId, isOpen, onClose, onCreate }. submitError es ADITIVO
+// (opcional): el error del servidor (p.ej. franja ocupada) se renderiza inline —
+// patrón W4 (confirmación INLINE); no existe API de toast invocable en el código.
+// Capa: bottom sheet = 40 en la escalera (bajo la nav 50 — la nav JAMÁS se tapa,
+// doc UI/UX 2.3/2.4). Espejos del zod de tournament.create:
+//   · name.min(2) → deshabilita el submit.
+//   · enrollmentDeadline futura (refine d > now) → se envía el FIN del día elegido
+//     (23:59) para que "hoy" sea elegible; submit deshabilitado si queda en pasado.
+//   · maxTeams potencia de 2 → solo se ofrecen opciones válidas.
+// format/type no se exponen en UI: se envían SINGLE_ELIMINATION / PUBLIC (válidos
+// para el engine; el front ofrece un subconjunto, jamás algo que el engine rechace).
+
+export interface CreateTournamentInput {
   courtId: string;
   name: string;
   maxTeams: number;
@@ -21,112 +36,179 @@ interface CreateTournamentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreate: (data: CreateTournamentInput) => void;
+  /** W5 (aditivo, opcional): error del servidor para revisión inline. */
+  submitError?: string | null;
 }
 
-const DAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
-const SLOTS = ["00:00 - 02:00", "02:00 - 04:00", "04:00 - 06:00", "06:00 - 08:00", "08:00 - 10:00", "10:00 - 12:00", "12:00 - 14:00", "14:00 - 16:00", "16:00 - 18:00", "18:00 - 20:00", "20:00 - 22:00", "22:00 - 00:00"];
+const INPUT_CLS =
+  "h-11 w-full rounded-xl border border-cypher-4/15 bg-cypher-5-1-1 px-4 text-sm text-cypher-4 placeholder:text-cypher-4-2-2 focus:border-cypher-2/60 focus:outline-none";
+const LABEL_CLS = "mb-1 block text-xs font-medium text-cypher-4-2";
 
-export function CreateTournamentModal({ courtId, isOpen, onClose, onCreate }: CreateTournamentModalProps) {
+export function CreateTournamentModal({
+  courtId,
+  isOpen,
+  onClose,
+  onCreate,
+  submitError = null,
+}: CreateTournamentModalProps) {
   const [name, setName] = useState("");
   const [maxTeams, setMaxTeams] = useState(8);
   const [dayOfWeek, setDayOfWeek] = useState(1);
-  const [timeSlot, setTimeSlot] = useState(9); // 18:00 por defecto
+  const [timeSlot, setTimeSlot] = useState(9); // 18:00 - 20:00 por defecto
   const [deadline, setDeadline] = useState("");
 
-  if (!isOpen) return null;
+  const trimmedName = name.trim();
+  const deadlineAt = deadline ? new Date(`${deadline}T23:59:59`) : null;
+  const isNameValid = trimmedName.length >= 2;
+  const isDeadlineValid = deadlineAt !== null && deadlineAt.getTime() > Date.now();
+  const canSubmit = isNameValid && isDeadlineValid;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!canSubmit || deadlineAt === null) return;
     onCreate({
       courtId,
-      name,
+      name: trimmedName,
       maxTeams,
       dayOfWeek,
       timeSlot,
-      enrollmentDeadline: new Date(deadline),
+      enrollmentDeadline: deadlineAt,
       format: "SINGLE_ELIMINATION",
-      type: "PUBLIC"
+      type: "PUBLIC",
     });
   };
 
   return (
-    <div className="fixed inset-0 z-[80] bg-black/70 flex items-end justify-center">
-      <div className="bg-white rounded-t-3xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="w-12 h-1.5 bg-zinc-200 rounded-full mx-auto mb-6"></div>
-        
-        <h3 className="text-lg font-bold text-zinc-900 mb-4">Crear Torneo en esta Cancha</h3>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-zinc-600 mb-1">Nombre del Torneo</label>
-            <input 
-              type="text" 
-              value={name} 
-              onChange={(e) => setName(e.target.value)} 
-              placeholder="Ej: Liga de Barrio 2026" 
-              required
-              className="w-full h-12 bg-zinc-50 rounded-xl border border-zinc-200 px-4 focus:border-zinc-400 focus:outline-none"
-            />
-          </div>
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          className="fixed inset-0 z-40 flex items-end justify-center bg-cypher-5/80 backdrop-blur-sm"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={onClose}
+        >
+          <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Crear torneo en esta cancha"
+            className="max-h-[85dvh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-3xl border-t border-cypher-4/10 bg-cypher-5-1 p-6 pb-24"
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", stiffness: 320, damping: 32 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div aria-hidden className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-cypher-4-2-2/40" />
 
-          <div>
-            <label className="block text-xs font-medium text-zinc-600 mb-1">Cupos Máximos</label>
-            <select 
-              value={maxTeams} 
-              onChange={(e) => setMaxTeams(Number(e.target.value))}
-              className="w-full h-12 bg-zinc-50 rounded-xl border border-zinc-200 px-4 focus:border-zinc-400 focus:outline-none"
-            >
-              <option value={4}>4 equipos</option>
-              <option value={8}>8 equipos</option>
-              <option value={16}>16 equipos</option>
-              <option value={32}>32 equipos</option>
-            </select>
-          </div>
+            <h3 className="mb-4 text-base font-bold text-cypher-4">Crear torneo en esta cancha</h3>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-zinc-600 mb-1">Día del torneo</label>
-              <select 
-                value={dayOfWeek} 
-                onChange={(e) => setDayOfWeek(Number(e.target.value))}
-                className="w-full h-12 bg-zinc-50 rounded-xl border border-zinc-200 px-4 focus:border-zinc-400 focus:outline-none"
-              >
-                {DAYS.map((day, i) => <option key={i} value={i}>{day}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-zinc-600 mb-1">Franja Horaria</label>
-              <select 
-                value={timeSlot} 
-                onChange={(e) => setTimeSlot(Number(e.target.value))}
-                className="w-full h-12 bg-zinc-50 rounded-xl border border-zinc-200 px-4 focus:border-zinc-400 focus:outline-none"
-              >
-                {SLOTS.map((slot, i) => <option key={i} value={i}>{slot}</option>)}
-              </select>
-            </div>
-          </div>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="tournament-name" className={LABEL_CLS}>
+                  Nombre del torneo
+                </label>
+                <input
+                  id="tournament-name"
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ej: Liga de Barrio 2026"
+                  maxLength={100}
+                  className={INPUT_CLS}
+                />
+              </div>
 
-          <div>
-            <label className="block text-xs font-medium text-zinc-600 mb-1">Cierra Inscripción</label>
-            <input 
-              type="date" 
-              value={deadline} 
-              onChange={(e) => setDeadline(e.target.value)} 
-              required
-              className="w-full h-12 bg-zinc-50 rounded-xl border border-zinc-200 px-4 focus:border-zinc-400 focus:outline-none"
-            />
-          </div>
+              <div>
+                <label htmlFor="tournament-max-teams" className={LABEL_CLS}>
+                  Cupos máximos
+                </label>
+                <select
+                  id="tournament-max-teams"
+                  value={maxTeams}
+                  onChange={(e) => setMaxTeams(Number(e.target.value))}
+                  className={INPUT_CLS}
+                >
+                  <option value={4}>4 equipos</option>
+                  <option value={8}>8 equipos</option>
+                  <option value={16}>16 equipos</option>
+                  <option value={32}>32 equipos</option>
+                </select>
+              </div>
 
-          <div className="flex gap-3 pt-4">
-            <Button type="button" variant="secondary" className="flex-1 min-h-[48px]" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button type="submit" className="flex-1 min-h-[48px]">
-              Crear Torneo
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="tournament-day" className={LABEL_CLS}>
+                    Día del torneo
+                  </label>
+                  <select
+                    id="tournament-day"
+                    value={dayOfWeek}
+                    onChange={(e) => setDayOfWeek(Number(e.target.value))}
+                    className={INPUT_CLS}
+                  >
+                    {DAY_LABELS.map((day, i) => (
+                      <option key={i} value={i}>
+                        {day}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="tournament-slot" className={LABEL_CLS}>
+                    Franja horaria
+                  </label>
+                  <select
+                    id="tournament-slot"
+                    value={timeSlot}
+                    onChange={(e) => setTimeSlot(Number(e.target.value))}
+                    className={INPUT_CLS}
+                  >
+                    {SLOT_LABELS.map((slot, i) => (
+                      <option key={i} value={i}>
+                        {slot}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label htmlFor="tournament-deadline" className={LABEL_CLS}>
+                  Cierra inscripción
+                </label>
+                <input
+                  id="tournament-deadline"
+                  type="date"
+                  value={deadline}
+                  onChange={(e) => setDeadline(e.target.value)}
+                  min={new Date().toISOString().slice(0, 10)}
+                  className={INPUT_CLS}
+                />
+                {deadline && !isDeadlineValid && (
+                  <p className="mt-1 text-xs text-red-400">La fecha límite debe ser futura.</p>
+                )}
+              </div>
+
+              {submitError && (
+                <p className="text-xs text-red-400" role="alert">
+                  {submitError}
+                </p>
+              )}
+
+              <div className="flex gap-3 pt-2">
+                <Button type="button" variant="secondary" className="min-h-[48px] flex-1" onClick={onClose}>
+                  Cancelar
+                </Button>
+                <Button type="submit" className="min-h-[48px] flex-1" disabled={!canSubmit}>
+                  Crear torneo
+                </Button>
+              </div>
+            </form>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }

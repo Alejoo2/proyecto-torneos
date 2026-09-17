@@ -4,81 +4,78 @@ import { useRouter } from "next/navigation";
 import { api } from "torneos/trpc/react";
 import { CourtForm } from "torneos/components/ui/court-form/court-form";
 import { Button } from "torneos/components/ui/button/button";
+import { Badge } from "torneos/components/ui/badge";
+import { LoadingSkeleton } from "torneos/components/ui/loading-skeleton";
+import { COURT_STATUS_LABEL } from "torneos/domain/status-labels";
+
+// W5 — Re-skin admin de canchas (piel blanca → Cypher). Entry point MÍNIMO:
+// mismas queries/mutaciones del scaffold, sin guards nuevos — el backend ya exige
+// "court:create" (solo admin) en cada procedimiento. Sin optimistic: la navegación
+// al detalle tras crear ES la confirmación; el error (ej. CONFLICT nombre
+// duplicado) se muestra en línea bajo el form.
 
 export function AdminCourtTemplate() {
   const router = useRouter();
-  
-  // Obtener todas las canchas
-  const { data: courts, isLoading } = api.court.list.useQuery({
-    status: "ALL",
-  });
 
-  // Mutación para crear cancha
+  const { data: courts, isLoading } = api.court.list.useQuery({ status: "ALL" });
+
   const createMutation = api.court.create.useMutation({
     onSuccess: (newCourt) => {
-      // Al crear, navegamos al detalle para ver la matriz generada
       router.push(`/canchas/${newCourt.id}`);
     },
   });
 
   return (
-    <div className="space-y-8">
-      {/* Sección de Creación */}
-      <div className="bg-white rounded-2xl p-6 border border-zinc-200">
-        <h2 className="text-lg font-bold text-zinc-900 mb-4">Crear Nueva Cancha</h2>
-        <CourtForm 
-          onSubmit={(data) => createMutation.mutate(data)} 
-          isLoading={createMutation.isPending} 
-        />
+    <div className="space-y-6">
+      <section className="rounded-2xl border border-cypher-4/10 bg-cypher-5-1 p-5">
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-cypher-4-2">
+          Crear nueva cancha
+        </h2>
+        <CourtForm onSubmit={(data) => createMutation.mutate(data)} isLoading={createMutation.isPending} />
         {createMutation.error && (
-          <p className="text-red-500 text-sm mt-2">
-            Error: {createMutation.error.message}
+          <p className="mt-3 text-sm text-red-400" role="alert">
+            {createMutation.error.message}
           </p>
         )}
-      </div>
+      </section>
 
-      {/* Sección de Listado */}
-      <div className="bg-white rounded-2xl p-6 border border-zinc-200">
-        <h2 className="text-lg font-bold text-zinc-900 mb-4">Canchas Existentes</h2>
-        
+      <section className="rounded-2xl border border-cypher-4/10 bg-cypher-5-1 p-5">
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-cypher-4-2">
+          Canchas existentes
+        </h2>
+
         {isLoading ? (
-          <p className="text-zinc-500">Cargando...</p>
+          <LoadingSkeleton variant="row" rows={3} />
         ) : courts && courts.length > 0 ? (
           <div className="space-y-3">
-            {courts.map((court) => (
-              <div 
-                key={court.id} 
-                className="flex items-center justify-between p-4 rounded-xl bg-zinc-50 border border-zinc-100"
-              >
-                <div>
-                  <p className="font-semibold text-zinc-900">{court.name}</p>
-                  <p className="text-sm text-zinc-500">{court.address}</p>
+            {courts.map((court) => {
+              const statusMeta =
+                COURT_STATUS_LABEL[court.status] ?? { label: court.status, variant: "neutral" as const };
+              return (
+                <div
+                  key={court.id}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-cypher-4/10 bg-cypher-5-1-1 p-4"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-semibold text-cypher-4">{court.name}</p>
+                    <p className="truncate text-sm text-cypher-4-2-2">{court.address}</p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-3">
+                    <Badge variant={statusMeta.variant} status={statusMeta.label} />
+                    <Button variant="secondary" size="sm" onClick={() => router.push(`/canchas/${court.id}`)}>
+                      Administrar
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    court.status === "ENABLED" 
-                      ? "bg-green-100 text-green-700" 
-                      : "bg-red-100 text-red-700"
-                  }`}>
-                    {court.status === "ENABLED" ? "Habilitada" : "Deshabilitada"}
-                  </span>
-                  <Button 
-                    variant="secondary" 
-                    size="sm"
-                    onClick={() => router.push(`/canchas/${court.id}`)}
-                  >
-                    Administrar
-                  </Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
-          <p className="text-zinc-500 text-center py-4">
-            No hay canchas registradas. Crea una arriba.
+          <p className="py-4 text-center text-sm text-cypher-4-2-2">
+            No hay canchas registradas. Crea la primera arriba.
           </p>
         )}
-      </div>
+      </section>
     </div>
   );
 }
