@@ -3,6 +3,7 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { VITRINE_TOURNAMENT_WHERE } from "torneos/lib/hub";
 import { fisherYatesShuffle, generateEliminationPhases } from "./tournament.helpers";
+import { matchEngine } from "torneos/server/core/match/match.engine";
 
 type PrismaDb = PrismaClient | Prisma.TransactionClient;
 type CreateTournamentInput = Omit<Prisma.TournamentUncheckedCreateInput, "managerId" | "status">;
@@ -138,8 +139,13 @@ export const tournamentEngine = {
       throw new TRPCError({ code: "BAD_REQUEST", message: "Debe haber al menos 2 equipos aprobados y ser potencia de 2" });
     }
 
-    // Sorteo y creación de fases en transacción atómica
-    return prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    // Sorteo y creación de fases en transacción atómica.
+    // Timeout extendido (default 5s): generateFromDraw notifica convocado-por-
+    // convocado dentro de la tx (~2 queries c/u) — con 30 convocados son ~17
+    // round-trips (6.4s medidos en dev). Deuda B-18: el loop secuencial no
+    // escala a brackets de 32 equipos; batch de notificaciones pendiente.
+    return prisma.$transaction(
+      async (tx: Prisma.TransactionClient) => {
       const shuffledTeams = fisherYatesShuffle(approvedTeams.map(e => ({ id: e.teamId })));
       const phasesData = generateEliminationPhases(shuffledTeams.length);
 
@@ -154,12 +160,29 @@ export const tournamentEngine = {
         }))
       );
 
-      // Actualizar estado del torneo a IN_PROGRESS
+      // ─── W5-fix: conectar la pieza huérfana del match engine ───
+      // generateFromDraw fue construida para este destino (su comentario
+      // original lo declaraba: "DENTRO de la transacción de closeAndDraw")
+      // y nunca fue invocada. Pre-crea el bracket completo (rondas futuras
+      // con equipos null), agenda fechas semanales por ronda y materializa
+      // convocatorias + notificaciones MATCH_SCHEDULED para la ronda 1.
+      // Requiere el helper con order por secuencia de juego (ronda 1 = order 1).
+      await matchEngine.generateFromDraw(
+        tx,
+        tournament.id,
+        shuffledTeams,
+        tournament.dayOfWeek,
+        tournament.timeSlot,
+      );
+
+            // Actualizar estado del torneo a IN_PROGRESS
       return tx.tournament.update({
         where: { id: tournamentId },
         data: { status: "IN_PROGRESS" },
       });
-    });
+      },
+      { timeout: 20000 },
+    );
   },
 
   async getById(prisma: PrismaDb, tournamentId: string) {

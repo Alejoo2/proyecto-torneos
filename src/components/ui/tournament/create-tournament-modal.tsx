@@ -6,17 +6,18 @@ import { Button } from "torneos/components/ui/button/button";
 import { DAY_LABELS, SLOT_LABELS } from "torneos/domain/schedule/labels";
 
 // W5 — Re-skin del modal de creación de torneo (bottom sheet Cypher).
-// Contrato INTACTO: { courtId, isOpen, onClose, onCreate }. submitError es ADITIVO
-// (opcional): el error del servidor (p.ej. franja ocupada) se renderiza inline —
-// patrón W4 (confirmación INLINE); no existe API de toast invocable en el código.
-// Capa: bottom sheet = 40 en la escalera (bajo la nav 50 — la nav JAMÁS se tapa,
-// doc UI/UX 2.3/2.4). Espejos del zod de tournament.create:
+// Contrato: { courtId, isOpen, onClose, onCreate } + enmienda aditiva W5:
+// submitError?: string | null — error inline del engine (patrón W4; no hay
+// toast API). Lo muestra el template: se limpia al abrir y onSuccess.
+// Capa: bottom sheet = 40 (la nav 50 flota encima — JAMÁS se tapa, doc 2.3/2.4).
+// QA-W5: pb-28 interno — el form queda sobre la BottomNav (64px + safe-area).
+// Espejos del zod de tournament.create:
 //   · name.min(2) → deshabilita el submit.
-//   · enrollmentDeadline futura (refine d > now) → se envía el FIN del día elegido
-//     (23:59) para que "hoy" sea elegible; submit deshabilitado si queda en pasado.
-//   · maxTeams potencia de 2 → solo se ofrecen opciones válidas.
-// format/type no se exponen en UI: se envían SINGLE_ELIMINATION / PUBLIC (válidos
-// para el engine; el front ofrece un subconjunto, jamás algo que el engine rechace).
+//   · enrollmentDeadline futura (refine d > now) → se envía el FIN del día
+//     elegido (23:59) para que "hoy" sea elegible.
+//   · maxTeams potencia de 2 → solo opciones válidas.
+// format/type no se exponen: SINGLE_ELIMINATION / PUBLIC (subconjunto válido —
+// el front jamás ofrece lo que el engine rechaza).
 
 export interface CreateTournamentInput {
   courtId: string;
@@ -36,7 +37,7 @@ interface CreateTournamentModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreate: (data: CreateTournamentInput) => void;
-  /** W5 (aditivo, opcional): error del servidor para revisión inline. */
+  /** Error del engine en línea (patrón W4). El dueño del estado es el template. */
   submitError?: string | null;
 }
 
@@ -49,7 +50,7 @@ export function CreateTournamentModal({
   isOpen,
   onClose,
   onCreate,
-  submitError = null,
+  submitError,
 }: CreateTournamentModalProps) {
   const [name, setName] = useState("");
   const [maxTeams, setMaxTeams] = useState(8);
@@ -93,7 +94,7 @@ export function CreateTournamentModal({
             role="dialog"
             aria-modal="true"
             aria-label="Crear torneo en esta cancha"
-            className="max-h-[85dvh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-3xl border-t border-cypher-4/10 bg-cypher-5-1 p-6 pb-24"
+            className="max-h-[85dvh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-3xl border-t border-cypher-4/10 bg-cypher-5-1 p-6 pb-28"
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
@@ -192,7 +193,10 @@ export function CreateTournamentModal({
               </div>
 
               {submitError && (
-                <p className="text-xs text-red-400" role="alert">
+                <p
+                  role="alert"
+                  className="rounded-xl border border-red-500/30 bg-cypher-5-1 px-3 py-2 text-xs text-red-400"
+                >
                   {submitError}
                 </p>
               )}

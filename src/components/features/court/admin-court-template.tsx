@@ -12,7 +12,9 @@ import { COURT_STATUS_LABEL } from "torneos/domain/status-labels";
 // mismas queries/mutaciones del scaffold, sin guards nuevos — el backend ya exige
 // "court:create" (solo admin) en cada procedimiento. Sin optimistic: la navegación
 // al detalle tras crear ES la confirmación; el error (ej. CONFLICT nombre
-// duplicado) se muestra en línea bajo el form.
+// duplicado) se muestra en línea bajo el form (patrón W4 — no hay toast API).
+// Fix QA-W5: Badge es archivo suelto (ui/badge) y su contrato real es
+// { variant, status(label) } — sin children.
 
 export function AdminCourtTemplate() {
   const router = useRouter();
@@ -49,8 +51,10 @@ export function AdminCourtTemplate() {
         ) : courts && courts.length > 0 ? (
           <div className="space-y-3">
             {courts.map((court) => {
-              const statusMeta =
-                COURT_STATUS_LABEL[court.status] ?? { label: court.status, variant: "neutral" as const };
+              const statusMeta = COURT_STATUS_LABEL[court.status] ?? {
+                label: court.status,
+                variant: "neutral" as const,
+              };
               return (
                 <div
                   key={court.id}

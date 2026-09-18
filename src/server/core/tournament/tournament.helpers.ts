@@ -19,7 +19,7 @@ export function generateEliminationPhases(teamCount: number): { name: string; or
   for (let i = 0; i < rounds; i++) {
     phases.push({
       name: phaseNames[i] ?? `Ronda ${rounds - i}`,
-      order: i + 1,
+      order: rounds - i,
     });
   }
   return phases.reverse(); // Ordenar de primera ronda a final

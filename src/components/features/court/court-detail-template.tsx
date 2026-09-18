@@ -102,7 +102,7 @@ export function CourtDetailTemplate({ courtId, isLoggedIn }: CourtDetailTemplate
     : null;
 
   return (
-    <div className="pb-10">
+    <div className="pt-10 pb-40">
       {/* ── CourtHero ── */}
       <motion.section
         initial={{ opacity: 0, y: 8 }}
@@ -112,8 +112,8 @@ export function CourtDetailTemplate({ courtId, isLoggedIn }: CourtDetailTemplate
       >
         {court && courtStatusMeta ? (
           <>
-            <div className="flex items-start justify-between gap-3">
-              <h1 className="text-2xl font-bold leading-tight text-cypher-4">{court.name}</h1>
+            <div className="flex items-start justify-between gap-4">
+              <h1 className="text-2xl font-bold leading-tight text-cypher-2">{court.name}</h1>
               <Badge variant={courtStatusMeta.variant} status={courtStatusMeta.label} />
             </div>
             <p className="mt-1 flex items-center gap-1.5 text-sm text-cypher-4-2">

@@ -6,6 +6,8 @@ import { dayLabel } from "torneos/domain/schedule/labels";
 // Es la matriz que se quitó del bubble en W1 y aterriza aquí (solo lectura):
 // consume el read-model de court.getBubble (days[].slots[].isFree) — sin estado,
 // sin toggles. La edición admin vive en court-availability-matrix (contrato intacto).
+// getBubble SOLO devuelve canchas ENABLED (DISABLED → 404 en la page): la matriz
+// pública no conoce el estado apagado — no hay prop de corte.
 
 export interface CourtAvailabilityDay {
   /** ISO UTC medianoche (columna @db.Date) — se lee con getters UTC para no correr el día. */
@@ -26,7 +28,7 @@ export function CourtAvailabilityGrid({ days }: CourtAvailabilityGridProps) {
     <div>
       <div
         role="img"
-        aria-label="Matriz de disponibilidad de los próximos 7 días. Verde: libre. Gris: ocupada."
+        aria-label="Matriz de disponibilidad de los próximos 7 días. Verde: libre. Gris: ocupada o cerrada."
         className="grid grid-cols-[52px_repeat(12,1fr)] gap-1"
       >
         <div />
@@ -48,9 +50,7 @@ export function CourtAvailabilityGrid({ days }: CourtAvailabilityGridProps) {
               </div>
               {Array.from({ length: SLOT_COUNT }, (_, slot) => {
                 const isFree = day.slots.some((s) => s.timeSlot === slot && s.isFree);
-                return (
-                  <div key={slot} className={courtAvailabilityCellVariants({ state: isFree ? "free" : "busy" })} />
-                );
+                return <div key={slot} className={courtAvailabilityCellVariants({ state: isFree ? "free" : "busy" })} />;
               })}
             </div>
           );
