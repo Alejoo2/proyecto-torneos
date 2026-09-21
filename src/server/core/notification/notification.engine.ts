@@ -74,16 +74,17 @@ export const notificationEngine = {
   },
 
   async list(db: PrismaClient, userId: string) {
+    // Obtener familias explícitamente deshabilitadas por el usuario
+    const disabledPrefs = await db.notificationPreference.findMany({
+      where: { userId, isEnabled: false },
+      select: { family: true },
+    });
+    const disabledFamilies = disabledPrefs.map((p) => p.family);
+
     return db.notification.findMany({
-      where: { 
+      where: {
         userId,
-        // Solo traer notificaciones de familias que el usuario tenga habilitadas
-        family: {
-          in: (await db.notificationPreference.findMany({
-            where: { userId, isEnabled: true },
-            select: { family: true }
-          })).map(p => p.family)
-        }
+        ...(disabledFamilies.length > 0 ? { family: { notIn: disabledFamilies } } : {}),
       },
       orderBy: { createdAt: "desc" },
       take: 50,

@@ -2,6 +2,8 @@
 
 import { signIn } from "next-auth/react";
 import { useState } from "react";
+import { FlaskConical } from "lucide-react";
+import { Button } from "torneos/components/ui/button/button";
 
 export default function DevLoginPage() {
   const [email, setEmail] = useState("");
@@ -13,26 +15,33 @@ export default function DevLoginPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4">
-      <h1 className="text-2xl font-bold mb-6">🧪 Dev Login (Solo Testing)</h1>
-      <form onSubmit={handleLogin} className="flex flex-col gap-4 w-full max-w-sm">
-        <input 
-          type="email" 
+    <main className="flex flex-1 flex-col items-center justify-center px-6 py-10">
+      <div className="mb-8 flex flex-col items-center text-center">
+        <span className="flex size-12 items-center justify-center rounded-2xl bg-cypher-5-1-1 text-cypher-1">
+          <FlaskConical className="size-6" />
+        </span>
+        <h1 className="mt-4 text-xl font-bold text-cypher-4">Dev Login</h1>
+        <p className="mt-1 text-sm text-cypher-4-2">Solo testing — no existe en producción.</p>
+      </div>
+
+      <form onSubmit={handleLogin} className="flex w-full max-w-sm flex-col gap-3">
+        <input
+          type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="ej: capitan@barrio.com"
-          className="px-4 py-2 rounded-lg bg-gray-800 border border-gray-700 outline-none"
           required
+          aria-label="Email del usuario de prueba"
+          className="h-11 rounded-xl bg-cypher-5-1-1 px-3 text-base text-cypher-4 placeholder:text-cypher-4-2-2 outline-none focus:ring-2 focus:ring-cypher-2/60"
         />
-        <button type="submit" className="bg-blue-600 hover:bg-blue-700 py-2 rounded-lg font-medium">
+        <Button type="submit" className="w-full">
           Entrar como este usuario
-        </button>
+        </Button>
       </form>
-      
-      <div className="mt-8 text-sm text-gray-400 text-center">
-        <p>Si el usuario no existe, se crea en la BD al instante con rol Player y disponibilidad completa.</p>
-        <p className="mt-2">Prueba con: <code className="bg-gray-800 px-2 py-1 rounded">capitan@barrio.com</code> y <code className="bg-gray-800 px-2 py-1 rounded">jugador1@barrio.com</code></p>
-      </div>
-    </div>
+
+      <p className="mt-8 max-w-sm text-center text-xs text-cypher-4-2-2">
+        Si el usuario no existe, se crea al instante con rol jugador y disponibilidad completa.
+      </p>
+    </main>
   );
 }

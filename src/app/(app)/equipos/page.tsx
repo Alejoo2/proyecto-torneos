@@ -1,17 +1,15 @@
-import { CreateTeamForm } from "torneos/components/features/team/create-team-form";
-import { TeamsList } from "torneos/components/features/team/teams-list";
+import { api, HydrateClient } from "torneos/trpc/server";
+import { TeamListTemplate } from "torneos/components/features/team/team-list-template";
 
-export default function TeamsPage() {
+export default async function TeamsPage() {
+  // Patrón A/W2: materializar en el RSC y sembrar el caché.
+  // Protegida: en anónimo el prefetch falla en silencio y el cache queda vacío;
+  // el template gatea con useSession (EmptyState de login).
+  await api.team.getMyTeams.prefetch();
+
   return (
-    <main className="flex flex-col gap-8 p-4 md:p-8 max-w-5xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-4">Mis Equipos</h1>
-        <TeamsList />
-      </div>
-
-      <div className="border-t border-gray-100 pt-8">
-        <CreateTeamForm />
-      </div>
-    </main>
+    <HydrateClient>
+      <TeamListTemplate />
+    </HydrateClient>
   );
 }

@@ -1,9 +1,11 @@
 "use client";
 
 import { createContext, useContext, useMemo, useState, type ReactNode } from "react";
+import { useSession } from "next-auth/react";
+import { signOut } from "next-auth/react";
+import { api } from "torneos/trpc/react";
 import { NotificationBell } from "torneos/components/app-shell/notification-bell";
 import { NotificationPanel } from "torneos/components/app-shell/notification-panel";
-import type { NotificationData } from "torneos/components/features/notifications/notification-item";
 
 interface NotificationCenterValue {
   unread: number;
@@ -22,34 +24,87 @@ export function useNotificationCenter(): NotificationCenterValue {
 
 interface NotificationCenterProps {
   children: ReactNode;
-  notifications?: NotificationData[];
 }
 
 /**
  * Estado único del panel de notificaciones (doc 3.4). El provider vive en el
  * shell; cualquier trigger (header, search del hub) consume el contexto.
- * En producción las notificaciones llegan del polling del badge (9.2).
+ * Conectado a tRPC con polling para el conteo de no leídas (solo usuarios autenticados).
  */
-export function NotificationCenter({ children, notifications = [] }: NotificationCenterProps) {
+export function NotificationCenter({ children }: NotificationCenterProps) {
   const [open, setOpen] = useState(false);
-  const unread = notifications.filter((n) => !n.read).length;
+  const { data: session } = useSession();
+  const isAuthenticated = Boolean(session?.user);
+  const utils = api.useUtils();
+
+  // 1. Polling cada 30s del conteo de no leídas SOLO si hay sesión activa
+  const { data: unreadCount = 0 } = api.notification.unreadCount.useQuery(undefined, {
+    enabled: isAuthenticated,
+    refetchInterval: 30000,
+    retry: false,
+  });
+
+  // 2. Consulta de notificaciones (solo cuando el panel está abierto Y hay sesión)
+  const { data: notifications = [], isLoading } = api.notification.list.useQuery(undefined, {
+    enabled: isAuthenticated && open,
+    retry: false,
+  });
+
+  // 3. Mutaciones para marcar como leídas
+  const markAsReadMutation = api.notification.markAsRead.useMutation({
+    onSuccess: () => {
+      void utils.notification.unreadCount.invalidate();
+      void utils.notification.list.invalidate();
+    },
+  });
+
+  const markAllAsReadMutation = api.notification.markAllAsRead.useMutation({
+    onSuccess: () => {
+      void utils.notification.unreadCount.invalidate();
+      void utils.notification.list.invalidate();
+    },
+  });
+
+  const handleItemRead = (id: string) => {
+    const item = notifications.find((n) => n.id === id);
+    if (item?.status === "UNREAD") {
+      markAsReadMutation.mutate({ id });
+    }
+  };
+
+  const handleMarkAllRead = () => {
+    markAllAsReadMutation.mutate();
+  };
+
+  // N-2: salida universal de la app (sirve también en (admin)/W10, donde no hay nav)
+  const handleLogout = () => {
+    setOpen(false);
+    void signOut({ redirectTo: "/" });
+  };
 
   const value = useMemo(
-    () => ({ unread, openPanel: () => setOpen(true), closePanel: () => setOpen(false) }),
-    [unread],
+    () => ({
+      unread: isAuthenticated ? unreadCount : 0,
+      openPanel: () => setOpen(true),
+      closePanel: () => setOpen(false),
+    }),
+    [isAuthenticated, unreadCount],
   );
 
   return (
     <NotificationCenterContext.Provider value={value}>
       {children}
-      <NotificationPanel
-        open={open}
-        onClose={() => setOpen(false)}
-        items={notifications}
-        onItemRead={(id) => {
-          notifications.find((n) => n.id === id)!.read = true; // demo; prod: optimistic (9.2)
-        }}
-      />
+      {isAuthenticated && (
+        <NotificationPanel
+          open={open}
+          onClose={() => setOpen(false)}
+          items={notifications}
+          isLoading={isLoading}
+          onItemRead={handleItemRead}
+          onMarkAllRead={handleMarkAllRead}
+          onLogout={handleLogout}
+        />
+      )}
     </NotificationCenterContext.Provider>
   );
 }

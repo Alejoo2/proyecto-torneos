@@ -7,6 +7,7 @@ import { CalendarDays, Clock, MapPin, Package, Plus, Trophy, Users } from "lucid
 import { api } from "torneos/trpc/react";
 import { Button } from "torneos/components/ui/button/button";
 import { Badge } from "torneos/components/ui/badge";
+import { ConfirmModal } from "torneos/components/ui/confirm-modal/confirm-modal";
 import { EmptyState } from "torneos/components/ui/empty-state";
 import { LoadingSkeleton } from "torneos/components/ui/loading-skeleton";
 import { CourtAvailabilityGrid } from "torneos/components/ui/court-availability-grid/court-availability-grid";
@@ -22,6 +23,7 @@ import { COURT_STATUS_LABEL, TOURNAMENT_STATUS_LABEL } from "torneos/domain/stat
 // getBubble SOLO devuelve ENABLED (DISABLED → 404 en la page): la matriz pública
 // no conoce el estado apagado. Errores de mutación INLINE (no hay API de toast
 // invocable en el código — patrón W4 de confirmación/error inline).
+// W6 (P1): Publicar exige ConfirmModal de revisión — irreversible, sin unpublish.
 
 interface CourtDetailTemplateProps {
   courtId: string;
@@ -40,6 +42,7 @@ export function CourtDetailTemplate({ courtId, isLoggedIn }: CourtDetailTemplate
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [publishError, setPublishError] = useState<string | null>(null);
+  const [confirmingPublishId, setConfirmingPublishId] = useState<string | null>(null);
   const utils = api.useUtils();
 
   // Read-model único del header + matriz (público, sirve a anónimos y logueados)
@@ -64,6 +67,9 @@ export function CourtDetailTemplate({ courtId, isLoggedIn }: CourtDetailTemplate
   const tournaments = isLoggedIn ? managerTournaments : publicTournaments;
   const isLoadingTournaments = isLoggedIn ? isLoadingManager : isLoadingPublic;
   const isManager = !!myManagerProfile;
+
+  // P1: el row en revisión sale de la lista del gestor (única clave = su id)
+  const confirmingPublish = managerTournaments?.find((t) => t.id === confirmingPublishId) ?? null;
 
   const createMutation = api.tournament.create.useMutation({
     onSuccess: () => {
@@ -198,7 +204,7 @@ export function CourtDetailTemplate({ courtId, isLoggedIn }: CourtDetailTemplate
                     <Button
                       size="sm"
                       className="mt-3 w-full"
-                      onClick={() => publishMutation.mutate({ tournamentId: t.id })}
+                      onClick={() => setConfirmingPublishId(t.id)}
                       disabled={publishMutation.isPending}
                     >
                       {publishMutation.isPending ? "Publicando..." : "Publicar torneo"}
@@ -256,6 +262,24 @@ export function CourtDetailTemplate({ courtId, isLoggedIn }: CourtDetailTemplate
         onClose={() => setIsModalOpen(false)}
         onCreate={(data) => createMutation.mutate(data)}
         submitError={createError}
+      />
+
+      {/* P1 (W6): revisión previa — publicar es irreversible (sin unpublish) */}
+      <ConfirmModal
+        isOpen={!!confirmingPublish}
+        title="Publicar torneo"
+        message={
+          confirmingPublish
+            ? `"${confirmingPublish.name}" pasa de borrador a inscripciones abiertas y se vuelve visible para todos los jugadores.\n\nEsta acción es irreversible: no existe volver a borrador.`
+            : ""
+        }
+        confirmText="Publicar"
+        onCancel={() => setConfirmingPublishId(null)}
+        onConfirm={() => {
+          if (!confirmingPublishId) return;
+          publishMutation.mutate({ tournamentId: confirmingPublishId });
+          setConfirmingPublishId(null);
+        }}
       />
     </div>
   );

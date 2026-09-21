@@ -3,16 +3,21 @@
 import { usePathname, useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { cn } from "torneos/lib/utils";
+import { useOptionalHeaderTitle } from "torneos/components/app-shell/header-title";
 import { BellTrigger } from "torneos/components/app-shell/notification-center";
 
 interface AppHeaderProps {
   mode?: "hub" | "internal";
+  /** Título conocido por el RSC (cero flash). Prioridad sobre el contexto (N-4). */
   title?: string;
 }
 
 export function AppHeader({ mode, title }: AppHeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const ctx = useOptionalHeaderTitle();
+  // N-4: prop > contexto. Prop = título conocido por el RSC; contexto = client-side.
+  const resolvedTitle = title ?? ctx?.title ?? null;
   const isHub = mode ? mode === "hub" : pathname === "/";
 
   return (
@@ -43,8 +48,8 @@ export function AppHeader({ mode, title }: AppHeaderProps) {
         )}
       </div>
 
-      <h1 className={cn("truncate text-sm font-semibold text-cypher-4", (isHub || !title) && "hidden")}>
-        {title}
+      <h1 className={cn("truncate text-sm font-semibold text-cypher-4", (isHub || !resolvedTitle) && "hidden")}>
+        {resolvedTitle}
       </h1>
       <div />
     </header>

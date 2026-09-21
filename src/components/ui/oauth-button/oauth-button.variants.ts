@@ -1,5 +1,8 @@
 import { cva, type VariantProps } from "class-variance-authority";
 
+// W6 re-skin Cypher: botón neutro de superficie elevada (matriz 4.3).
+// La identidad de marca la porta el icono (detalle gráfico, 4.2), no el fondo:
+// los colores planos de proveedor no están en la matriz legal.
 export const oauthButtonVariants = cva<{
   provider: {
     google: string;
@@ -10,12 +13,12 @@ export const oauthButtonVariants = cva<{
     false: string;
   };
 }>(
-  "flex w-full items-center justify-center gap-3 rounded-lg px-4 py-3 font-semibold text-white shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-black disabled:cursor-not-allowed disabled:opacity-50",
+  "flex w-full items-center justify-center gap-3 rounded-xl px-4 min-h-[44px] font-semibold text-cypher-4 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cypher-2/60 disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       provider: {
-        google: "bg-[#4285F4] hover:bg-[#357AE8] focus:ring-[#4285F4]",
-        discord: "bg-[#5865F2] hover:bg-[#4752C4] focus:ring-[#5865F2]",
+        google: "bg-cypher-5-1-1 hover:bg-cypher-4/10 active:bg-cypher-4/15",
+        discord: "bg-cypher-5-1-1 hover:bg-cypher-4/10 active:bg-cypher-4/15",
       },
       isLoading: {
         true: "cursor-wait opacity-75",

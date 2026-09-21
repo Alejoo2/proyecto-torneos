@@ -5,128 +5,103 @@ import {
   DEFAULT_AUTHENTICATED_PATH,
 } from "torneos/lib/anon-access";
 import { useState, useEffect } from "react";
+import { AnimatePresence, motion } from "motion/react";
 import { signIn } from "next-auth/react";
 import { OAuthButton } from "torneos/components/ui/oauth-button/oauth-button";
+import { Toast } from "torneos/components/ui/toast";
 
-export function LoginForm() {
+interface LoginFormProps {
+  /** Error de callback OAuth reportado por NextAuth en la URL (?error=…). */
+  authError?: string;
+}
+
+export function LoginForm({ authError }: LoginFormProps) {
   const searchParams = useSearchParams();
-  const [appLoading, setAppLoading] = useState(true);
   const [authLoading, setAuthLoading] = useState<"google" | "discord" | null>(null);
-  const [toast, setToast] = useState<{ title: string; subtitle: string, type: "success" | "info" } | null>(null);
+  const [toast, setToast] = useState<{ title: string } | null>(null);
 
-  // Efecto para simular el skeleton inicial de 800ms
   useEffect(() => {
-    const timer = setTimeout(() => setAppLoading(false), 800);
-    return () => clearTimeout(timer);
-  }, []);
-
-  // Auto-ocultar el toast después de 3s
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 3000);
-      return () => clearTimeout(timer);
-    }
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(t);
   }, [toast]);
 
   const handleOAuth = async (provider: "google" | "discord") => {
-  setAuthLoading(provider);
+    setAuthLoading(provider);
 
-  const requested = searchParams.get("callbackUrl");
-  const callbackUrl = isSafeInternalPath(requested)
-    ? requested
-    : DEFAULT_AUTHENTICATED_PATH;
+    const requested = searchParams.get("callbackUrl");
+    const callbackUrl = isSafeInternalPath(requested)
+      ? requested
+      : DEFAULT_AUTHENTICATED_PATH;
 
-  // NextAuth gestiona la redirección.
-  await signIn(provider, { callbackUrl });
+    // NextAuth gestiona la redirección.
+    await signIn(provider, { callbackUrl });
 
-  // Si llega aquí, falló o se detuvo. Ocultamos loader.
-  setAuthLoading(null);
-  setToast({ title: "Error de conexión", subtitle: "Intenta de nuevo", type: "info" });
-};
+    // Si llega aquí, el flujo no redirigió (falla o cancelación).
+    setAuthLoading(null);
+    setToast({ title: "No se pudo iniciar sesión — intenta de nuevo" });
+  };
 
   return (
-    <div className="w-full max-w-lg min-h-100dvh bg-white md:min-h-[90vh] md:my-[5vh] md:rounded-2rem md:border-10px md:border-gray-900 md:shadow-2xl overflow-hidden flex flex-col relative mx-auto">
-      
-      {/* ESTADO DE CARGA INICIAL (Skeleton) */}
-      <div 
-        className={`absolute inset-0 z-60 bg-white flex flex-col items-center justify-center transition-opacity duration-500 ${
-          appLoading ? "opacity-100" : "opacity-0 pointer-events-none"
-        }`}
-      >
-        <div className="w-24 h-24 bg-gray-200 rounded-3xl mb-6 animate-pulse"></div>
-        <div className="h-6 bg-gray-200 rounded w-48 mb-3 animate-pulse"></div>
-        <div className="h-3 bg-gray-200 rounded w-64 animate-pulse"></div>
+    <main className="relative flex flex-1 flex-col items-center justify-center overflow-y-auto px-6 py-10">
+      {/* HERO — marca púrpura (4.2: identidad, tamaño grande, legal) */}
+      <div className="mb-10 flex flex-col items-center text-center">
+        <span className="text-4xl font-black uppercase tracking-tight text-cypher-1">Torneos</span>
+        <p className="mt-2 text-sm text-cypher-4-2">Encuentra cancha, arma tu equipo, juega.</p>
       </div>
 
-      {/* CONTENIDO PRINCIPAL */}
-      <main className={`flex-1 overflow-y-auto overflow-x-hidden flex flex-col items-center justify-center p-8 relative transition-opacity duration-500 ${appLoading ? "opacity-0" : "opacity-100"}`}>
-        
-        {/* HERO / BRANDING (Placeholders exactos del mockup) */}
-        <div className="flex flex-col items-center mb-12 w-full">
-          <div className="w-24 h-24 bg-gray-200 rounded-3xl mb-6 flex items-center justify-center">
-            <div className="w-12 h-12 bg-gray-400 rounded-xl"></div>
-          </div>
-          <div className="h-6 bg-gray-800 rounded w-48 mb-3"></div>
-          <div className="h-3 bg-gray-300 rounded w-64"></div>
-        </div>
+      {/* ACCESO */}
+      <div className="w-full max-w-sm space-y-3">
+        <OAuthButton
+          provider="google"
+          onClick={() => void handleOAuth("google")}
+          isLoading={authLoading === "google"}
+          disabled={authLoading !== null}
+        >
+          {authLoading === "google" ? "Conectando…" : "Continuar con Google"}
+        </OAuthButton>
 
-        {/* BOTONES DE AUTENTICACIÓN */}
-        <div className="w-full space-y-3">
-          <OAuthButton 
-            provider="google" 
-            onClick={() => handleOAuth("google")}
-            isLoading={authLoading === "google"}
-            disabled={authLoading !== null}
-          >
-            {authLoading === "google" ? "Conectando..." : "Continuar con Google"}
-          </OAuthButton>
+        <OAuthButton
+          provider="discord"
+          onClick={() => void handleOAuth("discord")}
+          isLoading={authLoading === "discord"}
+          disabled={authLoading !== null}
+        >
+          {authLoading === "discord" ? "Conectando…" : "Continuar con Discord"}
+        </OAuthButton>
+      </div>
 
-          <OAuthButton 
-            provider="discord" 
-            onClick={() => handleOAuth("discord")}
-            isLoading={authLoading === "discord"}
-            disabled={authLoading !== null}
-          >
-            {authLoading === "discord" ? "Conectando..." : "Continuar con Discord"}
-          </OAuthButton>
-        </div>
-
-        {/* FOOTER */}
-        <div className="mt-8 text-center">
-          <div className="h-3 bg-gray-200 rounded w-64 mx-auto"></div>
-        </div>
-
-        {/* ESTADO DE CARGA POST-OAUTH (Overlay) */}
-        {authLoading && (
-          <div className="absolute inset-0 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center gap-4 z-50">
-            <div className="w-16 h-16 bg-gray-200 rounded-2xl animate-pulse mb-2"></div>
-            <div className="text-gray-600 text-sm font-medium">
-              Conectando con {authLoading === "google" ? "Google" : "Discord"}...
-            </div>
-            {/* Barra de progreso indeterminada usando solo Tailwind */}
-            <div className="w-48 h-2 bg-gray-200 rounded-full overflow-hidden mt-4">
-              <div className="h-full bg-gray-400 rounded-full animate-pulse w-full"></div>
-            </div>
-          </div>
-        )}
-      </main>
-
-      {/* TOAST DE NOTIFICACIÓN */}
-      {toast && (
-        <div className="absolute top-4 left-4 right-4 z-70 pointer-events-none transition-all duration-300 transform translate-y-0">
-          <div className="bg-gray-800 text-white px-4 py-3 rounded-2xl shadow-lg flex items-center gap-3">
-            <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center shrink-0">
-              <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-semibold text-white">{toast.title}</div>
-              <div className="text-xs text-gray-400">{toast.subtitle}</div>
-            </div>
-          </div>
-        </div>
+      {/* Error de callback anterior — inline y honesto */}
+      {authError && (
+        <p role="alert" className="mt-4 max-w-sm text-center text-sm text-red-400">
+          {authError}
+        </p>
       )}
-    </div>
+
+      {/* OVERLAW DE CONEXIÓN (secuencia → Motion) */}
+      <AnimatePresence>
+        {authLoading && (
+          <motion.div
+            className="absolute inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-cypher-5/95 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <span className="text-sm font-bold uppercase tracking-widest text-cypher-4">
+              Conectando con {authLoading === "google" ? "Google" : "Discord"}…
+            </span>
+            <div className="h-1 w-48 overflow-hidden rounded-full bg-cypher-5-1-1">
+              <motion.div
+                className="h-full w-1/2 rounded-full bg-cypher-2"
+                animate={{ x: ["-100%", "200%"] }}
+                transition={{ repeat: Infinity, duration: 1.1, ease: "easeInOut" }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <Toast toast={toast} />
+    </main>
   );
 }

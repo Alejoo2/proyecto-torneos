@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Shield, Trophy, User } from "lucide-react";
+import { Home, LayoutDashboard, Shield, Trophy, User } from "lucide-react";
 import { cn } from "torneos/lib/utils";
 
 const TABS = [
@@ -15,16 +15,21 @@ const TABS = [
 interface BottomNavProps {
   /** Solo demos (/design). En producción NUNCA se pasa: manda usePathname (3.1). */
   activeTab?: string;
+  /** N-1: presencia = 5ª pestaña Admin. SOLO el layout RSC la pasa (RBAC de sesión). */
+  adminHref?: string;
 }
 
-export function BottomNav({ activeTab }: BottomNavProps) {
+export function BottomNav({ activeTab, adminHref }: BottomNavProps) {
   const pathname = usePathname();
   const current = activeTab ?? pathname;
+  const tabs = adminHref
+    ? [...TABS, { href: adminHref, label: "Admin", icon: LayoutDashboard }]
+    : TABS;
 
   return (
     // h-16 = 64px base (3.1) + safe-area como padding inferior (2.1)
     <nav className="z-nav flex h-16 shrink-0 items-stretch border-t border-cypher-5-1-1 bg-cypher-5-1 pb-[env(safe-area-inset-bottom)]">
-      {TABS.map(({ href, label, icon: Icon }) => {
+      {tabs.map(({ href, label, icon: Icon }) => {
         const active = current === href || (href !== "/" && current.startsWith(href));
         return (
           <Link

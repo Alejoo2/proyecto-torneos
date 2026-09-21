@@ -11,6 +11,7 @@ import {
 } from "torneos/components/features/tournament/manager-filter-bar";
 import { Badge } from "torneos/components/ui/badge";
 import { Button } from "torneos/components/ui/button/button";
+import { ConfirmModal } from "torneos/components/ui/confirm-modal/confirm-modal";
 import { EmptyState } from "torneos/components/ui/empty-state";
 import { LoadingSkeleton } from "torneos/components/ui/loading-skeleton";
 import { Toast } from "torneos/components/ui/toast";
@@ -20,7 +21,10 @@ import {
   type EnrollmentStatus,
 } from "torneos/domain/status-labels";
 
-const MIN_TEAMS_TO_DRAW = 2; // precondición presentacional del sorteo
+const MIN_TEAMS_TO_DRAW = 2; // precondición presentacional del sorteo (el engine es la verdad)
+
+// F-1: el toast vive en este template — darle aire antes de la ceremonia (redirect al bracket).
+const DRAW_REDIRECT_DELAY_MS = 1800;
 
 export function ManagerEnrollmentsTemplate({ tournamentId }: { tournamentId: string }) {
   const router = useRouter();
@@ -28,8 +32,8 @@ export function ManagerEnrollmentsTemplate({ tournamentId }: { tournamentId: str
 
   const [filter, setFilter] = useState<EnrollmentFilter>("ALL");
   const [toast, setToast] = useState<{ title: string } | null>(null);
-  const [confirmingDraw, setConfirmingDraw] = useState(false);
-  const [confirmingCancel, setConfirmingCancel] = useState(false);
+  const [drawModalOpen, setDrawModalOpen] = useState(false);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
 
   // Toast (protocolo 4.4): piel única del átomo — el texto informa, no el color.
   useEffect(() => {
@@ -38,16 +42,6 @@ export function ManagerEnrollmentsTemplate({ tournamentId }: { tournamentId: str
     return () => clearTimeout(t);
   }, [toast]);
   const notify = useCallback((title: string) => setToast({ title }), []);
-
-  // Doble confirmación inline con auto-reset
-  useEffect(() => {
-    if (!confirmingDraw && !confirmingCancel) return;
-    const t = setTimeout(() => {
-      setConfirmingDraw(false);
-      setConfirmingCancel(false);
-    }, 4000);
-    return () => clearTimeout(t);
-  }, [confirmingDraw, confirmingCancel]);
 
   // Contexto: nombre + estado del torneo (define si siguen vivas las acciones finales)
   const tournamentQuery = api.tournament.getById.useQuery({ tournamentId }, { retry: false });
@@ -135,12 +129,15 @@ export function ManagerEnrollmentsTemplate({ tournamentId }: { tournamentId: str
     onSettled: () => void utils.enrollment.listByTournament.invalidate(LIST_INPUT),
   });
 
+  // F-1: toast visible ANTES de navegar — el push se difiere y el toast respira.
+  // Nota: si el usuario navega por su cuenta en la ventana del delay, el push
+  // posterior es benigno (mismo destino ya sorteado).
   const drawMutation = api.tournament.closeAndDraw.useMutation({
     onSuccess: () => {
       notify("Sorteo ejecutado — torneo en curso");
       void utils.tournament.getById.invalidate({ tournamentId });
       void utils.match.listByTournament.invalidate({ tournamentId });
-      router.push(`/torneos/${tournamentId}`);
+      window.setTimeout(() => router.push(`/torneos/${tournamentId}`), DRAW_REDIRECT_DELAY_MS);
     },
     onError: (e) => notify(e.message),
   });
@@ -149,7 +146,7 @@ export function ManagerEnrollmentsTemplate({ tournamentId }: { tournamentId: str
     onSuccess: () => {
       notify("Torneo cancelado");
       void utils.tournament.getById.invalidate({ tournamentId });
-      router.push(`/torneos/${tournamentId}`);
+      window.setTimeout(() => router.push(`/torneos/${tournamentId}`), DRAW_REDIRECT_DELAY_MS);
     },
     onError: (e) => notify(e.message),
   });
@@ -160,28 +157,6 @@ export function ManagerEnrollmentsTemplate({ tournamentId }: { tournamentId: str
     (rejectMutation.isPending && rejectMutation.variables?.enrollmentId) ||
     (disapproveMutation.isPending && disapproveMutation.variables?.enrollmentId) ||
     null;
-
-  const handleDrawClick = useCallback(() => {
-    if (drawMutation.isPending) return;
-    if (!confirmingDraw) {
-      setConfirmingCancel(false);
-      setConfirmingDraw(true);
-      return;
-    }
-    setConfirmingDraw(false);
-    drawMutation.mutate({ tournamentId });
-  }, [confirmingDraw, drawMutation, tournamentId]);
-
-  const handleCancelClick = useCallback(() => {
-    if (cancelMutation.isPending) return;
-    if (!confirmingCancel) {
-      setConfirmingDraw(false);
-      setConfirmingCancel(true);
-      return;
-    }
-    setConfirmingCancel(false);
-    cancelMutation.mutate({ tournamentId });
-  }, [confirmingCancel, cancelMutation, tournamentId]);
 
   if (listQuery.isLoading) {
     return <LoadingSkeleton variant="card" rows={4} className="pt-14" />;
@@ -222,6 +197,15 @@ export function ManagerEnrollmentsTemplate({ tournamentId }: { tournamentId: str
 
   // Sortear/cancelar solo tienen sentido antes de que arranque
   const canFinalize = tournament?.status === "SCHEDULED" || tournament?.status === "GRACE_PERIOD";
+
+  // F-1: el bracket de eliminación se construye con potencias de 2 (2, 4, 8, 16…).
+  const approvedCount = counts.APPROVED;
+  const isPowerOfTwo = approvedCount >= MIN_TEAMS_TO_DRAW && (approvedCount & (approvedCount - 1)) === 0;
+  const drawHint = !isPowerOfTwo
+    ? approvedCount < MIN_TEAMS_TO_DRAW
+      ? `Necesitas al menos ${MIN_TEAMS_TO_DRAW} equipos aprobados para sortear.`
+      : `El bracket requiere una potencia de 2 (2, 4, 8…): tienes ${approvedCount}. Aprueba o rechaza inscripciones hasta llegar a la potencia más cercana.`
+    : null;
 
   return (
     <div className="pb-nav-safe pt-14">
@@ -274,41 +258,50 @@ export function ManagerEnrollmentsTemplate({ tournamentId }: { tournamentId: str
           <Button
             className="w-full"
             size="lg"
-            disabled={counts.APPROVED < MIN_TEAMS_TO_DRAW || drawMutation.isPending}
-            onClick={handleDrawClick}
+            disabled={!isPowerOfTwo || drawMutation.isPending}
+            onClick={() => setDrawModalOpen(true)}
           >
             {drawMutation.isPending
               ? "Sorteando…"
-              : counts.APPROVED < MIN_TEAMS_TO_DRAW
-                ? `Cerrar y sortear · ${counts.APPROVED}/${MIN_TEAMS_TO_DRAW} equipos`
-                : confirmingDraw
-                  ? `¿Confirmar sorteo con ${counts.APPROVED} equipos?`
-                  : `Cerrar inscripciones y sortear · ${counts.APPROVED} equipos`}
+              : `Cerrar inscripciones y sortear · ${approvedCount} equipos`}
           </Button>
-          {counts.APPROVED < MIN_TEAMS_TO_DRAW && (
-            <p className="text-center text-xs text-cypher-4-2">
-              Necesitas al menos {MIN_TEAMS_TO_DRAW} equipos aprobados para sortear.
-            </p>
-          )}
+          {drawHint && <p className="text-center text-xs text-cypher-4-2">{drawHint}</p>}
+
           <Button
             variant="outline"
             className="w-full border-red-400/30 text-red-400 hover:bg-red-400/10 active:bg-red-400/15"
             disabled={cancelMutation.isPending}
-            onClick={handleCancelClick}
+            onClick={() => setCancelModalOpen(true)}
           >
-            {cancelMutation.isPending
-              ? "Cancelando…"
-              : confirmingCancel
-                ? "¿Confirmar cancelación del torneo?"
-                : "Cancelar torneo"}
+            {cancelMutation.isPending ? "Cancelando…" : "Cancelar torneo"}
           </Button>
-          {confirmingCancel && (
-            <p className="text-center text-xs text-cypher-4-2">
-              Se archivarán todas las inscripciones de este torneo.
-            </p>
-          )}
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={drawModalOpen}
+        title="Cerrar inscripciones y sortear"
+        message={`Se cierran las inscripciones y se genera el bracket con ${approvedCount} equipos.\n\nLos equipos no aprobados quedan fuera. Esta acción es irreversible.`}
+        confirmText={`Sortear con ${approvedCount}`}
+        onCancel={() => setDrawModalOpen(false)}
+        onConfirm={() => {
+          setDrawModalOpen(false);
+          drawMutation.mutate({ tournamentId });
+        }}
+      />
+
+      <ConfirmModal
+        isOpen={cancelModalOpen}
+        title="Cancelar torneo"
+        message={"Se cancela el torneo y se archivan todas sus inscripciones.\n\nEsta acción es irreversible."}
+        confirmText="Cancelar torneo"
+        variant="danger"
+        onCancel={() => setCancelModalOpen(false)}
+        onConfirm={() => {
+          setCancelModalOpen(false);
+          cancelMutation.mutate({ tournamentId });
+        }}
+      />
 
       <Toast toast={toast} />
     </div>

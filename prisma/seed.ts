@@ -546,8 +546,8 @@ async function seedFinishedTournament() {
   await seedFinishedTournament();
   await seedPendingResultsTournament();
   await seedAggregatedStats();
-  await seedPendingResultsTournament();
   await seedMatchScreenScenarios();
+  await seedInscriptionsTournament();
 
   const [users, matches, results, standings] = await Promise.all([
     prisma.user.count(), prisma.match.count(), prisma.matchResult.count(), prisma.tournamentStanding.count(),

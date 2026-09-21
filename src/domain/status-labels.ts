@@ -69,3 +69,16 @@ export const COURT_STATUS_LABEL: Record<string, { label: string; variant: Status
   ENABLED:  { label: "Habilitada",   variant: "success" },
   DISABLED: { label: "Deshabilitada", variant: "error" },
 };
+
+/**
+ * W7: estados de equipo entran al mapeo único (decisión vigente).
+ * INACTIVE es terminal → Badge neutral (decisión vigente).
+ */
+export const TEAM_STATUS_LABEL: Record<
+  "DRAFT" | "ACTIVE" | "INACTIVE",
+  { label: string; variant: "success" | "warning" | "error" | "neutral" }
+> = {
+  DRAFT: { label: "Borrador", variant: "warning" },
+  ACTIVE: { label: "Activo", variant: "success" },
+  INACTIVE: { label: "Inactivo", variant: "neutral" },
+};
