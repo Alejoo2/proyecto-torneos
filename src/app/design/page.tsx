@@ -20,6 +20,7 @@ import { Wave3Section } from "./wave3";
 import { Wave4Section } from "./wave4";
 import { Wave7TeamsScene, Wave7TournamentsScene } from "./wave7";
 import { HeaderTitleProvider } from "torneos/components/app-shell/header-title";
+import {Wave8Section} from "./wave8";
 
 const NOW = Date.now();
 
@@ -81,7 +82,8 @@ interface Scene {
 }
 
 const SCENES: Scene[] = [
-   { id: "wave7-equipos", label: "W7 · Equipos", node: <Wave7TeamsScene /> },
+  { id: "wave8", label: "W8 · Equipo", node: <Wave8Section /> },
+  { id: "wave7-equipos", label: "W7 · Equipos", node: <Wave7TeamsScene /> },
   { id: "wave7-torneos", label: "W7 · Torneos", node: <Wave7TournamentsScene /> },
   { id: "wave4", label: "W4 · Partido", node: <Wave4Section /> },
   { id: "wave3", label: "W3 · Gestión", node: <Wave3Section /> },

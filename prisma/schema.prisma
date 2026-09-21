@@ -218,6 +218,7 @@ model TeamMembership {
   playerId  String
   teamId    String
   isCaptain Boolean   @default(false)
+  isStarter Boolean   @default(false)
   joinedAt  DateTime  @default(now())
   leftAt    DateTime?
 

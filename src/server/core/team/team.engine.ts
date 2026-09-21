@@ -478,6 +478,40 @@ export const teamEngine = {
       return { finalized: true, approved: true };
     }
 
-    return { finalized: false, votes: approveVotes, total: totalMembers };
+        return { finalized: false, votes: approveVotes, total: totalMembers };
+  },
+
+  // ==========================================
+  // Titulares (N-3, W8): reutiliza assertTeamCaptain; sin loops → sin timeout extra
+  // ==========================================
+  async setStarter(
+    prisma: PrismaClient,
+    input: { teamId: string; membershipId: string; isStarter: boolean },
+    userId: string
+  ) {
+    await teamEngine.assertTeamCaptain(prisma, input.teamId, userId);
+
+    const membership = await prisma.teamMembership.findFirst({
+      where: { id: input.membershipId, teamId: input.teamId, leftAt: null },
+    });
+    if (!membership) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Miembro no encontrado" });
+    }
+
+    if (input.isStarter) {
+      const starterCount = await prisma.teamMembership.count({
+        where: { teamId: input.teamId, isStarter: true, leftAt: null },
+      });
+      if (starterCount >= 5) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Ya hay 5 titulares designados" });
+      }
+    }
+
+    await prisma.teamMembership.update({
+      where: { id: membership.id },
+      data: { isStarter: input.isStarter },
+    });
+
+    return { membershipId: membership.id, isStarter: input.isStarter };
   },
 };

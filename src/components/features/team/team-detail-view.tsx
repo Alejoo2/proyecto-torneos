@@ -1,170 +1,317 @@
 "use client";
-import Link from "next/link";
-import Image from "next/image";
-import { useSession } from "next-auth/react";
-import { useState } from "react";
-import { useGetTeamById, useLeaveTeam, useRequestDelete, useConfirmDelete } from "torneos/components/features/team/use-team";
-import { ConfirmModal } from "torneos/components/ui/confirm-modal/confirm-modal";
-import { DeletionBanner } from "torneos/components/ui/deletion-banner/deletion-banner";
 
-interface Props { 
-  teamId: string; 
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import { LogIn, SearchX, ShieldOff, UserPlus } from "lucide-react";
+import { HeaderTitle } from "torneos/components/app-shell/header-title";
+import { Badge } from "torneos/components/ui/badge";
+import { EmptyState } from "torneos/components/ui/empty-state";
+import { LoadingSkeleton } from "torneos/components/ui/loading-skeleton";
+import { Toast } from "torneos/components/ui/toast";
+import { TEAM_STATUS_LABEL } from "torneos/domain/status-labels";
+import { TacticalView } from "torneos/components/features/team/tactical-view";
+import { StarterTile } from "torneos/components/features/team/starter-tile";
+import { DeletionBanner } from "torneos/components/ui/deletion-banner/deletion-banner";
+import { ConfirmModal } from "torneos/components/ui/confirm-modal/confirm-modal";
+import {
+  useConfirmDelete,
+  useGetTeamById,
+  useLeaveTeam,
+  useRequestDelete,
+  useSetStarter,
+} from "torneos/components/features/team/use-team";
+
+interface Props {
+  teamId: string;
 }
 
+const MAX_STARTERS = 5;
+
+/** W8.2 — Detalle de equipo. Estructura del wireframe: Previsualización (cancha
+ *  horizontal) → Cancha (mosaico + contador N/5) → Banco (mosaico + contador).
+ *  isStarter NO es fuente de verdad de habilitados para torneo/partido en vivo
+ *  (eso es la convocatoria del partido): los textos jamás lo prometen. */
 export function TeamDetailView({ teamId }: Props) {
   const { data: session } = useSession();
-  // NUEVO HOOK APLICADO
-  const { data: team, isLoading } = useGetTeamById(teamId);
-  
-  // Mutaciones
+  const isLoggedIn = Boolean(session?.user);
+  const { data: team, isLoading, isError, refetch } = useGetTeamById(teamId);
+
+  const [toast, setToast] = useState<{ title: string } | null>(null);
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 3000);
+    return () => clearTimeout(t);
+  }, [toast]);
+  const notify = (title: string) => setToast({ title });
+
   const { mutate: leaveTeam, isPending: isLeaving, error: leaveError } = useLeaveTeam();
   const { mutate: requestDelete, isPending: isRequestingDelete } = useRequestDelete();
   const { mutate: confirmDelete } = useConfirmDelete();
-  
-  // Modales
+  const setStarterMutation = useSetStarter(teamId, (message) => notify(message));
+
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  if (isLoading) return <div className="p-8 text-center text-gray-500">Cargando equipo...</div>;
-  if (!team) return <div className="p-8 text-center text-red-500">Equipo no encontrado.</div>;
+  useEffect(() => {
+    if (leaveError) notify(leaveError.message);
+  }, [leaveError]);
+
+  if (!isLoggedIn) {
+    return (
+      <div className="pt-14 pb-28">
+        <div className="px-4 pt-16">
+          <EmptyState
+            icon={<LogIn className="size-8" />}
+            title="Inicia sesión"
+            description="Accede para ver este equipo."
+            action={
+              <Link
+                href="/login"
+                className="rounded-lg bg-cypher-2 px-4 py-2 text-xs font-bold text-cypher-5 active:bg-cypher-2-1"
+              >
+                Iniciar sesión
+              </Link>
+            }
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) return <LoadingSkeleton variant="card" rows={4} className="pt-14" />;
+
+  if (isError || !team) {
+    return (
+      <div className="pt-14 pb-28">
+        <div className="px-4 pt-16">
+          <EmptyState
+            icon={isError ? <ShieldOff className="size-8" /> : <SearchX className="size-8" />}
+            title={isError ? "No pudimos cargar el equipo" : "Equipo no encontrado"}
+            description={isError ? "Intenta de nuevo en unos segundos." : undefined}
+            action={
+              isError ? (
+                <button
+                  type="button"
+                  onClick={() => void refetch()}
+                  className="rounded-lg bg-cypher-2 px-4 py-2 text-xs font-bold text-cypher-5 active:bg-cypher-2-1"
+                >
+                  Reintentar
+                </button>
+              ) : undefined
+            }
+          />
+        </div>
+      </div>
+    );
+  }
 
   const currentUserId = session?.user?.id;
-  const isMember = team.memberships.some(m => m.player.profile?.userId === currentUserId);
-  const isCaptain = team.memberships.some(m => m.isCaptain && m.player.profile?.userId === currentUserId);
-  const myPlayerId = team.memberships.find(m => m.player.profile?.userId === currentUserId)?.playerId;
+  // Narrowing a consts locales (lección W4)
+  const memberships = team.memberships;
+  const myMembership = memberships.find((m) => m.player.profile?.userId === currentUserId) ?? null;
+  const isMember = myMembership !== null;
+  const isCaptain = myMembership?.isCaptain ?? false;
+  const othersCount = memberships.filter((m) => m.player.profile?.userId !== currentUserId).length;
+  const memberCount = team._count.memberships;
+  const statusLabel = TEAM_STATUS_LABEL[team.status];
 
-  // Lógica de Votación 
-  const deletionRequest = team.deletionRequest; 
-  // Corrección de propiedades según Prisma: voterId y approved
-  const hasVoted = deletionRequest?.votes.some(v => v.playerId === myPlayerId) ?? false;
-  const approveVotes = deletionRequest?.votes.filter(v => v.approve).length ?? 0;
+  const canManageStarters = isCaptain && team.status !== "INACTIVE";
+  const starters = memberships.filter((m) => m.isStarter);
+  const bench = memberships.filter((m) => !m.isStarter);
+  const startersFull = starters.length >= MAX_STARTERS;
+
+  const toTile = (m: (typeof memberships)[number]) => ({
+    name: m.player.profile?.displayName ?? "Jugador",
+    image: m.player.profile?.user?.image ?? null,
+    isCaptain: m.isCaptain,
+  });
+
+  const toggle = (membershipId: string, next: boolean) =>
+    setStarterMutation.mutate({ teamId: team.id, membershipId, isStarter: next });
+
+  // Gate espejo del engine: capitán con otros miembros → leave SIEMPRE FORBIDDEN
+  const captainLeaveBlocked = isCaptain && othersCount > 0;
+
+  const deletionRequest = team.deletionRequest ?? null;
+  const myPlayerId = myMembership?.playerId ?? null;
+  const hasVoted = deletionRequest?.votes.some((v) => v.playerId === myPlayerId) ?? false;
+  const approveVotes = deletionRequest?.votes.filter((v) => v.approve).length ?? 0;
 
   return (
-    <div className="flex flex-col min-h-dvh bg-gray-50 pb-20">
-      
-      {/* Header */}
-      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
-        <div className="flex items-center justify-between px-4 py-3">
-          <Link href="/equipos" className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors min-w-11 min-h-11" aria-label="Volver">
-            <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </Link>
-          <h2 className="text-base font-bold text-gray-900 truncate">{team.name}</h2>
-          <div className="w-10"></div>
-        </div>
-      </header>
+    <div className="pt-14 pb-28">
+      <HeaderTitle title={team.name} />
 
       {/* BANNER DE VOTACIÓN */}
       {deletionRequest && isMember && (
-        <DeletionBanner 
-          votes={approveVotes}
-          totalMembers={team._count.memberships}
-          hasVoted={hasVoted}
-          onApprove={() => confirmDelete({ requestId: deletionRequest.id, approved: true })}
-          onReject={() => confirmDelete({ requestId: deletionRequest.id, approved: false })}
-        />
+        <div className="pt-4">
+          <DeletionBanner
+            votes={approveVotes}
+            totalMembers={memberCount}
+            hasVoted={hasVoted}
+            onApprove={() => confirmDelete({ requestId: deletionRequest.id, approved: true })}
+            onReject={() => confirmDelete({ requestId: deletionRequest.id, approved: false })}
+          />
+        </div>
       )}
 
-      {/* Card Maestra */}
-      <div className="bg-white p-6 m-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center text-center">
-        <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-3 overflow-hidden relative">
-          <svg className="absolute inset-0 w-full h-full" viewBox="0 0 80 80" aria-hidden="true">
-            <rect width="80" height="80" fill={team.primaryColor} />
+      {/* Card maestra */}
+      <div className="mx-4 mt-4 overflow-hidden rounded-2xl border border-cypher-5-1-1 bg-cypher-5-1">
+        <svg className="block h-2 w-full" viewBox="0 0 100 10" preserveAspectRatio="none" aria-hidden="true">
+          <rect width="100" height="10" fill={team.primaryColor} />
+          {team.secondaryColor && <rect x="75" width="25" height="10" fill={team.secondaryColor} />}
+        </svg>
+        <div className="flex flex-col items-center p-6 text-center">
+          <svg className="size-20" viewBox="0 0 80 80" aria-hidden="true">
+            <rect width="80" height="80" rx="16" fill={team.primaryColor} />
+            <text x="40" y="50" textAnchor="middle" className="fill-cypher-5 text-2xl font-black">
+              {team.abbreviation}
+            </text>
           </svg>
-          <span className="relative text-2xl font-black text-white z-10 drop-shadow-md">{team.abbreviation}</span>
-        </div>
-        <h1 className="text-xl font-bold text-gray-900">{team.name}</h1>
-        <p className="text-xs text-gray-500 uppercase font-medium tracking-wide mt-1 mb-4">
-          {team.status === "DRAFT" ? "Borrador (Faltan jugadores)" : team.status === "INACTIVE" ? "Equipo Inactivo" : "Equipo Activo"}
-        </p>
-        
-        <div className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full">
-          <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3z" />
-          </svg>
-          <span className="text-sm font-bold text-gray-800">{team._count.memberships}/15 Jugadores</span>
+          <h1 className="mt-3 text-xl font-bold text-cypher-4">{team.name}</h1>
+          <div className="mt-2">
+            <Badge variant={statusLabel.variant} status={statusLabel.label} />
+          </div>
+          {team.status === "DRAFT" && (
+            <p className="mt-2 text-[11px] text-cypher-4-2-2">
+              El equipo se activa cuando alguien acepta tu invitación.
+            </p>
+          )}
+          <p className="mt-3 text-xs font-medium text-cypher-4-2">
+            {memberCount} jugador{memberCount === 1 ? "" : "es"}
+          </p>
         </div>
       </div>
 
-      {/* Botón de Reclutamiento */}
+      {/* Reclutamiento */}
       {isCaptain && team.status !== "INACTIVE" && (
-        <div className="px-4 mb-4">
-          <Link 
+        <div className="px-4 pt-4">
+          <Link
             href={`/reclutamiento/${team.id}`}
-            className="w-full bg-gray-800 text-white py-4 rounded-xl font-bold text-center flex items-center justify-center gap-2 hover:bg-gray-700 transition-colors"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-cypher-5-1-1 bg-cypher-5-1 py-3.5 text-sm font-bold text-cypher-4 transition-colors active:bg-cypher-5-1-1"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-            </svg>
-            Ir a Reclutamiento
+            <UserPlus className="size-4" />
+            Ir a reclutamiento
           </Link>
         </div>
       )}
 
-      {/* Plantilla */}
-      <div className="px-4">
-        <h3 className="text-lg font-bold text-gray-900 mb-3">Plantilla ({team._count.memberships})</h3>
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm divide-y divide-gray-100">
-          {team.memberships.map((m) => (
-            <div key={m.id} className="flex items-center gap-3 p-4">
-              <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center shrink-0 overflow-hidden relative">
-                {m.player.profile?.user?.image ? (
-                  <Image 
-                    src={m.player.profile.user.image} 
-                    alt={m.player.profile.displayName ?? "Jugador"} 
-                    fill 
-                    className="object-cover" 
-                  />
-                ) : (
-                  <span className="text-sm font-bold text-gray-500">
-                    {m.player.profile?.displayName?.charAt(0).toUpperCase() ?? "?"}
-                  </span>
-                )}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-bold text-gray-900">{m.player.profile?.displayName ?? "Jugador Anónimo"}</p>
-                {m.isCaptain && (
-                  <span className="text-xs text-emerald-600 font-bold uppercase tracking-wide">Capitán</span>
-                )}
-              </div>
-            </div>
+      {/* PREVISUALIZACIÓN TÁCTICA */}
+      <div className="px-4 pt-6">
+        <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-cypher-4-2-2">
+          Previsualización táctica
+        </h2>
+        <TacticalView
+          starters={starters.map((m) => ({
+            playerId: m.player.id,
+            displayName: m.player.profile?.displayName ?? null,
+            image: m.player.profile?.user?.image ?? null,
+          }))}
+        />
+      </div>
+
+      {/* CANCHA */}
+      <div className="px-4 pt-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-cypher-4-2-2">En cancha</h2>
+          <span
+            className={
+              startersFull
+                ? "rounded-full bg-cypher-3 px-3 py-1 text-xs font-bold text-cypher-5"
+                : "rounded-full bg-cypher-5-1-1 px-3 py-1 text-xs font-bold text-cypher-4-2"
+            }
+          >
+            {starters.length}/{MAX_STARTERS}
+          </span>
+        </div>
+        <div className="grid grid-cols-5 gap-3">
+          {starters.map((m) => (
+            <StarterTile
+              key={m.id}
+              {...toTile(m)}
+              active
+              onToggle={() => toggle(m.id, false)}
+            />
           ))}
         </div>
       </div>
 
-      {/* Acciones de Miembro */}
+      {/* BANCO */}
+      <div className="px-4 pt-6">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-xs font-bold uppercase tracking-widest text-cypher-4-2-2">Banco</h2>
+          <span className="rounded-full bg-cypher-5-1-1 px-3 py-1 text-xs font-bold text-cypher-4-2">
+            {bench.length}
+          </span>
+        </div>
+        <div className="grid grid-cols-5 gap-3">
+          {bench.map((m) => (
+            <StarterTile
+              key={m.id}
+              {...toTile(m)}
+              disabled={!canManageStarters || startersFull}
+              onToggle={() => toggle(m.id, true)}
+            />
+          ))}
+        </div>
+        {canManageStarters && (
+          <p className="mt-2 text-[11px] text-cypher-4-2-2">
+            {startersFull
+              ? "Cancha completa (5/5): quita alguien para dar ingreso."
+              : "Doble toque para poner en cancha. Máximo 5."}
+          </p>
+        )}
+      </div>
+
+      {/* Acciones de miembro */}
       {isMember && team.status !== "INACTIVE" && (
-        <div className="px-4 mt-8 flex flex-col gap-3">
-          <button 
-            onClick={() => setIsLeaveModalOpen(true)}
-            className="w-full bg-white text-red-500 border border-red-200 py-3 rounded-xl font-bold text-sm uppercase tracking-wide hover:bg-red-50 transition-colors active:scale-[0.98]"
-          >
-            Abandonar Equipo
-          </button>
+        <div className="mt-8 flex flex-col gap-3 px-4">
+          {captainLeaveBlocked ? (
+            <>
+              <button
+                type="button"
+                disabled
+                className="w-full cursor-not-allowed rounded-xl border border-cypher-5-1-1 bg-cypher-5-1 py-3 text-sm font-bold uppercase tracking-wide text-cypher-4-2-2"
+              >
+                Abandonar equipo
+              </button>
+              <p className="text-center text-[11px] text-cypher-4-2-2">
+                Debes transferir la capitanía o eliminar el equipo antes de abandonarlo.
+              </p>
+            </>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsLeaveModalOpen(true)}
+              className="w-full rounded-xl border border-red-500/30 bg-transparent py-3 text-sm font-bold uppercase tracking-wide text-red-400 transition-colors active:scale-[0.98] active:bg-red-500/10"
+            >
+              Abandonar equipo
+            </button>
+          )}
 
           {isCaptain && !deletionRequest && (
-            <button 
+            <button
+              type="button"
               onClick={() => setIsDeleteModalOpen(true)}
               disabled={isRequestingDelete}
-              className="w-full bg-transparent text-gray-400 border border-gray-200 py-3 rounded-xl font-bold text-sm uppercase tracking-wide hover:bg-gray-100 transition-colors active:scale-[0.98]"
+              className="w-full rounded-xl border border-cypher-5-1-1 bg-transparent py-3 text-sm font-bold uppercase tracking-wide text-cypher-4-2 transition-colors active:scale-[0.98] active:bg-cypher-5-1-1 disabled:opacity-50"
             >
-              Eliminar Equipo
+              Eliminar equipo
             </button>
           )}
         </div>
       )}
 
-      {/* MODALES */}
+      {/* MODALES — textos = validaciones reales del engine */}
       <ConfirmModal
         isOpen={isLeaveModalOpen}
-        title="Abandonar Equipo"
+        title="Abandonar equipo"
         message={
-          isCaptain 
-            ? "Si abandonas el equipo siendo capitán, y no hay otros miembros, el equipo pasará a estado INACTIVO. ¿Estás seguro?"
-            : "¿Estás seguro de que quieres abandonar este equipo? Tendrás que ser invitado de nuevo para volver."
+          isCaptain
+            ? "Eres el único miembro: al abandonar, el equipo pasará a estado INACTIVO. ¿Seguro?"
+            : "¿Seguro que quieres abandonar este equipo? Tendrás que ser invitado de nuevo para volver."
         }
-        confirmText={isLeaving ? "Abandonando..." : "Sí, Abandonar"}
+        confirmText={isLeaving ? "Abandonando..." : "Sí, abandonar"}
         variant="danger"
         onConfirm={() => leaveTeam({ teamId })}
         onCancel={() => setIsLeaveModalOpen(false)}
@@ -172,13 +319,13 @@ export function TeamDetailView({ teamId }: Props) {
 
       <ConfirmModal
         isOpen={isDeleteModalOpen}
-        title="Eliminar Equipo"
+        title="Eliminar equipo"
         message={
-          team._count.memberships < 3
-            ? "Al haber menos de 3 miembros, el equipo se eliminará (pasará a inactivo) inmediatamente. ¿Estás seguro?"
-            : "Al tener 3 o más miembros, se iniciará una votación. Todos deben aprobar para que el equipo se elimine. ¿Deseas iniciar la votación?"
+          memberCount < 3
+            ? "Con menos de 3 miembros el equipo pasa a INACTIVO inmediatamente. ¿Seguro?"
+            : "Con 3 o más miembros se inicia una votación: todos deben aprobar para eliminarlo. ¿Iniciar la votación?"
         }
-        confirmText={isRequestingDelete ? "Procesando..." : "Sí, Continuar"}
+        confirmText={isRequestingDelete ? "Procesando..." : "Sí, continuar"}
         variant="danger"
         onConfirm={() => {
           requestDelete({ teamId });
@@ -187,11 +334,7 @@ export function TeamDetailView({ teamId }: Props) {
         onCancel={() => setIsDeleteModalOpen(false)}
       />
 
-      {leaveError && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-red-500 text-white text-xs font-medium px-4 py-2 rounded-full shadow-lg z-50">
-          {leaveError.message}
-        </div>
-      )}
+      <Toast toast={toast} />
     </div>
   );
 }

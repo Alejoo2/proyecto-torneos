@@ -8,7 +8,7 @@ export interface PlayerGridItem {
   playerId: string;
   name: string;
   image?: string | null;
-  /** Marca visual persistente (bg cypher-1). La maneja el consumidor. */
+  /** Marca visual persistente (bg cypher-3). La maneja el consumidor. */
   ready?: boolean;
 }
 

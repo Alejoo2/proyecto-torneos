@@ -55,4 +55,51 @@ export const statsRouter = createTRPCRouter({
         orderBy: { position: "asc" },
       });
     }),
+
+  // ==========================================
+  // W9 — Mis estadísticas agregadas (enmienda aditiva AUTORIZADA en maestro)
+  // ==========================================
+  getMyStats: protectedProcedure.query(async ({ ctx }) => {
+    const profile = await ctx.db.profile.findUnique({
+      where: { userId: ctx.session.user.id },
+      select: { player: { select: { stats: true } } },
+    });
+    return profile?.player?.stats ?? null;
+  }),
+
+  // ==========================================
+  // W9 — Historial de mis partidos con stats (enmienda aditiva A3, patrón
+  // getMyStats: protected + read-only + resuelve profile→player). Fuente:
+  // MatchPlayerStat (shape verificado). "Sin stats" del wireframe requeriría
+  // MatchCallUp — registrado como deuda, no se fabrica.
+  // ==========================================
+  getMyMatchHistory: protectedProcedure.query(async ({ ctx }) => {
+    const profile = await ctx.db.profile.findUnique({
+      where: { userId: ctx.session.user.id },
+      select: { player: { select: { id: true } } },
+    });
+    const playerId = profile?.player?.id;
+    if (!playerId) return [];
+
+    return ctx.db.matchPlayerStat.findMany({
+      where: { playerId },
+      orderBy: { match: { createdAt: "desc" } },
+      take: 10,
+      select: {
+        matchId: true,
+        teamId: true,
+        goals: true,
+        match: {
+          select: {
+            tournamentId: true,
+            date: true,
+            scheduledAt: true,
+            status: true,
+            phase: { select: { name: true } },
+            tournament: { select: { name: true } },
+          },
+        },
+      },
+    });
+  }),
 });

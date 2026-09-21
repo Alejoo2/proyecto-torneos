@@ -52,7 +52,10 @@ export const teamRouter = createTRPCRouter({
       }
     });
     if (!profile?.player) return [];
-    return profile.player.teamMemberships.map(m => m.team);
+    // A2 (W9): isCaptain viaja ADITIVAMENTE para el chip de capitán del perfil.
+    // Consumidores previos (team-list-template, tournament-detail-template)
+    // ignoran el campo extra: cero ruptura de contrato.
+    return profile.player.teamMemberships.map((m) => ({ ...m.team, isCaptain: m.isCaptain }));
   }),
 
   getById: protectedProcedure
@@ -121,5 +124,18 @@ export const teamRouter = createTRPCRouter({
     .input(z.object({ teamId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       return teamEngine.leaveTeam(ctx.db, input.teamId, ctx.session.user.id);
+    }),
+
+  // ==========================================
+  // Titulares (N-3, W8): capitán-only, máximo 5 activos
+  // ==========================================
+  setStarter: protectedProcedure
+    .input(z.object({
+      teamId: z.string(),
+      membershipId: z.string(),
+      isStarter: z.boolean(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      return teamEngine.setStarter(ctx.db, input, ctx.session.user.id);
     }),
 });
