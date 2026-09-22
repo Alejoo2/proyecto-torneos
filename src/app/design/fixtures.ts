@@ -7,8 +7,7 @@ const NOW = Date.now();
 export const FIXTURE_NOTIFICATIONS: NotificationData[] = [
   {
     id: "n1",
-    family: "ENROLLMENT",
-    title: "Inscripción aprobada",
+    family: "TOURNAMENT",    title: "Inscripción aprobada",
     body: "Tu equipo 'Los Rayados' fue aprobado en la Copa Barrial Nocturna.",
     createdAt: NOW - 42_000,
     read: false,

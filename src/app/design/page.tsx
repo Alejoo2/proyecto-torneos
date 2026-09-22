@@ -18,9 +18,11 @@ import { FIXTURE_TEAMS, FIXTURE_PLAYERS } from "./fixtures";
 import { Wave2Section } from "./wave2";
 import { Wave3Section } from "./wave3";
 import { Wave4Section } from "./wave4";
+import { Wave10Section } from "./wave10";
 import { Wave7TeamsScene, Wave7TournamentsScene } from "./wave7";
 import { HeaderTitleProvider } from "torneos/components/app-shell/header-title";
 import {Wave8Section} from "./wave8";
+import {Wave9Section} from "./wave9";
 
 const NOW = Date.now();
 
@@ -82,6 +84,8 @@ interface Scene {
 }
 
 const SCENES: Scene[] = [
+  { id: "wave10", label: "W10 · Admin", node: <Wave10Section /> },
+    { id: "wave9", label: "W9 · Perfil", node: <Wave9Section /> },
   { id: "wave8", label: "W8 · Equipo", node: <Wave8Section /> },
   { id: "wave7-equipos", label: "W7 · Equipos", node: <Wave7TeamsScene /> },
   { id: "wave7-torneos", label: "W7 · Torneos", node: <Wave7TournamentsScene /> },

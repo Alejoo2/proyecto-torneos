@@ -22,8 +22,8 @@ export function TournamentsListTemplate() {
   );
   const [dayFilter, setDayFilter] = useState<DayFilter>("ALL");
 
-  const list = tournaments ?? [];
-
+  const list = useMemo(() => tournaments ?? [], [tournaments]);
+  
   const days = useMemo(
     () => Array.from(new Set(list.map((t) => t.dayOfWeek))).sort((a, b) => a - b),
     [list],

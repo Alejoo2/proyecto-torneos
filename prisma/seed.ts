@@ -54,6 +54,8 @@ async function seedPermissions() {
     { code: "team:manage", name: "Gestionar equipo", module: "team" },
     { code: "match:postpone", name: "Aplazar partidos", module: "match" },
     { code: "match:result", name: "Cargar resultados de partido", module: "match" },
+    { code: "rbac:manage", name: "Gestionar roles y permisos", module: "rbac" },
+    { code: "referee:manage", name: "Gestionar árbitros", module: "match" },
   ];
 
   await prisma.permission.createMany({ data: permissionsData, skipDuplicates: true });
@@ -78,8 +80,7 @@ async function seedRoles() {
   const roles = Object.fromEntries(dbRoles.map((r) => [r.name, r.id]));
 
   const rolePermissionsMap: Record<string, string[]> = {
-    admin: ["user:manage", "manager:create", "manager:disable", "court:create", "court:edit", "court:disable", "court:view", "tournament:approve"],
-    manager: ["court:view", "tournament:create", "tournament:manage", "match:postpone", "match:result"],
+    admin: ["user:manage", "manager:create", "manager:disable", "court:create", "court:edit", "court:disable", "court:view", "tournament:approve", "rbac:manage", "referee:manage"],    manager: ["court:view", "tournament:create", "tournament:manage", "match:postpone", "match:result"],
     player: ["court:view"],
     captain: ["court:view", "team:invite", "team:manage"],
   };

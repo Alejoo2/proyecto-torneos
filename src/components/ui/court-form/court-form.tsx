@@ -21,13 +21,17 @@ interface CourtFormProps {
     inventory?: string;
   }) => void;
   isLoading?: boolean;
+  /** W10 (ADITIVO): modo edición — monta los campos con valores de la cancha. */
+  initialValues?: { name?: string; address?: string; description?: string; inventory?: string };
+  /** W10 (ADITIVO): etiqueta del submit ("Crear cancha y generar disponibilidad" por defecto). */
+  submitLabel?: string;
 }
 
-export function CourtForm({ onSubmit, isLoading }: CourtFormProps) {
-  const [name, setName] = useState("");
-  const [address, setAddress] = useState("");
-  const [description, setDescription] = useState("");
-  const [inventory, setInventory] = useState("");
+export function CourtForm({ onSubmit, isLoading, initialValues, submitLabel }: CourtFormProps) {
+  const [name, setName] = useState(initialValues?.name ?? "");
+  const [address, setAddress] = useState(initialValues?.address ?? "");
+  const [description, setDescription] = useState(initialValues?.description ?? "");
+  const [inventory, setInventory] = useState(initialValues?.inventory ?? "");
 
   // Espejo zod: name.min(2) · address.min(5)
   const isFormValid = name.trim().length >= 2 && address.trim().length >= 5;
@@ -108,7 +112,7 @@ export function CourtForm({ onSubmit, isLoading }: CourtFormProps) {
       </div>
 
       <Button type="submit" isLoading={isLoading} disabled={!isFormValid} className="w-full">
-        Crear cancha y generar disponibilidad
+        {submitLabel ?? "Crear cancha y generar disponibilidad"}
       </Button>
     </form>
   );

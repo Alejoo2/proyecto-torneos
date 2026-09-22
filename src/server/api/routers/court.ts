@@ -7,6 +7,7 @@ import {
   permissionProcedure,
 } from "torneos/server/api/trpc";
 import { courtEngine } from "torneos/server/core/court/court.engine";
+import { courtCascadeEngine } from "torneos/server/core/court/cascade.engine";
 import {
   getMapData,
   getBubbleData,
@@ -171,4 +172,34 @@ export const courtRouter = createTRPCRouter({
   getPublicById: publicProcedure
     .input(z.object({ courtId: z.string() }))
     .query(({ ctx, input }) => getPublicCourtById(ctx.db, input.courtId)),
+
+  // ─── W10 — Cascada "Cancha Manda" (ADITIVO: disable/setAvailability originales intactos) ───
+  // Partidos que serían aplazados. slots=null ⇒ toda la cancha (para disable completo).
+  getBlockImpact: permissionProcedure("court:disable")
+    .input(z.object({
+      courtId: z.string(),
+      slots: z.array(z.object({ date: z.date(), timeSlot: z.number().min(0).max(11) })).nullable(),
+    }))
+    .query(({ ctx, input }) =>
+      courtCascadeEngine.getBlockImpact(ctx.db, input.courtId, input.slots),
+    ),
+
+  disableWithCascade: permissionProcedure("court:disable")
+    .input(z.object({ courtId: z.string() }))
+    .mutation(({ ctx, input }) =>
+      courtCascadeEngine.disableWithCascade(ctx.db, input.courtId, ctx.session.user.id),
+    ),
+
+  setAvailabilityWithCascade: permissionProcedure("court:edit")
+    .input(z.object({
+      courtId: z.string(),
+      slots: z.array(z.object({
+        date: z.date(),
+        timeSlot: z.number().min(0).max(11),
+        status: z.enum(["AVAILABLE", "UNAVAILABLE"]),
+      })),
+    }))
+    .mutation(({ ctx, input }) =>
+      courtCascadeEngine.setAvailabilityWithCascade(ctx.db, input, ctx.session.user.id),
+    ),
 });
