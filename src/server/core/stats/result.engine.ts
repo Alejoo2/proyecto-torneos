@@ -3,6 +3,7 @@ import { NotificationFamily, NotificationType } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { statsEngine } from "./stats.engine";
 import { notificationEngine } from "../notification/notification.engine";
+import { getMatchForManagerAction } from "torneos/server/core/match/match.engine";
 
 interface PlayerStatInput {
   playerId: string;
@@ -24,7 +25,9 @@ export const resultEngine = {
     playerStats: PlayerStatInput[],
     userId: string
   ) {
-    return db.$transaction(async (tx) => {
+        return db.$transaction(async (tx) => {
+      // W11 — E3/H-2: ownership (gestor o delegado) antes de CUALQUIER escritura.
+      await getMatchForManagerAction(tx, matchId, userId);
       const match = await tx.match.findUnique({
         where: { id: matchId },
         include: { tournament: true, phase: true }

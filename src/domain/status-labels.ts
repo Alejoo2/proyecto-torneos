@@ -57,12 +57,14 @@ export const COURT_STATUS: Record<CourtStatus, StatusLabel> = {
 
 export type StatusBadgeVariant = "success" | "warning" | "error" | "neutral";
 
-export const TOURNAMENT_STATUS_LABEL: Record<string, { label: string; variant: StatusBadgeVariant }> = {
-  DRAFT:        { label: "Borrador",   variant: "neutral" },
-  SCHEDULED:    { label: "Programado", variant: "neutral" },
-  GRACE_PERIOD: { label: "En gracia",  variant: "warning" },
-  IN_PROGRESS:  { label: "En curso",   variant: "success" },
-  FINISHED:     { label: "Finalizado", variant: "neutral" },
+// W11 — E4: etiquetas de estado de torneo (casa del gestor).
+export const TOURNAMENT_STATUS_LABEL: Record<string, string> = {
+  DRAFT: "Borrador",
+  SCHEDULED: "Inscripciones abiertas",
+  GRACE_PERIOD: "Cierre de inscripción",
+  IN_PROGRESS: "En curso",
+  FINISHED: "Finalizado",
+  CANCELLED: "Cancelado",
 };
 
 export const COURT_STATUS_LABEL: Record<string, { label: string; variant: StatusBadgeVariant }> = {
@@ -82,3 +84,4 @@ export const TEAM_STATUS_LABEL: Record<
   ACTIVE: { label: "Activo", variant: "success" },
   INACTIVE: { label: "Inactivo", variant: "neutral" },
 };
+

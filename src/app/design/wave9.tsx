@@ -30,13 +30,34 @@ function StatsScene() {
         onChange={() => undefined}
       />
 
-      <SceneHeading>Cards de estadística (tap → toast)</SceneHeading>
-      <div className="grid grid-cols-2 gap-4">
-        <StatCard value="8" label="Partidos con stats" detail="Total de partidos donde se cargaron tus estadísticas." onTap={setToast} />
-        <StatCard value="1.5" label="Prom. goles últ. 10" detail="Promedio de goles en tus últimos 10 partidos." onTap={setToast} />
-        <StatCard value="1.13" label="Puntaje Fair Play" note="(menor = mejor)" detail="Fórmula: (AM×1 + RO×3 + AZ×0.5 + FA×0.25) ÷ partidos. Menor es mejor." onTap={setToast} />
-        <StatCard value="3" label="Tarjetas últ. 10" detail="Suma de azules, amarillas y rojas en últimos 10." onTap={setToast} />
-      </div>
+<SceneHeading>Cards de estadística (tap → toast)</SceneHeading>
+<div className="grid grid-cols-2 gap-4">
+  <StatCard 
+    value="8" 
+    label="Partidos con stats" 
+    detail="Total de partidos donde se cargaron tus estadísticas." 
+    onTap={() => setToast("Partidos con stats: 8")} 
+  />
+  <StatCard 
+    value="1.5" 
+    label="Prom. goles últ. 10" 
+    detail="Promedio de goles en tus últimos 10 partidos." 
+    onTap={() => setToast("Promedio de goles: 1.5")} 
+  />
+  <StatCard 
+    value="1.13" 
+    label="Puntaje Fair Play" 
+    note="(menor = mejor)" 
+    detail="Fórmula: (AM×1 + RO×3 + AZ×0.5 + FA×0.25) ÷ partidos. Menor es mejor." 
+    onTap={() => setToast("Fair Play: 1.13")} 
+  />
+  <StatCard 
+    value="3" 
+    label="Tarjetas últ. 10" 
+    detail="Suma de azules, amarillas y rojas en últimos 10." 
+    onTap={() => setToast("Tarjetas últimas 10: 3")} 
+  />
+</div>
       {toast && <p className="rounded-lg bg-cypher-5-1-1 px-3 py-2 text-xs text-cypher-4-2">{toast}</p>}
 
       <SceneHeading>Chips de equipos (corona = capitán)</SceneHeading>

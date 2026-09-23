@@ -60,7 +60,7 @@ export function TacticalView({ starters, className }: TacticalViewProps) {
             {player ? (
               <div className="rounded-full border-2 border-cypher-3 bg-cypher-5 p-0.5 shadow-lg">
                 <PlayerAvatar
-                  profile={{ displayName: player.displayName, image: player.image ?? null }}
+                                    profile={{ displayName: player.displayName ?? "Jugador", image: player.image ?? null}}
                   size="sm"
                 />
               </div>

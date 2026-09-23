@@ -14,6 +14,7 @@ import { CourtAvailabilityGrid } from "torneos/components/ui/court-availability-
 import { CreateTournamentModal } from "torneos/components/ui/tournament/create-tournament-modal";
 import { dayLabel, slotLabel } from "torneos/domain/schedule/labels";
 import { COURT_STATUS_LABEL, TOURNAMENT_STATUS_LABEL } from "torneos/domain/status-labels";
+import { CreateTournamentModal } from "torneos/components/ui/tournament/create-tournament-modal";
 
 // W5 — Detalle público de cancha (destino del CTA "Ver Detalle" del hub).
 // Jerarquía del mini-spec: CourtHero → Disponibilidad 7 días (matriz getBubble) →
@@ -39,10 +40,7 @@ function formatDeadline(value: Date | string): string {
 }
 
 export function CourtDetailTemplate({ courtId, isLoggedIn }: CourtDetailTemplateProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [publishError, setPublishError] = useState<string | null>(null);
-  const [confirmingPublishId, setConfirmingPublishId] = useState<string | null>(null);
+  const [publishError, setPublishError] = useState<string | null>(null);  const [confirmingPublishId, setConfirmingPublishId] = useState<string | null>(null);
   const utils = api.useUtils();
 
   // Read-model único del header + matriz (público, sirve a anónimos y logueados)
@@ -71,17 +69,6 @@ export function CourtDetailTemplate({ courtId, isLoggedIn }: CourtDetailTemplate
   // P1: el row en revisión sale de la lista del gestor (única clave = su id)
   const confirmingPublish = managerTournaments?.find((t) => t.id === confirmingPublishId) ?? null;
 
-  const createMutation = api.tournament.create.useMutation({
-    onSuccess: () => {
-      setCreateError(null);
-      setIsModalOpen(false);
-      void utils.tournament.listByCourt.invalidate({ courtId });
-    },
-    onError: (error) => {
-      // Franja ocupada / deadline pasada / validación del engine — inline en el modal
-      setCreateError(error.message);
-    },
-  });
 
   const publishMutation = api.tournament.publish.useMutation({
     // Optimistic: el estado del row vuela a SCHEDULED en el mismo frame
@@ -243,26 +230,16 @@ export function CourtDetailTemplate({ courtId, isLoggedIn }: CourtDetailTemplate
           transition={{ duration: 0.25, delay: 0.18 }}
           className="mt-8 px-5"
         >
-          <Button
-            size="lg"
-            className="w-full"
-            onClick={() => {
-              setCreateError(null);
-              setIsModalOpen(true);
-            }}
+                    {/* W11 — E5: el modal W5 se retiró; la creación vive en el wizard */}
+          <Link
+            href={`/gestor/torneos/nuevo?courtId=${courtId}`}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-cypher-2 px-6 py-3 text-sm font-bold text-cypher-5 transition-colors active:bg-cypher-2-1"
           >
             <Plus size={18} /> Crear torneo aquí
-          </Button>
+          </Link>
         </motion.section>
       )}
 
-      <CreateTournamentModal
-        courtId={courtId}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onCreate={(data) => createMutation.mutate(data)}
-        submitError={createError}
-      />
 
       {/* P1 (W6): revisión previa — publicar es irreversible (sin unpublish) */}
       <ConfirmModal

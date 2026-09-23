@@ -69,12 +69,12 @@ export function CourtAvailabilityEditor({ courtId, courtName }: CourtAvailabilit
     overrides[`${iso}|${slot}`] ?? baseStatus(iso, slot);
 
   const delta: SlotPayload[] = Object.entries(overrides)
-    .filter(([key, st]) => {
-      const [iso, slotStr] = key.split("|");
+        .filter(([key, st]) => {
+      const [iso = "", slotStr = "0"] = key.split("|");
       return baseStatus(iso, Number(slotStr)) !== st;
     })
     .map(([key, st]) => {
-      const [iso, slotStr] = key.split("|");
+      const [iso = "", slotStr = "0"] = key.split("|");
       return {
         date: new Date(`${iso}T00:00:00.000Z`),
         timeSlot: Number(slotStr),
@@ -122,7 +122,7 @@ export function CourtAvailabilityEditor({ courtId, courtName }: CourtAvailabilit
               <div key={iso} className="grid grid-cols-[56px_repeat(12,1fr)] gap-1 py-0.5">
                 <div className="pr-1 text-right leading-tight">
                   <p className="text-[10px] font-semibold text-cypher-4-2">
-                    {DAY_LABELS[d.getUTCDay()].slice(0, 3)}
+                    {DAY_LABELS[d.getUTCDay()]?.slice(0, 3) ?? ""}
                   </p>
                   <p className="text-[9px] tabular-nums text-cypher-4-2-2">
                     {d.getUTCDate()}/{d.getUTCMonth() + 1}

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { LogIn, ShieldOff, Users } from "lucide-react";
+import { LogIn, Mail, ShieldOff, Users } from "lucide-react";
 import { api } from "torneos/trpc/react";
 import { HeaderTitle } from "torneos/components/app-shell/header-title";
 import { TeamCard } from "torneos/components/ui/team-card/team-card";
@@ -25,11 +25,37 @@ export function TeamListTemplate() {
     retry: false,
   });
 
+  // W11 — E1: bandeja de invitaciones (hoy: de equipo; E6 añadirá torneos a la misma bandeja).
+  // Inline con enabled (el hook useMyInvitations no acepta opciones — contrato intacto),
+  // mismo patrón que getMyTeams arriba.
+  const { data: pendingInvites } = api.recruitment.getMyInvitations.useQuery(undefined, {
+    enabled: isLoggedIn,
+    retry: false,
+  });
+  const pendingCount = pendingInvites?.length ?? 0;
+
   const openSheet = () => setSheetOpen(true);
 
   return (
     <div className="pt-14 pb-28">
-      <HeaderTitle title="Mis equipos" />
+            <HeaderTitle title="Mis equipos" />
+
+      {isLoggedIn && (
+        <div className="px-4 pt-2">
+          <Link
+            href="/invitaciones"
+            className="flex items-center gap-3 rounded-2xl border border-cypher-4/10 bg-cypher-5-1 px-4 py-3 transition-opacity active:opacity-80"
+          >
+            <Mail className="size-5 text-cypher-2" />
+            <span className="flex-1 text-sm font-semibold text-cypher-4">Invitaciones</span>
+            {pendingCount > 0 && (
+              <span className="rounded-full bg-cypher-4-2-2/20 px-2 py-0.5 text-xs font-bold text-cypher-4">
+                {pendingCount}
+              </span>
+            )}
+          </Link>
+        </div>
+      )}
 
       {!isLoggedIn ? (
         <div className="px-4 pt-16">

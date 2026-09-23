@@ -56,8 +56,11 @@ const vitrineDetailSelect = {
 } satisfies Prisma.TournamentSelect;
 
 export const tournamentEngine = {
-  async create(prisma: PrismaDb, input: CreateTournamentInput, userId: string) {
-    // 1. Verificar que el usuario es gestor activo
+  async create(
+    prisma: PrismaDb,
+    input: CreateTournamentInput & { slots?: { dayOfWeek: number; timeSlot: number }[] },
+    userId: string
+  ) {    // 1. Verificar que el usuario es gestor activo
     const manager = await prisma.manager.findFirst({
       where: { profile: { userId }, isActive: true },
     });
@@ -83,16 +86,43 @@ export const tournamentEngine = {
         status: { in: ["SCHEDULED", "GRACE_PERIOD", "IN_PROGRESS"] },
       },
     });
-    if (conflictingTournament) {
+        if (conflictingTournament) {
       throw new TRPCError({ code: "CONFLICT", message: "Franja horaria ocupada por otro torneo" });
     }
 
-    // 5. Crear torneo
+    // W11 — E5 (aditivo): multi-franja. Sin `slots` → comportamiento actual intacto.
+    // Conflicto validado por CADA franja marcada (la principal ya se validó arriba).
+    const extraSlots = (input.slots ?? []).filter(
+      (s) => !(s.dayOfWeek === input.dayOfWeek && s.timeSlot === input.timeSlot),
+    );
+    for (const s of extraSlots) {
+      const slotConflict = await prisma.tournament.findFirst({
+        where: {
+          courtId: input.courtId,
+          dayOfWeek: s.dayOfWeek,
+          timeSlot: s.timeSlot,
+          status: { in: ["SCHEDULED", "GRACE_PERIOD", "IN_PROGRESS"] },
+        },
+      });
+      if (slotConflict) {
+        throw new TRPCError({ code: "CONFLICT", message: "Una de las franjas marcadas está ocupada por otro torneo" });
+      }
+    }
+
+    // 5. Crear torneo — `slots` viaja aparte del spread de escalares
+    const { slots: _slots, ...scalarInput } = input;
     return prisma.tournament.create({
       data: {
-        ...input,
+        ...scalarInput,
         managerId: manager.id,
         status: "DRAFT",
+        ...(extraSlots.length > 0
+          ? {
+              slots: {
+                create: extraSlots.map((s) => ({ dayOfWeek: s.dayOfWeek, timeSlot: s.timeSlot })),
+              },
+            }
+          : {}),
       },
     });
   },
@@ -262,5 +292,36 @@ export const tournamentEngine = {
       throw new TRPCError({ code: "NOT_FOUND", message: "Torneo no encontrado" });
     }
     return tournament;
+  },
+
+  /** W11 — E4 (H-D): torneos del gestor en TODOS los estados (DRAFT/PRIVATE incluidos).
+   *  Deliberadamente SIN VITRINE_TOURNAMENT_WHERE: la vitrina excluye justo lo que
+   *  esta query busca. Read-model de gestor, no de vitrina (misma frontera que
+   *  getById vs getPublicById). courtId? filtra para una cancha (flujo "cancha manda"). */
+  async listMine(prisma: PrismaDb, userId: string, courtId?: string) {
+    const manager = await prisma.manager.findFirst({
+      where: { profile: { userId }, isActive: true },
+      select: { id: true },
+    });
+    if (!manager) return [];
+    return prisma.tournament.findMany({
+      where: { managerId: manager.id, ...(courtId ? { courtId } : {}) },
+      orderBy: { createdAt: "desc" },
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        status: true,
+        type: true,
+        courtId: true,
+        maxTeams: true,
+        dayOfWeek: true,
+        timeSlot: true,
+        enrollmentDeadline: true,
+        startDate: true,
+        createdAt: true,
+        _count: { select: { enrollments: true } },
+      },
+    });
   },
 };

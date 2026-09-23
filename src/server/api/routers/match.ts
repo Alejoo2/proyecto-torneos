@@ -1,8 +1,7 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
-import { createTRPCRouter, publicProcedure, protectedProcedure, managerProcedure } from "torneos/server/api/trpc";
-import { matchEngine } from "torneos/server/core/match/match.engine";
-
+import { createTRPCRouter, publicProcedure, protectedProcedure } from "torneos/server/api/trpc";
+import { matchEngine, getMatchForManagerAction } from "torneos/server/core/match/match.engine";
 // Estados en los que ya no se puede tocar el partido
 const EDITABLE_BLOCKERS = ["FINISHED", "WALKOVER", "CANCELLED"];
 
@@ -208,19 +207,14 @@ export const matchRouter = createTRPCRouter({
     }),
 
   // ─── B-06b: Gestor asigna/quita árbitro ───
-  assignReferee: managerProcedure
+  assignReferee: protectedProcedure
     .input(z.object({
       matchId: z.string(),
       refereeId: z.string().nullable(), // null = desasignar
     }))
-    .mutation(async ({ ctx, input }) => {
-      const match = await ctx.db.match.findUnique({
-        where: { id: input.matchId },
-        select: { status: true },
-      });
-      if (!match) {
-        throw new TRPCError({ code: "NOT_FOUND", message: "Partido no encontrado" });
-      }
+        .mutation(async ({ ctx, input }) => {
+      // W11 — E3/H-1: ownership (gestor o delegado). El helper lanza NOT_FOUND/FORBIDDEN.
+      const match = await getMatchForManagerAction(ctx.db, input.matchId, ctx.session.user.id);
       if (EDITABLE_BLOCKERS.includes(match.status)) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -250,7 +244,7 @@ export const matchRouter = createTRPCRouter({
 
   // ─── B-06b: Listado de árbitros para el selector del gestor ───
   // managerProcedure y no protected: phone/email del Referee son PII
-  listReferees: managerProcedure.query(({ ctx }) => {
+  listReferees: protectedProcedure.query(({ ctx }) => {
     return ctx.db.referee.findMany({
       where: { isActive: true },
       select: { id: true, name: true },
@@ -258,23 +252,23 @@ export const matchRouter = createTRPCRouter({
     });
   }),
 
-  postpone: managerProcedure
+  postpone: protectedProcedure
     .input(z.object({ matchId: z.string(), reason: z.string().min(10) }))
     .mutation(({ ctx, input }) => {
       return matchEngine.postpone(ctx.db, input.matchId, input.reason, ctx.session.user.id);
     }),
 
-  reschedule: managerProcedure
+  reschedule: protectedProcedure
     .input(z.object({
       matchId: z.string(),
       newDate: z.date(),
-      newTimeSlot: z.number().min(1).max(10),
+            newTimeSlot: z.number().min(0).max(11),
     }))
     .mutation(({ ctx, input }) => {
       return matchEngine.reschedule(ctx.db, input.matchId, input.newDate, input.newTimeSlot, ctx.session.user.id);
     }),
 
-  markWalkover: managerProcedure
+  markWalkover: protectedProcedure
     .input(z.object({ matchId: z.string(), winnerTeamId: z.string() }))
     .mutation(({ ctx, input }) => {
       return matchEngine.markWalkover(ctx.db, input.matchId, input.winnerTeamId, ctx.session.user.id);

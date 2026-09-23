@@ -16,8 +16,11 @@ import { useMyProfile, useToggleSlot, useUpdateProfile } from "torneos/component
 import { StatCard } from "torneos/components/features/profile/stat-card";
 import { TeamPill } from "torneos/components/features/profile/team-pill";
 import { MatchHistoryRow } from "torneos/components/features/profile/match-history-row";
-
-const TABS = [
+import { Badge } from "torneos/components/ui/badge";
+import { DelegatesSection } from "torneos/components/features/profile/delegates-section";
+import { DAY_LABELS, SLOT_LABELS } from "torneos/domain/schedule/labels";
+import { TOURNAMENT_STATUS_LABEL } from "torneos/domain/status-labels";
+const BASE_TABS = [
   { id: "stats", label: "Estadísticas" },
   { id: "edit", label: "Editar perfil" },
   { id: "schedule", label: "Disponibilidad" },
@@ -46,6 +49,19 @@ export function ProfileView() {
   const teamsQuery = api.team.getMyTeams.useQuery(undefined, { retry: false });
   const historyQuery = api.stats.getMyMatchHistory.useQuery(undefined, { retry: false });
 
+  // W11 — E4: casa del gestor. Pestaña condicional: manager activo O secretarías.
+  const managerQuery = api.admin.getMyManagerProfile.useQuery(undefined, { retry: false });
+  const assignmentsQuery = api.delegation.listAssignments.useQuery(undefined, { retry: false });
+  const myTournamentsQuery = api.tournament.listMine.useQuery(undefined, {
+    enabled: Boolean(managerQuery.data),
+    retry: false,
+  });
+  const showGestorTab =
+    Boolean(managerQuery.data) || (assignmentsQuery.data?.length ?? 0) > 0;
+  const tabs: { id: string; label: string }[] = [
+    ...BASE_TABS,
+    ...(showGestorTab ? [{ id: "gestor", label: "Gestor" }] : []),
+  ];
   const [tab, setTab] = useState<string>("stats");
   const [bioExpanded, setBioExpanded] = useState(false);
   const [toast, setToast] = useState<{ title: string; subtitle?: string } | null>(null);
@@ -220,8 +236,7 @@ export function ProfileView() {
 
       {/* TABS */}
       <div className="px-4 pt-6">
-        <TabBar tabs={TABS} active={tab} onChange={setTab} />
-      </div>
+        <TabBar tabs={tabs} active={tab} onChange={setTab} />      </div>
 
       {/* TAB: ESTADÍSTICAS */}
       {tab === "stats" && (
@@ -259,19 +274,20 @@ export function ProfileView() {
               />
             ) : (
               <div className="flex flex-col gap-3">
-                {history.map((m) => (
-                  <MatchHistoryRow
-                    key={m.matchId}
-                    href={`/torneos/${m.match.tournamentId}/partidos/${m.matchId}`}
-                    title={`${m.match.tournament.name} — ${m.match.phase.name}`}
-                    subtitle={
-                      m.match.scheduledAt || m.match.date
-                        ? DATE_FMT.format(new Date(m.match.scheduledAt ?? m.match.date))
-                        : "Por programar"
-                    }
-                    goals={m.goals}
-                  />
-                ))}
+                                {history.map((m) => {
+                  // Higiene W11: narrowing a const (lección W4) — el ternario no
+                  // estrecha a través de la expresión.
+                  const when = m.match.scheduledAt ?? m.match.date;
+                  return (
+                    <MatchHistoryRow
+                      key={m.matchId}
+                      href={`/torneos/${m.match.tournamentId}/partidos/${m.matchId}`}
+                      title={`${m.match.tournament.name} — ${m.match.phase.name}`}
+                      subtitle={when ? DATE_FMT.format(new Date(when)) : "Por programar"}
+                      goals={m.goals}
+                    />
+                  );
+                })}
               </div>
             )}
           </div>
@@ -379,6 +395,84 @@ export function ProfileView() {
               No disponible
             </span>
           </div>
+        </div>
+      )}
+
+      {/* TAB: GESTOR (W11 — E4: complementaria al flujo principal cancha → gestionar) */}
+      {tab === "gestor" && showGestorTab && (
+        <div className="space-y-6 px-4 pt-6">
+          {(assignmentsQuery.data?.length ?? 0) > 0 && (
+            <section className="rounded-2xl border border-cypher-4/10 bg-cypher-5-1 p-4">
+              <h2 className="text-sm font-semibold text-cypher-4">Mis secretarías</h2>
+              <p className="mt-0.5 text-xs text-cypher-4-2-2">
+                Torneos donde gestionas partidos en nombre del gestor.
+              </p>
+              <ul className="mt-3 space-y-2">
+                {assignmentsQuery.data?.map((a) => (
+                  <li key={a.delegationId} className="rounded-xl bg-cypher-5-1-1 px-3 py-2">
+                    <p className="text-sm font-medium text-cypher-4">
+                      {a.manager.displayName ?? "Gestor"}
+                    </p>
+                    <ul className="mt-1 space-y-1">
+                      {a.tournaments.map((t) => (
+                        <li key={t.id}>
+                          <Link
+                            href={`/torneos/${t.id}/gestion`}
+                            className="text-xs text-cypher-4-2 underline-offset-2 hover:underline"
+                          >
+                            {t.name}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          <section className="rounded-2xl border border-cypher-4/10 bg-cypher-5-1 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-semibold text-cypher-4">Mis torneos</h2>
+                <p className="mt-0.5 text-xs text-cypher-4-2-2">Todos los estados, incluidos borradores.</p>
+              </div>
+              <Link
+                href="/gestor/torneos/nuevo"
+                className="shrink-0 rounded-lg bg-cypher-2 px-3 py-2 text-xs font-bold text-cypher-5 active:bg-cypher-2-1"
+              >
+                + Crear
+              </Link>
+            </div>
+            <div className="mt-4">
+              {myTournamentsQuery.isLoading ? (
+                <LoadingSkeleton variant="row" rows={2} />
+              ) : myTournamentsQuery.data && myTournamentsQuery.data.length > 0 ? (
+                <ul className="divide-y divide-cypher-4/10">
+                  {myTournamentsQuery.data.map((t) => (
+                    <li key={t.id}>
+                      <Link
+                        href={`/torneos/${t.id}/gestion`}
+                        className="flex items-center justify-between gap-3 py-2.5 transition-opacity active:opacity-80"
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-medium text-cypher-4">{t.name}</span>
+                          <span className="text-xs text-cypher-4-2-2">
+                            {t._count.enrollments}/{t.maxTeams} equipos · {DAY_LABELS[t.dayOfWeek]} {SLOT_LABELS[t.timeSlot]}
+                          </span>
+                        </span>
+                        <Badge variant="neutral" status={TOURNAMENT_STATUS_LABEL[t.status] ?? t.status} />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="py-3 text-center text-xs text-cypher-4-2-2">Aún no creas torneos.</p>
+              )}
+            </div>
+          </section>
+
+          {Boolean(managerQuery.data) && <DelegatesSection />}
         </div>
       )}
 

@@ -24,7 +24,7 @@ export function AdminView() {
     <div className="pt-14 pb-28">
       <HeaderTitle title="Admin" />
       <div className="px-4 pt-3">
-        <TabBar tabs={TABS} active={tab} onChange={setTab} />
+        <TabBar tabs={TABS as unknown as { id: string; label: string }[]} active={tab} onChange={setTab} />
       </div>
       <div className="px-4 pt-6">
         {tab === "canchas" && <AdminCourtsTab />}

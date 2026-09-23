@@ -10,6 +10,7 @@ import { EmptyState } from "torneos/components/ui/empty-state";
 import { LoadingSkeleton } from "torneos/components/ui/loading-skeleton";
 import { Toast } from "torneos/components/ui/toast";
 import { MatchHero } from "./match-hero";
+import { MatchActionsPanel } from "./match-actions-panel";
 import { RefereeSelect } from "./referee-select";
 import { ResultWizard, resultDraftKey, type ResultPayload } from "./result-wizard";
 import { ResultReadout } from "./result-readout";
@@ -168,6 +169,9 @@ export function ManagerMatchTemplate({ matchId }: { matchId: string }) {
           courtName={match.court?.name ?? null}
           refereeName={match.referee?.name ?? (match.refereeId ? refereesQuery.data?.find((r) => r.id === match.refereeId)?.name ?? null : null)}
         />
+
+        {/* W11 — E2: aplazar / reprogramar / paseo (gestor y secretario) */}
+        {editable && <MatchActionsPanel match={match} onNotify={notify} />}        />
 
         {match.result ? (
           <ResultReadout

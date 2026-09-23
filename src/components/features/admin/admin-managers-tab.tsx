@@ -5,6 +5,7 @@ import { api } from "torneos/trpc/react";
 import { ManagerCard } from "torneos/components/ui/admin/manager-card";
 import { UserSearchResult } from "torneos/components/ui/admin/user-search-result";
 import { LoadingSkeleton } from "torneos/components/ui/loading-skeleton";
+import { ManagerDelegates } from "torneos/components/features/admin/manager-delegates";
 import { Toast } from "torneos/components/ui/toast";
 
 /** W10 — Pestaña Gestores (mismas queries del dashboard pre-docs, re-skinned).
@@ -74,14 +75,19 @@ export function AdminManagersTab() {
           <LoadingSkeleton variant="row" rows={2} />
         ) : managers && managers.length > 0 ? (
           <div className="space-y-3">
-            {managers.map((manager) => (
-              <ManagerCard
-                key={manager.id}
-                name={manager.profile.displayName ?? manager.profile.user.email}
-                email={manager.profile.user.email}
-                isActive={manager.isActive}
-                onToggleStatus={() => toggleStatusMutation.mutate({ managerId: manager.id })}
-              />
+                        {managers.map((manager) => (
+              <div key={manager.id} className="space-y-1.5">
+                <ManagerCard
+                  name={manager.profile.displayName ?? manager.profile.user.email}
+                  email={manager.profile.user.email}
+                  isActive={manager.isActive}
+                  onToggleStatus={() => toggleStatusMutation.mutate({ managerId: manager.id})}
+                />
+                <ManagerDelegates
+                  managerId={manager.id}
+                  managerName={manager.profile.displayName ?? manager.profile.user.email}
+                />
+              </div>
             ))}
           </div>
         ) : (

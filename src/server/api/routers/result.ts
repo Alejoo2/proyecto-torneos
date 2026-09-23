@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, protectedProcedure, managerProcedure } from "torneos/server/api/trpc";
+import { createTRPCRouter, protectedProcedure } from "torneos/server/api/trpc";
 import { resultEngine } from "torneos/server/core/stats/result.engine";
 
 const playerStatSchema = z.object({
@@ -14,7 +14,7 @@ const playerStatSchema = z.object({
 });
 
 export const resultRouter = createTRPCRouter({
-  load: managerProcedure
+  load: protectedProcedure
         .input(z.object({
       matchId: z.string(),
       homeScore: z.number().min(0),

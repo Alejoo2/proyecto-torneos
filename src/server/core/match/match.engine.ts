@@ -13,7 +13,7 @@ type PrismaTx = Prisma.TransactionClient;
  * Trae el partido validando que `userId` sea el gestor del torneo.
  * Sin esto, CUALQUIER manager podía modificar partidos de torneos ajenos.
  */
-async function getMatchForManagerAction(tx: PrismaTx, matchId: string, userId: string) {
+export async function getMatchForManagerAction(tx: PrismaTx, matchId: string, userId: string) {
   const match = await tx.match.findUnique({
     where: { id: matchId },
     include: {
@@ -22,7 +22,15 @@ async function getMatchForManagerAction(tx: PrismaTx, matchId: string, userId: s
   });
   if (!match) throw new TRPCError({ code: "NOT_FOUND", message: "Partido no encontrado" });
   if (match.tournament.manager.profile.userId !== userId) {
-    throw new TRPCError({ code: "FORBIDDEN", message: "No eres el gestor de este torneo" });
+    // W11 — E3 (visto del dueño): delegación "secretario de gestor", fail-closed.
+    // Busca por RELACIÓN profile.userId (no depende del shape de la sesión).
+    const delegation = await tx.managerDelegate.findFirst({
+      where: { managerId: match.tournament.managerId, profile: { userId } },
+      select: { id: true },
+    });
+    if (!delegation) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "No eres el gestor de este torneo" });
+    }
   }
   return match;
 }

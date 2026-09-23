@@ -7,7 +7,7 @@ interface StatCardProps {
   note?: string;
   /** Texto que viaja al Toast al tocar (fórmula, aclaración). */
   detail: string;
-  onTap: () => void;
+    onTap: (detail: string) => void;
 }
 
 /** W9 — Card grande de estadística (wireframe: grid 2×2). Tap → Toast con detail

@@ -12,6 +12,7 @@ import { matchRouter } from "./routers/match";
 import { resultRouter } from "./routers/result";
 import { statsRouter } from "./routers/stats";
 import { notificationRouter } from "./routers/notification";
+import { delegationRouter } from "./routers/delegation";
 
 
 export const appRouter = createTRPCRouter({
@@ -25,6 +26,7 @@ export const appRouter = createTRPCRouter({
   enrollment: enrollmentRouter,
   admin : adminRouter,
   match: matchRouter,
+    delegation: delegationRouter,
   result: resultRouter,
   stats: statsRouter,
   notification: notificationRouter, // <-- NUEVO

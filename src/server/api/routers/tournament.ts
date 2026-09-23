@@ -50,6 +50,18 @@ export const tournamentRouter = createTRPCRouter({
       dayOfWeek: z.number().min(0).max(6),
       timeSlot: z.number().min(0).max(11),
       startDate: z.coerce.date().optional(),
+      // W11 — E5: multi-franja (aditivo). Sin `slots` → camino actual intacto;
+      // con `slots`, la primera marcada llena los escalares (compatibilidad vitrina).
+      slots: z
+        .array(
+          z.object({
+            dayOfWeek: z.number().min(0).max(6),
+            timeSlot: z.number().min(0).max(11),
+          }),
+        )
+        .min(1)
+        .max(15)
+        .optional(),
     }))
     .mutation(async ({ ctx, input }) => {
       return tournamentEngine.create(ctx.db, input, ctx.session.user.id);
@@ -74,6 +86,13 @@ export const tournamentRouter = createTRPCRouter({
     .input(z.object({ tournamentId: z.string() }))
     .query(async ({ ctx, input }) => {
       return tournamentEngine.getById(ctx.db, input.tournamentId);
+    }),
+
+  // ─── W11 E4 (H-D): mis torneos (gestor, todos los estados) ───
+  listMine: protectedProcedure
+    .input(z.object({ courtId: z.string().optional() }).optional())
+    .query(async ({ ctx, input }) => {
+      return tournamentEngine.listMine(ctx.db, ctx.session.user.id, input?.courtId);
     }),
 
   // ─── Sala de Cine (Capitán) ───

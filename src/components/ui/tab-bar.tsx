@@ -1,7 +1,7 @@
 import { cn } from "torneos/lib/utils";
 
 interface TabBarProps {
-  tabs: { id: string; label: string }[];
+    tabs: readonly { id: string; label: string }[];
   active: string;
   onChange: (id: string) => void;
   className?: string;

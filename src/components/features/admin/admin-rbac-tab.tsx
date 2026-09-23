@@ -244,7 +244,7 @@ export function AdminRbacTab() {
                   key={p.id}
                   type="button"
                   aria-pressed={on}
-                  title={p.description ?? p.name}
+                  title={("description" in p && typeof p.description === "string" ? p.description : null) ?? p.name}
                   onClick={() =>
                     setNewRoleCodes((cur) =>
                       on ? cur.filter((c) => c !== p.code) : [...cur, p.code],
