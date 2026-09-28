@@ -150,6 +150,8 @@ export function AdminCourtsTab() {
                           address: court.address,
                           description: court.description ?? "",
                           inventory: court.inventory ?? "",
+                          lat: court.lat,
+                          lon: court.lon,
                         }}
                         submitLabel="Guardar cambios"
                         isLoading={updateMutation.isPending}

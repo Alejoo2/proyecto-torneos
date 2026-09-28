@@ -69,7 +69,7 @@ export async function getBubbleData(db: DB, courtId: string) {
   const today = toUtcMidnight(new Date());
   const weekEnd = addUtcDays(today, 7);
 
-  const [court, tournaments, availability] = await Promise.all([
+  const [court, tournaments, availability, reservations, confirmedMatches] = await Promise.all([
     db.court.findUnique({
       where: { id: courtId },
       select: {
@@ -98,6 +98,21 @@ export async function getBubbleData(db: DB, courtId: string) {
       where: { courtId, date: { gte: today, lt: weekEnd } },
       select: { date: true, timeSlot: true, status: true },
     }),
+    // S06 v3.0: franjas apartadas (azul) y partidos confirmados por sorteo (morado).
+    db.tournamentSlotReservation.findMany({
+      where: { courtId, date: { gte: today, lt: weekEnd } },
+      select: { date: true, timeSlot: true },
+    }),
+    db.match.findMany({
+      where: {
+        courtId,
+        date: { gte: today, lt: weekEnd },
+        homeTeamId: { not: null },
+        awayTeamId: { not: null },
+        status: { not: "CANCELLED" },
+      },
+      select: { date: true, timeSlot: true },
+    }),
   ]);
 
   if (court?.status !== "ENABLED") return null;
@@ -106,6 +121,12 @@ export async function getBubbleData(db: DB, courtId: string) {
     availability
       .filter((a) => a.status === "AVAILABLE")
       .map((a) => `${a.date.toISOString()}|${a.timeSlot}`),
+  );
+  const reservedSlots = new Set(
+    reservations.map((r) => `${r.date.toISOString()}|${r.timeSlot}`),
+  );
+  const confirmedSlots = new Set(
+    confirmedMatches.map((m) => `${m.date!.toISOString()}|${m.timeSlot!}`),
   );
 
   const days = Array.from({ length: 7 }, (_, i) => {
@@ -116,13 +137,22 @@ export async function getBubbleData(db: DB, courtId: string) {
     return {
       date: dateKey,
       dayOfWeek,
-      slots: Array.from({ length: SLOTS_PER_DAY }, (_, timeSlot) => ({
-        timeSlot,
-        // Libre = abierta explícitamente Y ningún torneo activo la ocupa
-        isFree:
-          openSlots.has(`${dateKey}|${timeSlot}`) &&
-          !tournaments.some((t) => t.dayOfWeek === dayOfWeek && t.timeSlot === timeSlot),
-      })),
+      slots: Array.from({ length: SLOTS_PER_DAY }, (_, timeSlot) => {
+        const key = `${dateKey}|${timeSlot}`;
+        const state = confirmedSlots.has(key)
+          ? ("confirmed" as const)
+          : reservedSlots.has(key)
+            ? ("reserved" as const)
+            : null;
+        return {
+          timeSlot,
+          // Libre = abierta explícitamente Y ningún torneo activo la ocupa
+          isFree:
+            openSlots.has(key) &&
+            !tournaments.some((t) => t.dayOfWeek === dayOfWeek && t.timeSlot === timeSlot),
+          state,
+        };
+      }),
     };
   });
 

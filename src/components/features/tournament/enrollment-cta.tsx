@@ -20,7 +20,7 @@ export interface CtaEnrollment {
   availabilityNote?: string | null;
 }
 
-type CtaVariant = "ANON" | "NO_TEAM" | "READY" | "HOLDING" | "ENROLLED";
+type CtaVariant = "ANON" | "NO_TEAM" | "PRIVATE" | "READY" | "HOLDING" | "ENROLLED";
 
 interface EnrollmentCtaProps {
   variant: CtaVariant;
@@ -37,6 +37,11 @@ interface EnrollmentCtaProps {
   enrollments?: CtaEnrollment[]; // ENROLLED
   isReevaluating?: boolean;
   onReevaluate?: (enrollmentId: string) => void;
+  pendingInvite?: boolean; // PRIVATE con invitación sin aceptar
+  absentTeamIds?: string[]; // S02 §8: equipos donde ya me ausenté
+  onMarkAbsent?: (teamId: string) => void;
+  onClearAbsence?: (teamId: string) => void;
+  isActingAbsence?: boolean;
   className?: string;
 }
 
@@ -84,6 +89,22 @@ export function EnrollmentCta(props: EnrollmentCtaProps) {
       <div className={cn("rounded-2xl border border-dashed border-cypher-4-2-2/30 p-4 text-center", className)}>
         <p className="text-sm text-cypher-4-2">Necesitas un equipo para inscribirte.</p>
         <p className="mt-1 text-xs text-cypher-4-2-2">Crea uno o únete desde la pestaña Equipo.</p>
+      </div>
+    );
+  }
+
+  if (variant === "PRIVATE") {
+    // Torneo privado sin invitación aceptada: el engine lo niega igual,
+    // la UI ni lo ofrece. Con PENDING se deriva a la bandeja.
+    return (
+      <div className={cn("rounded-2xl border border-dashed border-cypher-4-2-2/30 p-4 text-center", className)}>
+        <p className="text-sm text-cypher-4-2">Torneo privado.</p>
+        <p className="mt-1 text-xs text-cypher-4-2-2">Solo equipos invitados por el gestor pueden inscribirse.</p>
+        {props.pendingInvite && (
+          <Link href="/invitaciones" className={cn(buttonVariants({ size: "sm" }), "mt-3 w-full")}>
+            Tienes una invitación pendiente
+          </Link>
+        )}
       </div>
     );
   }
@@ -151,6 +172,7 @@ export function EnrollmentCta(props: EnrollmentCtaProps) {
           {list.map((e) => {
             const meta = ENROLLMENT_STATUS[e.status as keyof typeof ENROLLMENT_STATUS];
             const pendingAvail = e.status === "PENDING_AVAILABILITY";
+            const isAbsent = props.absentTeamIds?.includes(e.team.id) ?? false;
             return (
               <div key={e.id} className="rounded-2xl bg-cypher-5-1 p-3.5">
                 <div className="flex items-center justify-between gap-2">
@@ -172,6 +194,14 @@ export function EnrollmentCta(props: EnrollmentCtaProps) {
                 {pendingAvail && e.availabilityNote && (
                   <p className="mt-2 text-xs text-red-400">{e.availabilityNote}</p>
                 )}
+                <button
+                  type="button"
+                  disabled={props.isActingAbsence}
+                  onClick={() => (isAbsent ? props.onClearAbsence?.(e.team.id) : props.onMarkAbsent?.(e.team.id))}
+                  className="mt-2 text-xs font-semibold text-cypher-4-2 underline-offset-2 hover:underline disabled:opacity-50"
+                >
+                  {isAbsent ? "Volver a este torneo" : "Ausentarme de este torneo"}
+                </button>
               </div>
             );
           })}

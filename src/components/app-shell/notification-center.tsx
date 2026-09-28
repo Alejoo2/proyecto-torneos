@@ -6,6 +6,10 @@ import { signOut } from "next-auth/react";
 import { api } from "torneos/trpc/react";
 import { NotificationBell } from "torneos/components/app-shell/notification-bell";
 import { NotificationPanel } from "torneos/components/app-shell/notification-panel";
+import type {
+  NotificationItemActions,
+  NotificationItemData,
+} from "torneos/components/features/notifications/notification-item";
 
 interface NotificationCenterValue {
   unread: number;
@@ -38,15 +42,18 @@ export function NotificationCenter({ children }: NotificationCenterProps) {
   const utils = api.useUtils();
 
   // 1. Polling cada 30s del conteo de no leídas SOLO si hay sesión activa
+  // (el poll cubre la frescura: sin refetch extra al enfocar).
   const { data: unreadCount = 0 } = api.notification.unreadCount.useQuery(undefined, {
     enabled: isAuthenticated,
     refetchInterval: 30000,
+    refetchOnWindowFocus: false,
     retry: false,
   });
 
   // 2. Consulta de notificaciones (solo cuando el panel está abierto Y hay sesión)
   const { data: notifications = [], isLoading } = api.notification.list.useQuery(undefined, {
     enabled: isAuthenticated && open,
+    refetchOnWindowFocus: false,
     retry: false,
   });
 
@@ -82,6 +89,29 @@ export function NotificationCenter({ children }: NotificationCenterProps) {
     void signOut({ redirectTo: "/" });
   };
 
+  // Conflicto duro: ausentarme / deshacer desde la bandeja (idempotentes).
+  const markAbsentMutation = api.enrollment.markTournamentAbsence.useMutation();
+  const clearAbsentMutation = api.enrollment.clearTournamentAbsence.useMutation();
+  const itemActions: NotificationItemActions = {
+    isActing: markAbsentMutation.isPending || clearAbsentMutation.isPending,
+    onMarkAbsent: (n: NotificationItemData) => {
+      const p = (n.payload ?? {}) as { tournamentId?: string; teamId?: string };
+      if (!p.tournamentId || !p.teamId) return;
+      markAbsentMutation.mutate(
+        { tournamentId: p.tournamentId, teamId: p.teamId },
+        { onSuccess: () => markAsReadMutation.mutate({ id: n.id }) },
+      );
+    },
+    onUndoAbsence: (n: NotificationItemData) => {
+      const p = (n.payload ?? {}) as { tournamentId?: string };
+      if (!p.tournamentId) return;
+      clearAbsentMutation.mutate(
+        { tournamentId: p.tournamentId },
+        { onSuccess: () => markAsReadMutation.mutate({ id: n.id }) },
+      );
+    },
+  };
+
   const value = useMemo(
     () => ({
       unread: isAuthenticated ? unreadCount : 0,
@@ -103,6 +133,7 @@ export function NotificationCenter({ children }: NotificationCenterProps) {
           onItemRead={handleItemRead}
           onMarkAllRead={handleMarkAllRead}
           onLogout={handleLogout}
+          itemActions={itemActions}
         />
       )}
     </NotificationCenterContext.Provider>

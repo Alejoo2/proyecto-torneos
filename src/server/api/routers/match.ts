@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
+import type { Prisma } from "@prisma/client";
 import { createTRPCRouter, publicProcedure, protectedProcedure } from "torneos/server/api/trpc";
 import { matchEngine, getMatchForManagerAction } from "torneos/server/core/match/match.engine";
 // Estados en los que ya no se puede tocar el partido
@@ -17,6 +18,32 @@ const playerWithProfile = {
   },
 };
 
+// Fase B: read-model mínimo del detalle (bytes, no forma). El front consume
+// solo id/name/abbreviation/primaryColor (TeamChip + wizard), court/referee/
+// phase por nombre y result por marcador+notas. description/inventory (Text)
+// y el PII del árbitro (phone/email, antes expuesto hasta en la pública)
+// ya no viajan — tsc vigila cada campo que el front lea.
+const matchDetailInclude = {
+  homeTeam: { select: { id: true, name: true, abbreviation: true, primaryColor: true } },
+  awayTeam: { select: { id: true, name: true, abbreviation: true, primaryColor: true } },
+  result: { select: { homeScore: true, awayScore: true, winnerId: true, isWalkover: true, notes: true } },
+  phase: { select: { id: true, name: true } },
+  court: { select: { id: true, name: true } },
+  referee: { select: { id: true, name: true } },
+  callUps: {
+    include: {
+      team: { select: { id: true, name: true, abbreviation: true, primaryColor: true } },
+      player: playerWithProfile,
+    },
+  },
+  playerStats: {
+    include: {
+      team: { select: { id: true, name: true, abbreviation: true } },
+      player: playerWithProfile,
+    },
+  },
+} satisfies Prisma.MatchInclude;
+
 export const matchRouter = createTRPCRouter({
   listByTournament: protectedProcedure
     .input(z.object({ tournamentId: z.string() }))
@@ -33,28 +60,7 @@ export const matchRouter = createTRPCRouter({
     .query(({ ctx, input }) => {
       return ctx.db.match.findUnique({
         where: { id: input.id },
-        include: {
-          homeTeam: true,
-          awayTeam: true,
-          result: true,
-          phase: true,   // ← agregado: listByTournament ya lo traía, Detalle Partido lo necesita
-          court: true,   // ← agregado: Detalle Partido muestra la sede (quitalo si no aplica)
-          referee: true,
-          callUps: {
-            include: {
-              team: {
-                select: { id: true, name: true, abbreviation: true, primaryColor: true },
-              },
-              player: playerWithProfile,
-            },
-          },
-          playerStats: {
-            include: {
-              team: { select: { id: true, name: true, abbreviation: true } },
-              player: playerWithProfile,
-            },
-          },
-        },
+        include: matchDetailInclude,
       });
     }),
 
@@ -69,47 +75,33 @@ export const matchRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const match = await ctx.db.match.findUnique({
         where: { id: input.id },
-        include: {
-          homeTeam: true,
-          awayTeam: true,
-          result: true,
-          phase: true,
-          court: true,
-          referee: true,
-          callUps: {
-            include: {
-              team: { select: { id: true, name: true, abbreviation: true, primaryColor: true } },
-              player: playerWithProfile,
-            },
-          },
-          playerStats: {
-            include: {
-              team: { select: { id: true, name: true, abbreviation: true } },
-              player: playerWithProfile,
-            },
-          },
-        },
+        include: matchDetailInclude,
       });
 
       // t3 estándar: en publicProcedure ctx.session es Session | null
       const userId = ctx.session?.user?.id ?? null;
       if (!match || !userId) return { match, viewer: null };
 
+      // Fase B: perfil + capitanías en 1 viaje (antes: profile y memberships secuenciales).
       const profile = await ctx.db.profile.findUnique({
         where: { userId },
-        select: { id: true, player: { select: { id: true } } },
+        select: {
+          id: true,
+          player: {
+            select: {
+              id: true,
+              teamMemberships: {
+                where: { isCaptain: true, leftAt: null },
+                select: { teamId: true },
+              },
+            },
+          },
+        },
       });
       if (!profile) return { match, viewer: null };
 
       const playerId = profile.player?.id ?? null;
-
-      // Capitanía VIGENTE — mismo criterio que markAbsent (B-14 cerrado por esta vía)
-      const memberships = playerId
-        ? await ctx.db.teamMembership.findMany({
-            where: { playerId, isCaptain: true, leftAt: null },
-            select: { teamId: true },
-          })
-        : [];
+      const captainOfTeamIds = profile.player?.teamMemberships.map((m) => m.teamId) ?? [];
 
       // "Gestionar" solo al gestor de ESTE torneo (front sugiere por ownership;
       // el backend autoriza por permiso en cada mutación)
@@ -130,7 +122,7 @@ export const matchRouter = createTRPCRouter({
         viewer: {
           userId,
           playerId,
-          captainOfTeamIds: memberships.map((m) => m.teamId),
+          captainOfTeamIds,
           isManager,
         },
       };
@@ -141,14 +133,16 @@ export const matchRouter = createTRPCRouter({
   markAbsent: protectedProcedure
     .input(z.object({
       matchId: z.string(),
+      teamId: z.string(),
       playerId: z.string(),
       isAbsent: z.boolean(),
       notes: z.string().max(200).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
-      // 1. El jugador debe estar convocado en ese partido
+      // 1. El jugador debe estar convocado en ese partido Y ese equipo
+      // (un jugador en los dos equipos marca por equipo, no global).
       const callUp = await ctx.db.matchCallUp.findFirst({
-        where: { matchId: input.matchId, playerId: input.playerId },
+        where: { matchId: input.matchId, teamId: input.teamId, playerId: input.playerId },
         include: { match: { select: { status: true } } },
       });
       if (!callUp) {
@@ -187,10 +181,12 @@ export const matchRouter = createTRPCRouter({
           leftAt: null,
         },
       });
-      if (!captaincy) {
+      // S02/Fase 2: el jugador puede marcarse a SÍ MISMO (auto-ausencia en el
+      // partido); a otros solo el capitán vigente. markedBy audita quién fue.
+      if (callerPlayerId !== input.playerId && !captaincy) {
         throw new TRPCError({
           code: "FORBIDDEN",
-          message: "Solo el capitán del equipo puede marcar ausencias en su convocatoria",
+          message: "Solo el capitán marca ausencias ajenas; las propias las marca cada jugador",
         });
       }
 
@@ -214,7 +210,7 @@ export const matchRouter = createTRPCRouter({
     }))
         .mutation(async ({ ctx, input }) => {
       // W11 — E3/H-1: ownership (gestor o delegado). El helper lanza NOT_FOUND/FORBIDDEN.
-      const match = await getMatchForManagerAction(ctx.db, input.matchId, ctx.session.user.id);
+      const match = await getMatchForManagerAction(ctx.db, input.matchId, ctx.session.user.id, "referee:assign");
       if (EDITABLE_BLOCKERS.includes(match.status)) {
         throw new TRPCError({
           code: "BAD_REQUEST",
@@ -261,7 +257,7 @@ export const matchRouter = createTRPCRouter({
   reschedule: protectedProcedure
     .input(z.object({
       matchId: z.string(),
-      newDate: z.date(),
+      newDate: z.coerce.date(),
             newTimeSlot: z.number().min(0).max(11),
     }))
     .mutation(({ ctx, input }) => {

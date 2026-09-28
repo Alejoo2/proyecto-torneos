@@ -64,7 +64,7 @@ export const authConfig = {
                   Array.from({ length: 12 }, (_, slot) => ({
                     dayOfWeek: day,
                     timeSlot: slot,
-                    status: "AVAILABLE" as const,
+                    status: "UNAVAILABLE" as const,
                   }))
                 ).flat();
 

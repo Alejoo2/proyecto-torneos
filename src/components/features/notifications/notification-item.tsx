@@ -18,10 +18,21 @@ const FAMILY_ICON: Record<NotificationFamily, typeof Bell> = {
 export interface NotificationItemData {
   id: string;
   family: NotificationFamily;
+  type?: string;
   title: string;
   body: string;
   createdAt: Date | string | number;
   status: "UNREAD" | "READ";
+  /** Json crudo de la fila (ids para acciones). Se castea en el consumidor. */
+  payload?: unknown;
+}
+
+export interface NotificationItemActions {
+  /** Conflicto duro: ausentarme de este torneo (payload: tournamentId + teamId). */
+  onMarkAbsent?: (notification: NotificationItemData) => void;
+  /** Deshacer ausencia (idempotente). */
+  onUndoAbsence?: (notification: NotificationItemData) => void;
+  isActing?: boolean;
 }
 
 /** Exportación retrocompatible para fixtures de diseño/demo */
@@ -38,32 +49,62 @@ export type NotificationData = {
 interface NotificationItemProps {
   notification: NotificationItemData;
   onRead?: (id: string) => void;
+  actions?: NotificationItemActions;
 }
 
-export function NotificationItem({ notification, onRead }: NotificationItemProps) {
+export function NotificationItem({ notification, onRead, actions }: NotificationItemProps) {
   const Icon = FAMILY_ICON[notification.family] ?? Bell;
   const isRead = notification.status === "READ";
+  // Prioridad máxima: el rojo exige elegir cancha. Fondo distinto + undo.
+  const isConflict = notification.type === "TOURNAMENT_CONFLICT";
 
   return (
-    <button
-      type="button"
-      onClick={() => onRead?.(notification.id)}
+    <div
       className={cn(
-        "flex w-full items-start gap-3 border-b border-cypher-5-1 px-4 py-3 text-left transition-colors active:bg-cypher-5-1-1",
-        !isRead && "bg-cypher-5-1",
+        "border-b border-cypher-5-1 px-4 py-3",
+        isConflict && "border-red-400/30 bg-red-500/10",
       )}
     >
-      <Icon className={cn("mt-0.5 size-4 shrink-0", isRead ? "text-cypher-4-2-2" : "text-cypher-4")} />
-      <span className="min-w-0 flex-1">
-        <span className="flex items-baseline justify-between gap-2">
-          <span className={cn("truncate text-sm", isRead ? "text-cypher-4-2" : "font-semibold text-cypher-4")}>
-            {notification.title}
+      <button
+        type="button"
+        onClick={() => onRead?.(notification.id)}
+        className={cn(
+          "flex w-full items-start gap-3 text-left transition-colors active:bg-cypher-5-1-1",
+          !isRead && "bg-cypher-5-1",
+        )}
+      >
+        <Icon className={cn("mt-0.5 size-4 shrink-0", isRead ? "text-cypher-4-2-2" : "text-cypher-4")} />
+        <span className="min-w-0 flex-1">
+          <span className="flex items-baseline justify-between gap-2">
+            <span className={cn("truncate text-sm", isRead ? "text-cypher-4-2" : "font-semibold text-cypher-4")} title={notification.title}>
+              {notification.title}
+            </span>
+            <Age dataUpdatedAt={new Date(notification.createdAt).getTime()} className="shrink-0 text-[10px] text-cypher-4-2-2" />
           </span>
-          <Age dataUpdatedAt={new Date(notification.createdAt).getTime()} className="shrink-0 text-[10px] text-cypher-4-2-2" />
+          <span className="mt-0.5 line-clamp-2 block text-xs text-cypher-4-2-2" title={notification.body}>{notification.body}</span>
         </span>
-        <span className="mt-0.5 line-clamp-2 block text-xs text-cypher-4-2-2">{notification.body}</span>
-      </span>
-      {!isRead && <span className="mt-2 size-2 shrink-0 rounded-full bg-green-500" />}
-    </button>
+        {!isRead && <span className="mt-2 size-2 shrink-0 rounded-full bg-green-500" />}
+      </button>
+      {isConflict && actions && (
+        <div className="mt-2 flex gap-2 pl-7">
+          <button
+            type="button"
+            disabled={actions.isActing}
+            onClick={() => actions.onMarkAbsent?.(notification)}
+            className="rounded-lg bg-red-500/20 px-3 py-1.5 text-xs font-bold text-red-300 disabled:opacity-50"
+          >
+            Ausentarme aquí
+          </button>
+          <button
+            type="button"
+            disabled={actions.isActing}
+            onClick={() => actions.onUndoAbsence?.(notification)}
+            className="rounded-lg bg-cypher-5-1-1 px-3 py-1.5 text-xs font-bold text-cypher-4-2 disabled:opacity-50"
+          >
+            Deshacer
+          </button>
+        </div>
+      )}
+    </div>
   );
 }

@@ -34,7 +34,7 @@ export default async function TournamentDetailPage({
 
   return (
     <HydrateClient>
-            <TournamentDetailTemplate
+      <TournamentDetailTemplate
         tournamentId={tournamentId}
         isLoggedIn={!!session?.user}
         sessionUserId={session?.user?.id ?? null}

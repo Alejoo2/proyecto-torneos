@@ -8,11 +8,25 @@ import { Button } from "torneos/components/ui/button/button";
 export default function DevLoginPage() {
   const [email, setEmail] = useState("");
 
+  const loginAs = async (target: string) => {
+    await signIn("credentials", { email: target, callbackUrl: "/" });
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     // Usamos el callbackUrl "/" para que entre al Hub directamente
-    await signIn("credentials", { email, callbackUrl: "/" });
+    await loginAs(email);
   };
+
+  const QUICK = [
+    "test1@test",
+    "test2@test",
+    "test5@test",
+    "test6@test",
+    "test16@test",
+    "gestor@gestor",
+    "admin@admin",
+  ];
 
   return (
     <main className="flex flex-1 flex-col items-center justify-center px-6 py-10">
@@ -38,6 +52,19 @@ export default function DevLoginPage() {
           Entrar como este usuario
         </Button>
       </form>
+
+      <div className="mt-6 grid w-full max-w-sm grid-cols-2 gap-2">
+        {QUICK.map((q) => (
+          <button
+            key={q}
+            type="button"
+            onClick={() => void loginAs(q)}
+            className="rounded-xl border border-cypher-5-1-1 bg-cypher-5-1 px-3 py-2 text-xs font-semibold text-cypher-4-2 transition-colors active:bg-cypher-5-1-1"
+          >
+            {q}
+          </button>
+        ))}
+      </div>
 
       <p className="mt-8 max-w-sm text-center text-xs text-cypher-4-2-2">
         Si el usuario no existe, se crea al instante con rol jugador y disponibilidad completa.

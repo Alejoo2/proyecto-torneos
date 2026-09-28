@@ -37,6 +37,26 @@ export const slotHoldEngine = {
 
     if (!tournament) throw new TRPCError({ code: "NOT_FOUND", message: "Torneo no disponible" });
 
+    // E6-cierre: PRIVATE exige que alguno de tus equipos capitaneados tenga
+    // invitación aceptada. Espejo del gate de enroll (no confiamos en la UI).
+    if (tournament.type === "PRIVATE") {
+      const myTeams = await prisma.teamMembership.findMany({
+        where: { isCaptain: true, leftAt: null, player: { profile: { userId } } },
+        select: { teamId: true },
+      });
+      const invite = await prisma.tournamentTeamInvite.findFirst({
+        where: {
+          tournamentId,
+          teamId: { in: myTeams.map((m) => m.teamId) },
+          status: "ACCEPTED",
+        },
+        select: { id: true },
+      });
+      if (!invite) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Torneo privado: tu equipo necesita invitación aceptada" });
+      }
+    }
+
     // 3. Verificar cupos disponibles
     const occupied = tournament._count.enrollments + tournament._count.slotHolds;
     if (occupied >= tournament.maxTeams) {

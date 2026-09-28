@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMyInvitations, useAcceptInvitation, useRejectInvitation } from "torneos/components/features/recruitment/use-recruitment";
+import { ArrowLeft, Mail } from "lucide-react";
+import { useMyInvitations, useAcceptInvitation, useRejectInvitation, useMyTeamInvites, useAcceptTeamInvite, useDeclineTeamInvite } from "torneos/components/features/recruitment/use-recruitment";
 import { InvitationCard } from "torneos/components/ui/invitation-card/invitation-card";
 
 export function InvitationsView() {
@@ -9,49 +10,48 @@ export function InvitationsView() {
   const { data: invitations, isLoading } = useMyInvitations();
   const { mutate: accept, isPending: isAccepting } = useAcceptInvitation();
   const { mutate: reject, isPending: isRejecting } = useRejectInvitation();
+  const { data: teamInvites, isLoading: isLoadingTeamInvites } = useMyTeamInvites();
+  const { mutate: acceptTeam, isPending: isAcceptingTeam } = useAcceptTeamInvite();
+  const { mutate: declineTeam, isPending: isDecliningTeam } = useDeclineTeamInvite();
 
   return (
-    <div className="flex flex-col min-h-dvh bg-gray-50">
+    <div className="flex min-h-dvh flex-col bg-cypher-5">
       
       {/* Header */}
-      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-100">
+      <header className="sticky top-0 z-20 border-b border-cypher-5-1-1 bg-cypher-5/80 backdrop-blur-md">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <Link href="/" className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 active:bg-gray-200 transition-colors min-w-11 min-h-11" aria-label="Volver">
-              <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-              </svg>
+            <Link href="/" className="flex h-10 min-h-[44px] w-10 min-w-[44px] items-center justify-center rounded-full transition-colors hover:bg-cypher-4/10 active:bg-cypher-4/15" aria-label="Volver">
+              <ArrowLeft className="size-6 text-cypher-4-2" />
             </Link>
-            <h2 className="text-base font-bold text-gray-900">Mis Invitaciones</h2>
+            <h2 className="text-base font-bold text-cypher-4">Mis Invitaciones</h2>
           </div>
         </div>
       </header>
 
       {/* Contenido */}
-      <main className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+      <main className="flex-1 space-y-4 overflow-y-auto px-6 py-6">
         {isLoading && (
           <div className="space-y-4">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm h-32 animate-pulse" />
+              <div key={i} className="h-32 animate-pulse rounded-2xl border border-cypher-5-1-1/60 bg-cypher-5-1 p-4" />
             ))}
           </div>
         )}
 
-        {!isLoading && (!invitations || invitations.length === 0) && (
-          <div className="flex flex-col items-center justify-center h-[60vh] text-center">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-              <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
+        {!isLoading && !isLoadingTeamInvites && (!invitations || invitations.length === 0) && (!teamInvites || teamInvites.length === 0) && (
+          <div className="flex h-[60vh] flex-col items-center justify-center text-center">
+            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-cypher-5-1-1">
+              <Mail className="size-10 text-cypher-4-2-2" />
             </div>
-            <h3 className="text-base font-bold text-gray-900 mb-1">Bandeja vacía</h3>
-            <p className="text-sm text-gray-500">Aquí aparecerán las invitaciones de los equipos.</p>
+            <h3 className="mb-1 text-base font-bold text-cypher-4">Bandeja vacía</h3>
+            <p className="text-sm text-cypher-4-2-2">Aquí aparecerán las invitaciones de equipos y torneos.</p>
           </div>
         )}
 
         {!isLoading && invitations && invitations.length > 0 && (
           <>
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+            <p className="text-xs font-semibold uppercase tracking-wide text-cypher-4-2-2">
               {invitations.length} {invitations.length === 1 ? "Invitación pendiente" : "Invitaciones pendientes"}
             </p>
             
@@ -66,6 +66,47 @@ export function InvitationsView() {
                 isAccepting={isAccepting}
                 isRejecting={isRejecting}
               />
+            ))}
+          </>
+        )}
+
+        {!isLoadingTeamInvites && teamInvites && teamInvites.length > 0 && (
+          <>
+            <p className="text-xs font-semibold uppercase tracking-wide text-cypher-4-2-2">
+              Torneos privados ({teamInvites.length})
+            </p>
+
+            {teamInvites.map((inv) => (
+              <div key={inv.id} className="rounded-2xl border border-cypher-5-1-1/60 bg-cypher-5-1 p-4">
+                <p className="text-sm font-bold text-cypher-4">{inv.tournament.name}</p>
+                <p className="text-xs text-cypher-4-2-2">
+                  Invita a tu equipo {inv.team.name} · {inv.tournament.status}
+                </p>
+                <div className="mt-3 flex gap-2">
+                  <Link
+                    href={`/torneos/${inv.tournament.id}`}
+                    className="inline-flex min-h-[44px] items-center rounded-xl bg-cypher-5-1-1 px-4 py-2 text-xs font-bold text-cypher-4-2 transition-colors hover:bg-cypher-4/10"
+                  >
+                    Ver torneo
+                  </Link>
+                  <button
+                    type="button"
+                    disabled={isAcceptingTeam}
+                    onClick={() => acceptTeam({ inviteId: inv.id })}
+                    className="inline-flex min-h-[44px] items-center rounded-xl bg-cypher-2 px-4 py-2 text-xs font-bold text-cypher-5 disabled:opacity-50"
+                  >
+                    Aceptar
+                  </button>
+                  <button
+                    type="button"
+                    disabled={isDecliningTeam}
+                    onClick={() => declineTeam({ inviteId: inv.id })}
+                    className="inline-flex min-h-[44px] items-center rounded-xl bg-cypher-5-1-1 px-4 py-2 text-xs font-bold text-cypher-4-2 transition-colors hover:bg-cypher-4/10 disabled:opacity-50"
+                  >
+                    Rechazar
+                  </button>
+                </div>
+              </div>
             ))}
           </>
         )}

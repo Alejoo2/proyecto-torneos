@@ -12,6 +12,8 @@ import { Toast } from "torneos/components/ui/toast";
 import { TEAM_STATUS_LABEL } from "torneos/domain/status-labels";
 import { TacticalView } from "torneos/components/features/team/tactical-view";
 import { StarterTile } from "torneos/components/features/team/starter-tile";
+import { AvailabilityMatrix } from "torneos/components/ui/availability-matrix/availability-matrix";
+import { PlayerGrid } from "torneos/components/features/match/player-grid";
 import { DeletionBanner } from "torneos/components/ui/deletion-banner/deletion-banner";
 import { ConfirmModal } from "torneos/components/ui/confirm-modal/confirm-modal";
 import {
@@ -20,6 +22,12 @@ import {
   useLeaveTeam,
   useRequestDelete,
   useSetStarter,
+  useSuggestedSlots,
+  useSetSuggestedSlots,
+  useRequestTransfer,
+  usePendingTransfers,
+  useAcceptTransfer,
+  useRejectTransfer,
 } from "torneos/components/features/team/use-team";
 
 interface Props {
@@ -52,6 +60,32 @@ export function TeamDetailView({ teamId }: Props) {
 
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  // S03 §7: matriz sugerida (capitán) — set local + guardado explícito.
+  const { data: suggestedSlots } = useSuggestedSlots(teamId);
+  const setSuggestedMutation = useSetSuggestedSlots(teamId, (message) => notify(message));
+  const [suggestSet, setSuggestSet] = useState<Set<string> | null>(null);
+  useEffect(() => {
+    if (suggestedSlots && suggestSet === null) {
+      setSuggestSet(new Set(suggestedSlots.map((s) => `${s.dayOfWeek}|${s.timeSlot}`)));
+    }
+  }, [suggestedSlots, suggestSet]);
+  const toggleSuggested = (dayOfWeek: number, timeSlot: number) => {
+    setSuggestSet((prev) => {
+      const next = new Set(prev ?? []);
+      const key = `${dayOfWeek}|${timeSlot}`;
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  };
+
+  // S03 §5: transferencia con PlayerGrid (receptor) + entrantes pendientes.
+  const [openPlayerId, setOpenPlayerId] = useState<string | null>(null);
+  const requestTransferMutation = useRequestTransfer((message) => notify(message));
+  const { data: pendingTransfers } = usePendingTransfers();
+  const acceptTransferMutation = useAcceptTransfer(teamId, (message) => notify(message));
+  const rejectTransferMutation = useRejectTransfer((message) => notify(message));
 
   useEffect(() => {
     if (leaveError) notify(leaveError.message);
@@ -195,6 +229,125 @@ export function TeamDetailView({ teamId }: Props) {
           </Link>
         </div>
       )}
+
+      {/* HORARIO SUGERIDO (capitán): amarillo en la matriz de tu equipo */}
+      {isCaptain && team.status !== "INACTIVE" && (
+        <div className="px-4 pt-6">
+          <h2 className="mb-1 text-xs font-bold uppercase tracking-widest text-cypher-4-2-2">
+            Horario sugerido
+          </h2>
+          <p className="mb-3 text-[11px] text-cypher-4-2-2">
+            Marca las franjas que propones. Aparecen en amarillo en la matriz de tu equipo.
+          </p>
+          <div className="rounded-2xl border border-cypher-5-1-1 bg-cypher-5-1 p-3">
+            <AvailabilityMatrix
+              slots={(() => {
+                const cells: { dayOfWeek: number; timeSlot: number; status: "SUGGESTED" | "UNAVAILABLE" }[] = [];
+                for (let dayOfWeek = 0; dayOfWeek < 7; dayOfWeek++) {
+                  for (let timeSlot = 0; timeSlot < 12; timeSlot++) {
+                    cells.push({
+                      dayOfWeek,
+                      timeSlot,
+                      status: suggestSet?.has(`${dayOfWeek}|${timeSlot}`) ? "SUGGESTED" : "UNAVAILABLE",
+                    });
+                  }
+                }
+                return cells;
+              })()}
+              onToggleSlot={toggleSuggested}
+            />
+          </div>
+          <button
+            type="button"
+            disabled={suggestSet === null || setSuggestedMutation.isPending}
+            onClick={() => {
+              const slots = [...(suggestSet ?? [])].map((key) => {
+                const [d, s] = key.split("|").map(Number);
+                return { dayOfWeek: d ?? 0, timeSlot: s ?? 0 };
+              });
+              setSuggestedMutation.mutate({ teamId: team.id, slots });
+            }}
+            className="mt-3 w-full rounded-xl bg-cypher-2 py-3 text-sm font-bold text-cypher-5 transition-colors active:bg-cypher-2-1 disabled:opacity-50"
+          >
+            {setSuggestedMutation.isPending ? "Guardando…" : "Guardar sugerencia"}
+          </button>
+        </div>
+      )}
+
+      {/* CAPITANÍA: transferir con PlayerGrid + entrantes pendientes */}
+      {isCaptain && team.status !== "INACTIVE" && (
+        <div className="px-4 pt-6">
+          <h2 className="mb-1 text-xs font-bold uppercase tracking-widest text-cypher-4-2-2">
+            Transferir capitanía
+          </h2>
+          <p className="mb-3 text-[11px] text-cypher-4-2-2">
+            El receptor debe aceptar. No puedes quedar sin sucesor.
+          </p>
+          <PlayerGrid
+            players={memberships
+              .filter((m) => !m.isCaptain)
+              .map((m) => ({
+                playerId: m.player.id,
+                name: m.player.profile?.displayName ?? "Jugador",
+                image: m.player.profile?.user?.image ?? null,
+              }))}
+            openPlayerId={openPlayerId}
+            onTogglePlayer={(playerId) => setOpenPlayerId((prev) => (prev === playerId ? null : playerId))}
+            renderPanel={(player) => (
+              <div className="flex items-center justify-between gap-2 rounded-xl bg-cypher-5-1-1 px-3 py-2">
+                <span className="truncate text-xs text-cypher-4-2">
+                  Transferir a {player.name}
+                </span>
+                <button
+                  type="button"
+                  disabled={requestTransferMutation.isPending}
+                  onClick={() =>
+                    requestTransferMutation.mutate(
+                      { teamId: team.id, toPlayerId: player.playerId },
+                      { onSuccess: () => setOpenPlayerId(null) },
+                    )
+                  }
+                  className="rounded-lg bg-cypher-2 px-3 py-1.5 text-xs font-bold text-cypher-5 disabled:opacity-50"
+                >
+                  Confirmar
+                </button>
+              </div>
+            )}
+          />
+        </div>
+      )}
+      {(pendingTransfers ?? [])
+        .filter((t) => t.teamId === team.id)
+        .map((t) => (
+          <div key={t.id} className="px-4 pt-6">
+            <div className="rounded-2xl border border-cypher-2/30 bg-cypher-5-1 p-4">
+              <p className="text-sm text-cypher-4">
+                Te transfieren la capitanía de {t.from.team.name}
+              </p>
+              <p className="mt-0.5 text-xs text-cypher-4-2-2">
+                De {t.from.player.profile?.displayName ?? "el capitán actual"}
+              </p>
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  disabled={acceptTransferMutation.isPending}
+                  onClick={() => acceptTransferMutation.mutate({ transferId: t.id })}
+                  className="flex-1 rounded-xl bg-cypher-2 py-2.5 text-sm font-bold text-cypher-5 disabled:opacity-50"
+                >
+                  Aceptar
+                </button>
+                <button
+                  type="button"
+                  disabled={rejectTransferMutation.isPending}
+                  onClick={() => rejectTransferMutation.mutate({ transferId: t.id })}
+                  className="flex-1 rounded-xl bg-cypher-5-1-1 py-2.5 text-sm font-bold text-cypher-4-2 disabled:opacity-50"
+                >
+                  Rechazar
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
 
       {/* PREVISUALIZACIÓN TÁCTICA */}
       <div className="px-4 pt-6">

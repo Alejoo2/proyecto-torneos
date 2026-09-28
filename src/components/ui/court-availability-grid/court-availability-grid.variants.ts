@@ -10,6 +10,9 @@ export const courtAvailabilityCellVariants = cva("h-7 flex-1 rounded-[4px]", {
     state: {
       free: "bg-green-500",
       busy: "bg-cypher-5-1-1",
+      // S06 v3.0: apartada = azul paleta (cypher-3); confirmada por sorteo = morado (cypher-1).
+      reserved: "bg-cypher-3",
+      confirmed: "bg-cypher-1",
     },
   },
   defaultVariants: {

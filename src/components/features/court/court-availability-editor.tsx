@@ -26,7 +26,11 @@ const SLOT_COUNT = 12;
  *  setAvailabilityWithCascade. La cancha manda: lo que se cierra, aplaza. */
 export function CourtAvailabilityEditor({ courtId, courtName }: CourtAvailabilityEditorProps) {
   const utils = api.useUtils();
-  const { data: rows, isLoading } = api.court.getAvailability.useQuery({ courtId });
+  const { data: rows, isLoading } = api.court.getAvailability.useQuery(
+    { courtId },
+    // Matriz 14×12 pesada: 10 min fresca; Guardar invalida (línea 41).
+    { staleTime: 10 * 60_000, refetchOnWindowFocus: false },
+  );
 
   const [overrides, setOverrides] = useState<Record<string, Status>>({});
   const [confirm, setConfirm] = useState<{ slots: SlotPayload[]; count: number; sample: string[] } | null>(null);

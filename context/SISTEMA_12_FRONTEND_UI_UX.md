@@ -25,7 +25,7 @@ Este documento gobierna:
 2. La **navegación**: BottomNav, Barra Superior (back + campana) y panel de notificaciones.
 3. El **sistema de color Cypher**: tokens, roles, combinaciones legales, efecto neón.
 4. El **Hub/Mapa**: la landing page (especificación del Sistema 12).
-5. La **frontera de animación**: qué es de Tailwind y qué de Motion One.
+5. La **frontera de animación**: qué es de Tailwind y qué de motion.
 6. El **modelo de datos de pines** y la migración pendiente.
 7. El **mapa de canales** Back↔Front aplicado a cada vista.
 8. El **análisis preparatorio de notificaciones** desde el front.
@@ -62,7 +62,7 @@ Reglas derivadas:
 |---|---|
 | `(app)` | Marco + Barra Superior + área de contenido + BottomNav |
 | `(auth)` | Marco + contenido. Sin nav, sin barra superior |
-| `(public)` | A determinar en auditoría (ver 10). Hipótesis: `/` termina sirviendo el hub; el grupo puede absorberse o quedarse como transición |
+| `(anon)` | Vitrina pública: `/`, `/torneos`, `/canchas/[id]`, `/torneos/[id]`. Sin nav, con barra mínima |
 
 Regla de flujo interno en `(app)`: las páginas solo renderizan contenido dentro del área entre la barra superior y la nav, con padding inferior que garantice que nada quede bajo la nav.
 
@@ -81,7 +81,7 @@ La escalera es fija, documentada, y ningún componente puede inventar niveles:
 | Barra superior del shell | sticky / flotante según modo | Back + campana + título (3.2) |
 | **BottomNav** | **50** | **Techo del contenido** |
 | Modales fullscreen | < 50 | Viven ENTRE barra superior y nav |
-| Toast | 70 | Siempre visible, anclado arriba |
+| Toast | 70 | Siempre visible, anclado abajo (`bottom-6`) |
 
 ### 2.4 La Nav Bar Intocable (enmienda)
 
@@ -230,7 +230,7 @@ El fondo aurora del hub (detrás del mapa) se re-mapea de los colores huérfanos
 
 ### 5.2 El hack de tiles (excepción técnica documentada)
 
-`grayscale(100%)` + `mix-blend-mode: multiply` + `opacity: 0.8` sobre el tile-pane de Leaflet convierte el blanco del tile en transparente: sobre el aurora oscuro solo quedan las calles, en modo urbano oscuro, sin pagar un proveedor de tiles dark.
+`invert(1) hue-rotate(180deg) brightness(0.8) contrast(1.05) saturate(0)` + `opacity: 0.5` sobre el tile-pane de Leaflet (receta real en `globals.css`, evolucionó del grayscale+multiply original)
 
 Registro obligatorio:
 
@@ -241,7 +241,7 @@ Registro obligatorio:
 
 ### 5.3 Pines
 
-- Componente `<CourtPin />` (divIcon de Leaflet) alimentado por `api.court.list` (vía la costura de Sección 7 mientras la deuda siga abierta).
+- Componente `<CourtPin />` (divIcon de Leaflet) alimentado por `api.court.getMap` / `getBubble` (hub.engine; `court.list` NO es la fuente del hub).
 - Lenguaje visual del pin: estado `ENABLED` → pin oscuro; `DISABLED` → pin apagado. Indicador de torneos activos (punto verde semántico estándar — ver 4.5).
 - **Interacción: click simple.** El long-press de 7.10 queda **diferido a fase madura**. Ratificado.
 - Detalle técnico de composición React↔Leaflet (divIcon consume HTML string): a resolver en implementación. El componente sigue siendo `ui/` puro: recibe la cancha por props.
@@ -250,9 +250,9 @@ Registro obligatorio:
 
 - Al tap de pin: pan suave del mapa + sheet de ficha.
 - Posición: respeta la nav (por encima de ella, nunca tapándola), anclado abajo-izquierda, ancho acotado al dispositivo.
-- Contenido: nombre, dirección, estado (semántico estándar), mini-matriz de disponibilidad, torneos activos, inventario, CTA "Ver Detalle" → `/canchas/[id]`.
-- Estados de carga: skeletons en la mini-matriz y torneos (honestidad de carga).
-- Animación de entrada: spring (frontera Motion One, ver Sección 6).
+- Contenido: nombre, dirección, estado (semántico estándar), torneos activos, inventario, CTA "Ver Detalle" → `/canchas/[id]` (la matriz completa vive en el detalle, nunca en el sheet: regla S05).
+- Estados de carga: skeletons en el resumen y torneos (honestidad de carga).
+- Animación de entrada: spring (frontera motion, ver Sección 6).
 - Cierre: botón X, tecla Escape.
 
 ### 5.5 Controles y filtros (exclusivos del hub)
@@ -264,22 +264,22 @@ Registro obligatorio:
 
 ---
 
-## 6. Frontera de Animación: Tailwind vs Motion One
+## 6. Frontera de Animación: Tailwind vs motion
 
 Un solo sistema mental, dos dueños por naturaleza de la animación:
 
 | Animación | Dueño | Ejemplos del proyecto |
 |---|---|---|
 | Micro-feedback de estado (instantáneo, sin secuencia) | Tailwind (transiciones en clases/variantes `cva`) | `active:bg-*` de botones, hover de chips, cambio de color de foco |
-| Entrada/salida de elementos (secuencia, spring, física) | **Motion One** | Aparición del bottom sheet (spring), toast entrando/saliendo, despliegue del panel de notificaciones, transición entre estados de Sala de Cine |
+| Entrada/salida de elementos (secuencia, spring, física) | **motion** | Aparición del bottom sheet (spring), toast entrando/saliendo, despliegue del panel de notificaciones, transición entre estados de Sala de Cine |
 
-Regla práctica: si la animación tiene secuencia, rebote, o requiere desmontar el elemento al terminar → Motion One. Si es un cambio de estado de superficie → Tailwind.
+Regla práctica: si la animación tiene secuencia, rebote, o requiere desmontar el elemento al terminar → motion. Si es un cambio de estado de superficie → Tailwind.
 
 Aclaraciones de cumplimiento:
 
-1. Motion One manipula estilos del DOM en runtime; eso **no viola 3.2** (que castiga estilos declarados por el desarrollador en el JSX). Lo que la librería deja en el DOM es estado de presentación transitorio. Queda escrito para auditorías futuras.
-2. Motion One exige cliente: todo lo que anime con él vive en templates `'use client'` o islas cliente. El hub ya es isla por Leaflet; coherente.
-3. Las keyframes de skeleton del prototipo migran a utilidades Tailwind (animate-pulse ya cubre el caso). Motion One no entra donde CSS basta.
+1. motion manipula estilos del DOM en runtime; eso **no viola 3.2** (que castiga estilos declarados por el desarrollador en el JSX). Lo que la librería deja en el DOM es estado de presentación transitorio. Queda escrito para auditorías futuras.
+2. motion exige cliente: todo lo que anime con él vive en templates `'use client'` o islas cliente. El hub ya es isla por Leaflet; coherente.
+3. Las keyframes de skeleton del prototipo migran a utilidades Tailwind (animate-pulse ya cubre el caso). motion no entra donde CSS basta.
 
 ---
 
@@ -291,21 +291,18 @@ PROJECT_CONTEXT 7.10 dice "sin coordenadas en BD, posiciones relativas". La evol
 
 Etiqueta de deuda: **TECH-DEBT-GEO**.
 
-### 7.2 Propuesta de entidad: MapPin
+### 7.2 Decisión vigente: `lat/lon` en `Court` (MapPin descartado)
 
-La posición geográfica se modela como **entidad propia con relación 1:1 a Court**, no como campos sueltos:
-
-- `MapPin`: identidad propia (`id`), relación única con `courtId`, latitud, longitud (evaluar en auditoría: etiqueta visual, orden, metadatos de presentación).
-- Justificación: (a) **aísla la deuda** — la migración toca una tabla nueva, no muta Court; (b) la cancha no sabe de mapas (separación de dominio); (c) deja puerta abierta a proyecciones futuras del mapa; (d) el seed de datos quemados puede poblar MapPin sin ensuciar Court.
-- Costo conocido: un join para el caso de uso principal (hub). Aceptado: la lectura del hub es agregada (cancha + pin + torneos activos) y ya vive en un solo query del router.
-
-⚠️ **PROPUESTA:** la estructura final (nombres, tipos, convenciones de tabla) debe calzar con el `schema.prisma` real, que aún no ha sido auditado (Sección 10). La migración se etiqueta siguiendo la convención existente (`YYYYMMDDHHMMSS_nombre`) tras esa auditoría. Nombre tentativo: `add_map_pins`.
+La propuesta original de entidad `MapPin` 1:1 queda **descartada** (decisión S05):
+la ubicación vive en `Court.lat/lon`, obligatorios e imperativos porque fijan
+los pines del mapa. TECH-DEBT-GEO pasa a ser backfill: exigir coords reales al
+crear + migrar las 3 canchas seed (hoy `@default(0)`).
 
 ### 7.3 La costura tipada en el front (patrón anti-propagación de deuda)
 
 Mientras TECH-DEBT-GEO viva:
 
-1. El front consume el **contrato**, no el fixture: los tipos del hub se infieren del output de tRPC (`api.court.list`), aunque la fuente temporal sea el fixture.
+1. El front consume el **contrato**, no la fuente: los tipos del hub se infieren del output de tRPC (`api.court.getMap`), gobierne quien gobierne los datos.
 2. El fixture vive en un único módulo que **cumple ese contrato tipado** (falla compilación si miente).
 3. Ningún componente importa el fixture directamente; solo la fuente de la costura.
 
@@ -322,7 +319,7 @@ Al pagar la deuda (migración + seed con coordenadas reales): se cambia la fuent
 | Dato | Canal de lectura | Canal de cambios | Presentación |
 |---|---|---|---|
 | Lista de canchas + estado ENABLED/DISABLED | RSC (materialización) | Reconciliación al foco | Materializado |
-| Posición de pines (MapPin) | RSC, mismo query agregado que canchas | Ídem (baja frecuencia extrema) | Materializado |
+| Posición de pines (`lat/lon`) | RSC, mismo query agregado que canchas | Ídem (baja frecuencia extrema) | Materializado |
 | Torneos activos por cancha (agregado del pin) | RSC (pre-calculado) | Ídem | Materializado |
 | Mini-matriz del bottom sheet | Pull puntual al abrir el sheet | Reconciliación al foco | Skeleton → dato |
 | Detalle de cancha `/canchas/[id]` | RSC | Reconciliación al foco | Materializado |
@@ -377,7 +374,7 @@ Este documento se escribió sin leer el código real. Antes de tocar una línea 
 
 | # | Artefacto | Qué se busca | Alimenta |
 |---|---|---|---|
-| 1 | `prisma/schema.prisma` | Modelo Court actual, convenciones de nombres/tablas, relaciones existentes, cómo están modeladas prereservas e inscripciones | 7.2 (migración MapPin definitiva), etiquetado de migración |
+| 1 | `prisma/schema.prisma` | Backfill `lat/lon` reales de canchas seed | 7.2, etiquetado de migración |
 | 2 | Routers tRPC (court, tournament, auth, sala de cine) | Qué queries/mutations exponen, si siguen patrón delgado+engines, shape de outputs | 8 (canales reales), 7.3 (costura) |
 | 3 | `src/app/` route groups reales | Qué vive en `(public)`, qué hace `page.tsx` raíz, estructura actual de `(app)` | 2.2, decisión de routing del hub |
 | 4 | `src/components/` existente | Violaciones a 3.2/3.3/5.1 v2.0 (inline styles, barrels, hooks de datos en ui/), scaffold T3 residual (`post.tsx`, `post.ts`), qué componentes ya existen vs. los que este documento define | Plan de limpieza |
@@ -395,7 +392,7 @@ Entregable de la auditoría: **informe de hallazgos + plan de limpieza priorizad
 Para mantener una sola verdad (y que la verdad no se contradiga):
 
 1. **7.10 "Mapa custom Canvas/SVG"** → obsoleto. Sustituido por Leaflet + OSM (5.1). El espíritu (sin dependencias comerciales de mapas) se conserva.
-2. **7.10 "Sin coordenadas geográficas en BD"** → obsoleta. Deuda formal TECH-DEBT-GEO; destino: lat/lon en BD vía entidad MapPin (7.2).
+2. **7.10 "Sin coordenadas geográficas en BD"** → obsoleta. Destino: `lat/lon` obligatorios en `Court` (7.2 enmendado; MapPin descartado).
 3. **7.10 "Long-press para mobile"** → diferido (5.3). Click simple vigente.
 4. **Sección 9, Sistema 12** → pasa de "Pendiente / Por especificar" a "Especificado en SISTEMA_12_FRONTEND_UI_UX.md".
 5. **Contexto complementario de Fase 1** (documento externo): la regla de ocultar BottomNav en modales fullscreen queda **revocada** por 2.4.
@@ -419,16 +416,16 @@ Para mantener una sola verdad (y que la verdad no se contradiga):
 | Campana de notificaciones | Ciudadana del shell, esquina sup-izq, apila con back; panel en capa 45, jamás tapa nav (3.4, 9.3) |
 | AppHeader | Solo modo interno; hub gestiona su propia search bar (3.2) |
 | Interacción de pines | Click simple; long-press diferido (5.3) |
-| Coordenadas | Deuda TECH-DEBT-GEO; datos quemados con costura tipada (7) |
+| Coordenadas | `lat/lon` en `Court`, obligatorios; deuda = backfill (TECH-DEBT-GEO) |
 | Mapa | Leaflet + OSM; hack de tiles documentado como excepción (5.1–5.2) |
-| Animación | Tailwind = estados; Motion One = secuencia/spring (6) |
+| Animación | Tailwind = estados; motion = secuencia/spring (6) |
 | Filtrado del hub | 100% cliente sobre capa 2 (8.2) |
 
 **Abiertas (dependen de auditoría, no de diseño):**
 
 | Decisión | Bloquea | Resolución |
 |---|---|---|
-| Forma final de MapPin (7.2) | Migración etiquetada | Auditoría de schema (10.1) |
+| Backfill `lat/lon` (7.2) | Migración + exigir al crear | Dueño: coordenadas reales Sogamoso/Nobsa |
 | Destino de `(public)` (2.2) | Routing del hub | Auditoría de route groups (10.3) |
 | Receta exacta del aurora (4.6) | Nada | Implementación |
 | Patrones React↔Leaflet para pines/sheet | Implementación del hub | Fase de diseño técnico |
@@ -436,3 +433,24 @@ Para mantener una sola verdad (y que la verdad no se contradiga):
 ---
 
 > **Siguiente paso propuesto:** ejecutar la auditoría de Sección 10 (empezando por `schema.prisma` y routers). Su entregable desbloquea el plan de limpieza y la migración etiquetada. Este documento permanece en Borrador hasta que la auditoría no contradiga nada de lo aquí especificado.
+
+---
+
+## 13. Auditoría UI con skill ui-ux-pro-max (2026-09-27, backlog del dueño)
+
+Método: checklist pre-entrega del skill + barridos estáticos (emojis, inline,
+hex, `img`, aria-labels, truncate, focos). Contraste 4.5:1 y 375px/landscape:
+QA visual del dueño (no verificable estático).
+
+| ID | Sev | Hallazgo | Evidencia | Acción |
+|---|---|---|---|---|
+| UI-AUDIT-01 | ✅ resuelto 2026-09-27 (re-skin Cypher + lucide; fix `selectedSlot === idx`) | Flujo reclutamiento en tema claro: viola decisión cerrada 4.2 (superficies blancas prohibidas) | `recruitment-view.tsx:68`, `invitations-view.tsx:38`, `invitation-card:23`, `invite-modal:28`, `player-card:51`, `player-profile-modal:30`; rutas vivas `/invitaciones`, `/reclutamiento/[teamId]` | Re-skin a tokens Cypher + lucide (solo classNames) |
+| UI-AUDIT-02 | ✅ resuelto 2026-09-27 (kill-switch CSS + MotionProvider + guards scroll) | Sin `prefers-reduced-motion` en todo el front | `animate-pulse/spin` (court-bubble, hub-template, loading-skeleton, spinner de Button), `scrollIntoView` smooth (`result-wizard:124,340`), `animate-in` (`player-profile-modal:29`) | Prefijo `motion-safe:` o media query global |
+| UI-AUDIT-03 | ✅ resuelto 2026-09-27 (title en truncados) | Truncados sin disclosure operable del valor completo | `notification-item:79`, `match-history-row:20`, `result-wizard:400` (`max-w-[150px]`) | `title` o disclosure operable (no solo hover) |
+| UI-AUDIT-04 | ✅ resuelto 2026-09-27 (clase origin-bottom-right) | Inline `transformOrigin` fuera de excepciones 3.2 | `court-bubble.tsx:38` | Mover a clase o documentar excepción |
+
+En verde (sin acción): foco visible (`focus-visible:ring` en Button, sin reset
+global de outline) · 39 aria-labels en icon-buttons · sin emojis
+estructurales · sin `toast-top` · inlines restantes en excepciones (CSS vars,
+columns, SLOTS) · hex solo en `/design` + default de color-input · `img`×4
+solo en avatares (lint ya avisa).

@@ -23,7 +23,7 @@ export function useUpdateProfile() {
 // Hook para togglear slots (con Optimistic UI usando useUtils de tRPC v11)
 export function useToggleSlot() {
   const utils = api.useUtils();
-  
+
   return api.availability.toggleSlot.useMutation({
     onMutate: async (newSlot) => {
       await utils.availability.getMine.cancel();
@@ -51,6 +51,26 @@ export function useToggleSlot() {
       }
     },
     onSettled: () => {
+      void utils.availability.getMine.invalidate();
+      void utils.availability.getMatrix.invalidate();
+    },
+  });
+}
+
+// S02 v2.0: matriz fusionada (verde/gris + amarillo + rojo)
+export function useAvailabilityMatrix() {
+  return api.availability.getMatrix.useQuery(undefined, {
+    staleTime: 1000 * 60,
+  });
+}
+
+// S02 §6: guardado por lotes (el cliente acumula ~1 min y envía el delta)
+export function useSetSlots() {
+  const utils = api.useUtils();
+
+  return api.availability.setSlots.useMutation({
+    onSuccess: () => {
+      void utils.availability.getMatrix.invalidate();
       void utils.availability.getMine.invalidate();
     },
   });

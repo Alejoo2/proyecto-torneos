@@ -135,7 +135,7 @@ export const courtCascadeEngine = {
     if (!court) throw new TRPCError({ code: "NOT_FOUND", message: "Cancha no encontrada" });
 
     const affected = slots === null
-      ? await findAffectedTx(prisma, courtId)
+      ? findAffectedTx(prisma, courtId)
       : await findAffectedDirect(prisma, courtId, slots);
 
     return {

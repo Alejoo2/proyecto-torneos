@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { Inbox, X, CheckCheck, LogOut } from "lucide-react";
 import {
   NotificationItem,
+  type NotificationItemActions,
   type NotificationItemData,
 } from "torneos/components/features/notifications/notification-item";
 import { EmptyState } from "torneos/components/ui/empty-state";
@@ -18,6 +19,8 @@ interface NotificationPanelProps {
   isLoading?: boolean;
   /** N-2: presencia = footer de logout (salida universal de la app). */
   onLogout?: () => void;
+  /** Acciones de conflicto duro (ausentarme / deshacer). */
+  itemActions?: NotificationItemActions;
 }
 
 /**
@@ -36,6 +39,7 @@ export function NotificationPanel({
   onMarkAllRead,
   isLoading,
   onLogout,
+  itemActions,
 }: NotificationPanelProps) {
   const [logoutArmed, setLogoutArmed] = useState(false);
   const armTimer = useRef<number | null>(null);
@@ -130,7 +134,7 @@ export function NotificationPanel({
                 />
               ) : (
                 items.map((n) => (
-                  <NotificationItem key={n.id} notification={n} onRead={onItemRead} />
+                  <NotificationItem key={n.id} notification={n} onRead={onItemRead} actions={itemActions} />
                 ))
               )}
             </div>

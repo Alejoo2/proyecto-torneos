@@ -17,7 +17,7 @@ export function MatchHistoryRow({ href, title, subtitle, goals }: MatchHistoryRo
       className="flex items-center gap-4 rounded-2xl bg-cypher-5-1 p-4 transition-colors active:bg-cypher-5-1-1"
     >
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-cypher-4">{title}</p>
+        <p className="truncate text-sm font-medium text-cypher-4" title={title}>{title}</p>
         <p className="text-xs text-cypher-4-2-2">{subtitle}</p>
       </div>
       <span className="shrink-0 text-[11px] font-medium text-cypher-4-2">

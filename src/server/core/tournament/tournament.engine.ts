@@ -2,8 +2,10 @@
 import type { Prisma, PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { VITRINE_TOURNAMENT_WHERE } from "torneos/lib/hub";
-import { fisherYatesShuffle, generateEliminationPhases } from "./tournament.helpers";
+import { fisherYatesShuffle, generateEliminationPhases, nextWeekdayUTC } from "./tournament.helpers";
 import { matchEngine } from "torneos/server/core/match/match.engine";
+import { absenceEngine } from "torneos/server/core/tournament/absence.engine";
+import { notificationEngine } from "torneos/server/core/notification/notification.engine";
 
 type PrismaDb = PrismaClient | Prisma.TransactionClient;
 type CreateTournamentInput = Omit<Prisma.TournamentUncheckedCreateInput, "managerId" | "status">;
@@ -90,6 +92,24 @@ export const tournamentEngine = {
       throw new TRPCError({ code: "CONFLICT", message: "Franja horaria ocupada por otro torneo" });
     }
 
+    // S06 v3.0: la franja también puede estar apartada (reserva concreta de
+    // otro torneo publicado). Se mapea la ventana de 14 días a patrón y se
+    // exige; el publish valida fecha exacta contra solapes.
+    const windowStart = new Date();
+    windowStart.setUTCHours(0, 0, 0, 0);
+    const windowEnd = new Date(windowStart);
+    windowEnd.setUTCDate(windowStart.getUTCDate() + 14);
+    const reserved = await prisma.tournamentSlotReservation.findMany({
+      where: { courtId: input.courtId, date: { gte: windowStart, lt: windowEnd } },
+      select: { date: true, timeSlot: true },
+    });
+    const reservedPatterns = new Set(
+      reserved.map((r) => `${new Date(r.date).getUTCDay()}|${r.timeSlot}`),
+    );
+    if (reservedPatterns.has(`${input.dayOfWeek}|${input.timeSlot}`)) {
+      throw new TRPCError({ code: "CONFLICT", message: "Franja apartada por otro torneo" });
+    }
+
     // W11 — E5 (aditivo): multi-franja. Sin `slots` → comportamiento actual intacto.
     // Conflicto validado por CADA franja marcada (la principal ya se validó arriba).
     const extraSlots = (input.slots ?? []).filter(
@@ -110,6 +130,7 @@ export const tournamentEngine = {
     }
 
     // 5. Crear torneo — `slots` viaja aparte del spread de escalares
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- _slots se omite a proposito
     const { slots: _slots, ...scalarInput } = input;
     return prisma.tournament.create({
       data: {
@@ -127,7 +148,7 @@ export const tournamentEngine = {
     });
   },
 
-  async publish(prisma: PrismaDb, tournamentId: string, userId: string) {
+  async publish(prisma: PrismaClient, tournamentId: string, userId: string) {
     const tournament = await prisma.tournament.findUnique({
       where: { id: tournamentId },
       include: { manager: { include: { profile: true } } },
@@ -141,9 +162,49 @@ export const tournamentEngine = {
       throw new TRPCError({ code: "BAD_REQUEST", message: "El torneo debe estar en estado DRAFT para publicarse" });
     }
 
-    return prisma.tournament.update({
-      where: { id: tournamentId },
-      data: { status: "SCHEDULED" },
+    // S06 v3.0: al publicar se apartan maxTeams-1 franjas concretas desde la
+    // fecha base. En ese instante quedan bloqueadas: otro torneo no puede
+    // escogerlas (ver check en create + overlap aquí).
+    const base = nextWeekdayUTC(
+      tournament.startDate ?? new Date(),
+      tournament.dayOfWeek,
+    );
+    const dates: Date[] = [];
+    for (let i = 0; i < tournament.maxTeams - 1; i++) {
+      const d = new Date(base);
+      d.setUTCDate(base.getUTCDate() + i * 7);
+      dates.push(d);
+    }
+    const taken = await prisma.tournamentSlotReservation.findFirst({
+      where: {
+        courtId: tournament.courtId,
+        tournamentId: { not: tournamentId },
+        OR: dates.map((date) => ({ date, timeSlot: tournament.timeSlot })),
+      },
+      select: { id: true },
+    });
+    if (taken) {
+      throw new TRPCError({ code: "CONFLICT", message: "Franja apartada por otro torneo" });
+    }
+
+    return prisma.$transaction(async (tx) => {
+      await tx.tournamentSlotReservation.createMany({
+        data: dates.map((date) => ({
+          tournamentId,
+          courtId: tournament.courtId,
+          date,
+          timeSlot: tournament.timeSlot,
+        })),
+        skipDuplicates: true,
+      });
+      await tx.courtAvailability.updateMany({
+        where: { courtId: tournament.courtId, date: { in: dates }, timeSlot: tournament.timeSlot },
+        data: { status: "UNAVAILABLE" },
+      });
+      return tx.tournament.update({
+        where: { id: tournamentId },
+        data: { status: "SCHEDULED" },
+      });
     });
   },
 
@@ -169,6 +230,9 @@ export const tournamentEngine = {
       throw new TRPCError({ code: "BAD_REQUEST", message: "Debe haber al menos 2 equipos aprobados y ser potencia de 2" });
     }
 
+    const shuffledTeams = fisherYatesShuffle(approvedTeams.map(e => ({ id: e.teamId })));
+    const phasesData = generateEliminationPhases(shuffledTeams.length);
+
     // Sorteo y creación de fases en transacción atómica.
     // Timeout extendido (default 5s): generateFromDraw notifica convocado-por-
     // convocado dentro de la tx (~2 queries c/u) — con 30 convocados son ~17
@@ -176,9 +240,6 @@ export const tournamentEngine = {
     // escala a brackets de 32 equipos; batch de notificaciones pendiente.
     return prisma.$transaction(
       async (tx: Prisma.TransactionClient) => {
-      const shuffledTeams = fisherYatesShuffle(approvedTeams.map(e => ({ id: e.teamId })));
-      const phasesData = generateEliminationPhases(shuffledTeams.length);
-
       // Crear fases
       await Promise.all(
         phasesData.map(p => tx.tournamentPhase.create({
@@ -212,7 +273,36 @@ export const tournamentEngine = {
       });
       },
       { timeout: 20000 },
-    );
+    ).then(async (updated) => {
+      // Rojo del sorteo FUERA de la tx (mismo motivo que enroll: el detect es
+      // caro y el timeout es compartido). Best-effort, no bloquea el sorteo.
+      try {
+        for (const t of shuffledTeams) {
+          const hard = await absenceEngine.teamHardConflicts(
+            prisma, t.id, tournament.dayOfWeek, tournament.timeSlot,
+          );
+          for (const h of hard) {
+            const names = h.otherTournaments.map((o) => o.name).join(" vs ");
+            await notificationEngine.create(prisma, {
+              userId: h.userId,
+              family: "TOURNAMENT",
+              type: "TOURNAMENT_CONFLICT",
+              title: `Conflicto en ${tournament.name}: elige cancha`,
+              body: `Tienes ${h.otherTournaments.length} torneos en la misma franja (${names}). Márcate ausente en uno para quitar el rojo.`,
+              payload: {
+                tournamentId: tournament.id,
+                teamId: t.id,
+                dayOfWeek: tournament.dayOfWeek,
+                timeSlot: tournament.timeSlot,
+              },
+            });
+          }
+        }
+      } catch (e) {
+        console.error("Aviso de rojo post-sorteo falló (no bloqueante):", e);
+      }
+      return updated;
+    });
   },
 
   async getById(prisma: PrismaDb, tournamentId: string) {

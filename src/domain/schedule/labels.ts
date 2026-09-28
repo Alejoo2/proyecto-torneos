@@ -30,6 +30,25 @@ export function dayLabel(dayOfWeek: number): string {
   return DAY_LABELS[dayOfWeek] ?? "";
 }
 
+// Etiqueta corta para filas de matriz (celdas pegadas): "0-2am", …, "10-12am".
+export const SLOT_LABELS_SHORT = [
+  "0-2am",
+  "2-4am",
+  "4-6am",
+  "6-8am",
+  "8-10am",
+  "10-12pm",
+  "12-2pm",
+  "2-4pm",
+  "4-6pm",
+  "6-8pm",
+  "8-10pm",
+  "10-12am",
+] as const;
+
 export function slotLabel(timeSlot: number): string {
   return SLOT_LABELS[timeSlot] ?? "";
 }
+
+// Cabeceras de grilla unificada (estilo detalle cancha): "2hr"…"24hr".
+export const SLOT_GRID_HEADERS: string[] = Array.from({ length: 12 }, (_, i) => `${(i + 1) * 2}hr`);

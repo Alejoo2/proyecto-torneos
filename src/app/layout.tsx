@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "torneos/styles/globals.css";
 import { NextAuthProvider } from "torneos/components/providers/session-provider";
+import { MotionProvider } from "torneos/components/providers/motion-provider";
 import { TRPCReactProvider } from "torneos/trpc/react";
 
 // La fuente entra como variable CSS → alimenta el token --font-sans en @theme.
@@ -37,7 +38,9 @@ export default function RootLayout({
     <html lang="es" className={inter.variable}>
       <body>
         <TRPCReactProvider>
-          <NextAuthProvider>{children}</NextAuthProvider>
+          <MotionProvider>
+            <NextAuthProvider>{children}</NextAuthProvider>
+          </MotionProvider>
         </TRPCReactProvider>
       </body>
     </html>

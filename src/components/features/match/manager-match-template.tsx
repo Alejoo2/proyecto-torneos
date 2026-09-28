@@ -15,6 +15,7 @@ import { RefereeSelect } from "./referee-select";
 import { ResultWizard, resultDraftKey, type ResultPayload } from "./result-wizard";
 import { ResultReadout } from "./result-readout";
 import { TERMINAL_MATCH_STATUS } from "./types";
+import { useTournamentPowers } from "torneos/components/features/tournament/use-tournament-powers";
 
 export function ManagerMatchTemplate({ matchId }: { matchId: string }) {
   const utils = api.useUtils();
@@ -29,13 +30,24 @@ export function ManagerMatchTemplate({ matchId }: { matchId: string }) {
   }, [toast]);
   const notify = useCallback((title: string) => setToast({ title }), []);
 
-  const matchQuery = api.match.getById.useQuery({ id: matchId }, { retry: false });
+  const matchQuery = api.match.getById.useQuery(
+    { id: matchId },
+    // Ficha pesada (~12 viajes): 2 min fresca; mutaciones invalidan. Sin refetch al enfocar.
+    { retry: false, staleTime: 2 * 60_000, refetchOnWindowFocus: false },
+  );
   // managerProcedure: datos del selector Y sonda RBAC honesta — el FORBIDDEN de un
   // no-gestor solo llega por acá (getById es protected: pasa cualquier autenticado).
-  const refereesQuery = api.match.listReferees.useQuery(undefined, { retry: false });
+  // Directorio pasivo: 15 min + sin refetch al enfocar.
+  const refereesQuery = api.match.listReferees.useQuery(
+    undefined,
+    { retry: false, staleTime: 15 * 60_000, refetchOnWindowFocus: false },
+  );
 
   const match = matchQuery.data ?? null;
   const editable = match ? !(TERMINAL_MATCH_STATUS as readonly string[]).includes(match.status) : false;
+  // Poderes por permiso (dueño = todo; secretario = sus llaves): cada acción
+  // se muestra solo con su llave. El backend niega igual.
+  const powers = useTournamentPowers(match?.tournamentId ?? null);
 
   const assignRefereeMutation = api.match.assignReferee.useMutation({
     onMutate: async ({ refereeId }) => {
@@ -68,6 +80,8 @@ export function ManagerMatchTemplate({ matchId }: { matchId: string }) {
         void utils.match.listByTournament.invalidate({ tournamentId: match.tournamentId });
         void utils.tournament.getById.invalidate({ tournamentId: match.tournamentId });
         void utils.stats.getTournamentStandings.invalidate({ tournamentId: match.tournamentId });
+        // El resultado confirma el partido en la matriz de la cancha.
+        if (match.courtId) void utils.court.getBubble.invalidate({ courtId: match.courtId });
       }
     },
     onError: (e) => notify(e.message),
@@ -78,8 +92,11 @@ export function ManagerMatchTemplate({ matchId }: { matchId: string }) {
   }
 
   // getById (protected) no rechaza a un jugador-logueado: el FORBIDDEN real de un
-  // no-gestor llega por listReferees. Ambos errores cuentan para el gate.
-  if (matchQuery.error?.data?.code === "FORBIDDEN" || refereesQuery.error?.data?.code === "FORBIDDEN") {
+  // no-gestor llega por listReferees. Pero el secretario (delegación v2) SÍ entra:
+  // el backend ya autoriza por permiso en cada mutación y el template esconde
+  // cada acción por llave (powers.can). Sin llaves → Sin acceso, como antes.
+  const isForbidden = matchQuery.error?.data?.code === "FORBIDDEN" || refereesQuery.error?.data?.code === "FORBIDDEN";
+  if (!powers.isLoading && isForbidden && !powers.canEnterGestion) {
     return (
       <div className="pb-nav-safe pt-14">
         <div className="px-5 pt-10">
@@ -137,7 +154,7 @@ export function ManagerMatchTemplate({ matchId }: { matchId: string }) {
     );
   }
 
-  const showForm = editable && !match.result;
+  const showForm = editable && !match.result && powers.can("match:result");
 
   return (
     <div className="pb-nav-safe pt-14">
@@ -170,8 +187,18 @@ export function ManagerMatchTemplate({ matchId }: { matchId: string }) {
           refereeName={match.referee?.name ?? (match.refereeId ? refereesQuery.data?.find((r) => r.id === match.refereeId)?.name ?? null : null)}
         />
 
-        {/* W11 — E2: aplazar / reprogramar / paseo (gestor y secretario) */}
-        {editable && <MatchActionsPanel match={match} onNotify={notify} />}        />
+        {/* W11 — E2: aplazar / reprogramar / ausente (gestor y secretario) */}
+        {editable && (
+          <MatchActionsPanel
+            match={match}
+            onNotify={notify}
+            can={{
+              postpone: powers.can("match:postpone"),
+              reschedule: powers.can("match:reschedule"),
+              walkover: powers.can("match:walkover"),
+            }}
+          />
+        )}
 
         {match.result ? (
           <ResultReadout
@@ -193,7 +220,7 @@ export function ManagerMatchTemplate({ matchId }: { matchId: string }) {
               <RefereeSelect
                 referees={refereesQuery.data ?? []}
                 valueId={match.refereeId}
-                disabled={!editable || assignRefereeMutation.isPending}
+                disabled={!editable || !powers.can("referee:assign") || assignRefereeMutation.isPending || refereesQuery.isLoading}
                 isPending={assignRefereeMutation.isPending}
                 onChange={(refereeId) => assignRefereeMutation.mutate({ matchId: match.id, refereeId })}
               />

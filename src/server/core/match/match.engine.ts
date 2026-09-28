@@ -2,6 +2,7 @@ import type { Prisma, PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { notificationEngine } from "../notification/notification.engine";
 import { generateMatchesForElimination } from "./match.helpers";
+import { maybeFinishTournament } from "torneos/server/core/tournament/finish.engine";
 
 type PrismaTx = Prisma.TransactionClient;
 
@@ -13,7 +14,7 @@ type PrismaTx = Prisma.TransactionClient;
  * Trae el partido validando que `userId` sea el gestor del torneo.
  * Sin esto, CUALQUIER manager podía modificar partidos de torneos ajenos.
  */
-export async function getMatchForManagerAction(tx: PrismaTx, matchId: string, userId: string) {
+export async function getMatchForManagerAction(tx: PrismaTx, matchId: string, userId: string, required?: string) {
   const match = await tx.match.findUnique({
     where: { id: matchId },
     include: {
@@ -24,12 +25,22 @@ export async function getMatchForManagerAction(tx: PrismaTx, matchId: string, us
   if (match.tournament.manager.profile.userId !== userId) {
     // W11 — E3 (visto del dueño): delegación "secretario de gestor", fail-closed.
     // Busca por RELACIÓN profile.userId (no depende del shape de la sesión).
+    // Delegación v2: si se exige permiso, el secretario debe tener la llave.
     const delegation = await tx.managerDelegate.findFirst({
       where: { managerId: match.tournament.managerId, profile: { userId } },
       select: { id: true },
     });
     if (!delegation) {
       throw new TRPCError({ code: "FORBIDDEN", message: "No eres el gestor de este torneo" });
+    }
+    if (required) {
+      const grant = await tx.managerDelegatePermission.findFirst({
+        where: { delegateId: delegation.id, permission: required },
+        select: { id: true },
+      });
+      if (!grant) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Tu secretaría no incluye este permiso" });
+      }
     }
   }
   return match;
@@ -76,7 +87,8 @@ async function syncCallUpsWithRoster(tx: PrismaTx, matchId: string) {
   }
 }
 
-/** Notifica a todos los convocados de un partido */
+/** Notifica a todos los convocados de un partido en batch (2 viajes, no N):
+ *  el loop secuencial reventaba el timeout de 5s de la tx (30 convocados). */
 async function notifyCallUpPlayers(
   tx: PrismaTx,
   matchId: string,
@@ -92,13 +104,14 @@ async function notifyCallUpPlayers(
     select: { player: { select: { profile: { select: { userId: true } } } } },
   });
 
-  for (const c of callUps) {
-    await notificationEngine.create(tx, {
+  await notificationEngine.createManyForMatch(
+    tx,
+    callUps.map((c) => ({
       userId: c.player.profile.userId,
-      family: "MATCH",
+      family: "MATCH" as const,
       ...notification,
-    });
-  }
+    })),
+  );
 }
 
 /**
@@ -231,12 +244,14 @@ export const matchEngine = {
           select: { profile: { select: { userId: true } } }
         });
 
-        for (const u of userIds) {
-          await notificationEngine.create(tx, {
+        await notificationEngine.createManyForMatch(
+          tx,
+          userIds.map((u) => ({
             ...notificationData,
             userId: u.profile.userId,
-          });
-        }
+            family: "MATCH" as const,
+          })),
+        );
       }
     }
   },
@@ -244,7 +259,7 @@ export const matchEngine = {
   async postpone(db: PrismaClient, matchId: string, reason: string, userId: string) {
     return db.$transaction(async (tx) => {
       // 🔒 Hallazgo 1: ahora valida ownership
-      const match = await getMatchForManagerAction(tx, matchId, userId);
+      const match = await getMatchForManagerAction(tx, matchId, userId, "match:postpone");
       if (match.status !== "SCHEDULED" && match.status !== "IN_PROGRESS") {
         throw new TRPCError({ code: "BAD_REQUEST", message: "El partido no puede ser aplazado en su estado actual" });
       }
@@ -282,7 +297,7 @@ export const matchEngine = {
   async reschedule(db: PrismaClient, matchId: string, newDate: Date, newTimeSlot: number, userId: string) {
     return db.$transaction(async (tx) => {
       // 🔒 Hallazgo 1: ownership
-      const match = await getMatchForManagerAction(tx, matchId, userId);
+      const match = await getMatchForManagerAction(tx, matchId, userId, "match:reschedule");
       if (match.status !== "POSTPONED") {
         throw new TRPCError({ code: "BAD_REQUEST", message: "Solo se pueden reprogramar partidos aplazados" });
       }
@@ -344,7 +359,7 @@ export const matchEngine = {
   async markWalkover(db: PrismaClient, matchId: string, winnerTeamId: string, userId: string) {
     return db.$transaction(async (tx) => {
       // 🔒 Hallazgo 1: ownership
-      const match = await getMatchForManagerAction(tx, matchId, userId);
+      const match = await getMatchForManagerAction(tx, matchId, userId, "match:walkover");
       if (match.status === "FINISHED" || match.status === "WALKOVER") {
         throw new TRPCError({ code: "BAD_REQUEST", message: "El partido ya finalizó" });
       }
@@ -353,6 +368,10 @@ export const matchEngine = {
       if (winnerTeamId !== match.homeTeamId && winnerTeamId !== match.awayTeamId) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "El equipo ganador no participa en este partido" });
       }
+
+      // Regla del dueño: gana el contrario, el ausente queda marcado.
+      // walkoverTeamId = el AUSENTE (no el ganador): el ganador avanza igual.
+      const absentTeamId = winnerTeamId === match.homeTeamId ? match.awayTeamId : match.homeTeamId;
 
       await tx.matchResult.create({
         data: {
@@ -369,9 +388,12 @@ export const matchEngine = {
       // (antes: findFirst sin orden → podía asignar al partido equivocado)
       await advanceWinnerInBracket(tx, matchId, winnerTeamId);
 
+      // S10 §6: el paseo también completa el cuadro (mismo helper que load).
+      await maybeFinishTournament(tx, match.tournamentId);
+
       return tx.match.update({
         where: { id: matchId },
-        data: { status: "WALKOVER", walkoverTeamId: winnerTeamId }
+        data: { status: "WALKOVER", walkoverTeamId: absentTeamId }
       });
     });
   }

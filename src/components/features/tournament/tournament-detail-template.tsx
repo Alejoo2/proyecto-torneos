@@ -6,6 +6,7 @@ import { ClipboardList, Lock, Trophy } from "lucide-react";
 import { api } from "torneos/trpc/react";
 import { TournamentHero } from "torneos/components/features/tournament/tournament-hero";
 import { EnrollmentCta } from "torneos/components/features/tournament/enrollment-cta";
+import { useTournamentPowers } from "torneos/components/features/tournament/use-tournament-powers";
 import { BracketView } from "torneos/components/features/tournament/bracket-view";
 import { StandingsTable } from "torneos/components/features/tournament/standings-table";
 import { TabBar } from "torneos/components/ui/tab-bar";
@@ -47,29 +48,51 @@ export function TournamentDetailTemplate({
 
   const utils = api.useUtils();
   const loginHref = `/login?callbackUrl=${encodeURIComponent(`/torneos/${tournamentId}`)}`;
+  // Poderes por permiso (hook SIEMPRE arriba del return temprano: si no,
+  // el conteo de hooks cambia entre loading y datos y React crashea).
+  const powers = useTournamentPowers(isLoggedIn ? tournamentId : null);
 
   // ── Capa 2: lecturas ramificadas por sesión (frontera RSC en page.tsx) ──
-  const publicQuery = api.tournament.getPublicById.useQuery({ tournamentId }, { enabled: !isLoggedIn });
-  const managedQuery = api.tournament.getById.useQuery({ tournamentId }, { enabled: isLoggedIn, retry: false });
+  // Sin refetch al enfocar en ninguna (el regreso de pestaña no re-dispara el batch);
+  // standings 5 min (loadResult invalida), resto vive del global 30s + invalidaciones.
+  const publicQuery = api.tournament.getPublicById.useQuery({ tournamentId }, { enabled: !isLoggedIn, refetchOnWindowFocus: false });
+  const managedQuery = api.tournament.getById.useQuery({ tournamentId }, { enabled: isLoggedIn, retry: false, refetchOnWindowFocus: false });
   const holdQuery = api.tournament.checkHold.useQuery(
     { tournamentId },
     // doc 8.3: refetch 15s SOLO mientras exista hold activo
-    { enabled: isLoggedIn, retry: false, refetchInterval: (data) => (data ? 15_000 : false) },
+    { enabled: isLoggedIn, retry: false, refetchInterval: (data) => (data ? 15_000 : false), refetchOnWindowFocus: false },
   );
-  const myTeamsQuery = api.team.getMyTeams.useQuery(undefined, { enabled: isLoggedIn, retry: false });
-  const myStatusQuery = api.enrollment.getMyStatus.useQuery({ tournamentId }, { enabled: isLoggedIn, retry: false });
-  const matchesQuery = api.match.listByTournament.useQuery({ tournamentId }, { enabled: isLoggedIn, retry: false });
-  const standingsAuthQuery = api.stats.getTournamentStandings.useQuery({ tournamentId }, { enabled: isLoggedIn, retry: false });
-  const standingsPublicQuery = api.stats.getTournamentStandingsPublic.useQuery({ tournamentId }, { enabled: !isLoggedIn });
+  const myTeamsQuery = api.team.getMyTeams.useQuery(undefined, { enabled: isLoggedIn, retry: false, refetchOnWindowFocus: false });
+  const myStatusQuery = api.enrollment.getMyStatus.useQuery({ tournamentId }, { enabled: isLoggedIn, retry: false, refetchOnWindowFocus: false });
+  const matchesQuery = api.match.listByTournament.useQuery({ tournamentId }, { enabled: isLoggedIn, retry: false, staleTime: 2 * 60_000, refetchOnWindowFocus: false });
+  const standingsAuthQuery = api.stats.getTournamentStandings.useQuery({ tournamentId }, { enabled: isLoggedIn, retry: false, staleTime: 5 * 60_000, refetchOnWindowFocus: false });
+  const standingsPublicQuery = api.stats.getTournamentStandingsPublic.useQuery({ tournamentId }, { enabled: !isLoggedIn, staleTime: 5 * 60_000, refetchOnWindowFocus: false });
 
   const tournament = isLoggedIn ? managedQuery.data : publicQuery.data;
   const isLoading = isLoggedIn ? managedQuery.isLoading : publicQuery.isLoading;
   const dataUpdatedAt = isLoggedIn ? managedQuery.dataUpdatedAt : publicQuery.dataUpdatedAt;
     const standings = (isLoggedIn ? standingsAuthQuery.data : standingsPublicQuery.data) ?? [];
   const matches = matchesQuery.data ?? [];
-  const teams = useMemo(() => myTeamsQuery.data ?? [], [myTeamsQuery.data]);
+  // C1: cada tab carga su skeleton propio — sin el flash del EmptyState
+  // mientras su query vuela (el hero ya pintó con la ficha).
+  const isLoadingMatches = matchesQuery.isLoading;
+  const isLoadingStandings = isLoggedIn ? standingsAuthQuery.isLoading : standingsPublicQuery.isLoading;
+  // Regla absoluta: solo el capitán inscribe; capitanía única por jugador.
+  // Se pasa SOLO el equipo capitaneado: el dropdown jamás aparece.
+  const teams = useMemo(
+    () => (myTeamsQuery.data ?? []).filter((t) => t.isCaptain),
+    [myTeamsQuery.data],
+  );
   const myEnrollments = myStatusQuery.data ?? [];
   const holdData = holdQuery.data ?? null;
+  // E6: invites PRIVATE de mis equipos (capitán). Sin aceptada no hay CTA.
+  const myTeamInvitesQuery = api.enrollment.listMyTeamInvites.useQuery(undefined, {
+    enabled: isLoggedIn,
+    retry: false,
+  });
+  const myInviteForTournament = (myTeamInvitesQuery.data ?? []).find((i) => i.tournamentId === tournamentId) ?? null;
+  const myInviteAccepted = myInviteForTournament?.status === "ACCEPTED";
+  const myInvitePending = myInviteForTournament?.status === "PENDING";
 
   // serverTimestamp exacto sin esperar B-09: expiresAt − secondsRemaining = reloj del servidor
   const hold = holdData
@@ -106,6 +129,29 @@ export function TournamentDetailTemplate({
     },
     onError: (e) => notify(e.message),
   });
+  // S02 §8: auto-ausencia por torneo (superficie en el CTA, no solo bandeja).
+  const myAbsencesQuery = api.enrollment.listMyTournamentAbsences.useQuery(undefined, {
+    enabled: isLoggedIn,
+    retry: false,
+  });
+  const absentTeamIds = (myAbsencesQuery.data ?? [])
+    .filter((a) => a.tournamentId === tournamentId)
+    .map((a) => a.teamId)
+    .filter((t): t is string => t !== null);
+  const markAbsentMutation = api.enrollment.markTournamentAbsence.useMutation({
+    onSuccess: () => {
+      void myAbsencesQuery.refetch();
+      notify("Ausencia marcada: saliste del conteo de este torneo");
+    },
+    onError: (e) => notify(e.message),
+  });
+  const clearAbsenceMutation = api.enrollment.clearTournamentAbsence.useMutation({
+    onSuccess: () => {
+      void myAbsencesQuery.refetch();
+      notify("Volviste a este torneo");
+    },
+    onError: (e) => notify(e.message),
+  });
 
   // Auto-selección del primer equipo
   useEffect(() => {
@@ -120,13 +166,9 @@ export function TournamentDetailTemplate({
   const enrolledCount = tournament.enrollments.length;
   const activeHolds = "slotHolds" in tournament._count ? tournament._count.slotHolds : 0;
   const isScheduled = tournament.status === "SCHEDULED";
-  // Entry point "Gestionar": el front sugiere por ownership (solo getById trae
-  // manager.profile — de ahí el guard "in"); el backend autoriza por permiso.
-  const canManage =
-    isLoggedIn &&
-    !!sessionUserId &&
-    "manager" in tournament &&
-    tournament.manager.profile.userId === sessionUserId;
+  // Entry point "Gestionar": por permiso (dueño o secretario con llaves),
+  // no por rol. Sin poderes no hay botón aunque el backend lo niegue igual.
+  const canManage = powers.canEnterGestion;
 
   const ctaCommon = {
     teams,
@@ -143,12 +185,19 @@ export function TournamentDetailTemplate({
     enrollments: myEnrollments,
     isReevaluating: reevaluate.isPending,
     onReevaluate: (enrollmentId: string) => reevaluate.mutate({ enrollmentId }),
+    pendingInvite: myInvitePending,
+    absentTeamIds,
+    onMarkAbsent: (teamId: string) => markAbsentMutation.mutate({ tournamentId, teamId }),
+    onClearAbsence: () => clearAbsenceMutation.mutate({ tournamentId }),
+    isActingAbsence: markAbsentMutation.isPending || clearAbsenceMutation.isPending,
   };
 
   const showHoldCta = isLoggedIn && isScheduled && hold !== null;
   const showEnrolledCta = myEnrollments.length > 0;
-  const showReadyCta = isLoggedIn && isScheduled && !holdData && myEnrollments.length === 0 && teams.length > 0;
-  const showNoTeamCta = isLoggedIn && isScheduled && !holdData && myEnrollments.length === 0 && teams.length === 0;
+  const isPrivate = "type" in tournament && tournament.type === "PRIVATE";
+  const showReadyCta = isLoggedIn && isScheduled && !holdData && myEnrollments.length === 0 && teams.length > 0 && (!isPrivate || myInviteAccepted);
+  const showNoTeamCta = isLoggedIn && isScheduled && !holdData && myEnrollments.length === 0 && teams.length === 0 && !isPrivate;
+  const showPrivateCta = isLoggedIn && isScheduled && isPrivate && myEnrollments.length === 0 && teams.length > 0 && !myInviteAccepted;
   const showAnonCta = !isLoggedIn && isScheduled;
 
   return (
@@ -172,12 +221,13 @@ export function TournamentDetailTemplate({
       />
 
       {/* Zona CTA — PANTALLA 2: A/B/C/D (estado C inline, decisión D1) */}
-      {(showAnonCta || showNoTeamCta || showReadyCta || showHoldCta || showEnrolledCta) && (
+      {(showAnonCta || showNoTeamCta || showReadyCta || showHoldCta || showEnrolledCta || showPrivateCta) && (
         <div className="mt-4 space-y-4 px-5">
           {showHoldCta && <EnrollmentCta variant="HOLDING" {...ctaCommon} />}
           {showEnrolledCta && <EnrollmentCta variant="ENROLLED" {...ctaCommon} />}
           {showReadyCta && <EnrollmentCta variant="READY" {...ctaCommon} />}
           {showNoTeamCta && <EnrollmentCta variant="NO_TEAM" />}
+          {showPrivateCta && <EnrollmentCta variant="PRIVATE" {...ctaCommon} />}
           {showAnonCta && <EnrollmentCta variant="ANON" loginHref={loginHref} />}
         </div>
       )}
@@ -211,6 +261,12 @@ export function TournamentDetailTemplate({
                 </Link>
               }
             />
+          ) : isLoadingMatches ? (
+            <div className="flex flex-col gap-2">
+              <LoadingSkeleton />
+              <LoadingSkeleton />
+              <LoadingSkeleton />
+            </div>
           ) : matches.length === 0 ? (
             <EmptyState
               icon={<Trophy className="size-8" />}
@@ -220,7 +276,13 @@ export function TournamentDetailTemplate({
           ) : (
 <BracketView matches={matches} matchHrefBase={`/torneos/${tournamentId}/partidos`} />          ))}
         {tab === "standings" &&
-          (standings.length === 0 ? (
+          (isLoadingStandings ? (
+            <div className="flex flex-col gap-2">
+              <LoadingSkeleton />
+              <LoadingSkeleton />
+              <LoadingSkeleton />
+            </div>
+          ) : standings.length === 0 ? (
             <EmptyState
               icon={<Trophy className="size-8" />}
               title="Sin posiciones aún"

@@ -16,14 +16,15 @@ interface CourtBubbleProps {
 // o el CTA Entrar) → nunca se corta con nav. max-h reserva el espacio de
 // search+filtros arriba → nunca los cruza.
 const bubbleBase =
-  "absolute bottom-4 right-4 z-sheet w-[320px] max-w-[calc(100%-1rem)] max-h-[calc(100%-8.5rem)] overflow-y-auto scrollbar-hide rounded-3xl border border-cypher-5-1-1 bg-cypher-5-1 p-4 shadow-[0_10px_30px_rgba(0,0,0,0.5)]";
+  "absolute bottom-4 right-4 z-sheet w-[320px] max-w-[calc(100%-1rem)] max-h-[calc(100%-8.5rem)] overflow-y-auto scrollbar-hide rounded-3xl border border-cypher-5-1-1 bg-cypher-5-1 p-4 shadow-[0_10px_30px_rgba(0,0,0,0.5)] origin-bottom-right";
 
 export function CourtBubble({ courtId, onClose }: CourtBubbleProps) {
   const isOpen = courtId !== null;
 
   const { data: court } = api.court.getBubble.useQuery(
     { courtId: courtId ?? "" },
-    { enabled: isOpen, staleTime: 60_000 },
+    // La burbuja se abre a cada rato: 2 min fresca + sin refetch al enfocar.
+    { enabled: isOpen, staleTime: 2 * 60_000, refetchOnWindowFocus: false },
   );
 
   return (
@@ -35,7 +36,6 @@ export function CourtBubble({ courtId, onClose }: CourtBubbleProps) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.5, y: 20 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          style={{ transformOrigin: "bottom right" }}
         >
           {!court ? (
             <div className="space-y-3">

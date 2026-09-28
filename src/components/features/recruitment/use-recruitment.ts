@@ -71,6 +71,36 @@ export function useRejectInvitation() {
   }); 
 }
 // ==========================================
+// Invites a torneos PRIVATE (E6: capitán del equipo)
+// ==========================================
+
+export function useMyTeamInvites() {
+  return api.enrollment.listMyTeamInvites.useQuery(undefined, {
+    staleTime: 1000 * 30,
+  });
+}
+
+export function useAcceptTeamInvite() {
+  const utils = api.useContext();
+
+  return api.enrollment.acceptTeamInvite.useMutation({
+    onSuccess: () => {
+      void utils.enrollment.listMyTeamInvites.invalidate();
+      void utils.enrollment.getMyStatus.invalidate();
+    },
+  });
+}
+
+export function useDeclineTeamInvite() {
+  const utils = api.useContext();
+
+  return api.enrollment.declineTeamInvite.useMutation({
+    onSuccess: () => {
+      void utils.enrollment.listMyTeamInvites.invalidate();
+    },
+  });
+}
+// ==========================================
 // Hooks para Perfil de Jugador (Capitán)
 // ==========================================
 export function usePlayerProfile(teamId: string, playerId: string | null) {

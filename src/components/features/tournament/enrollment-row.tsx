@@ -8,7 +8,8 @@ import { cn } from "torneos/lib/utils";
 
 // Fila de inscripción — PURO (sin tRPC): mutaciones y optimistic viven en el
 // template. Acciones = mapeo exacto de transiciones del enrollment.engine:
-// PENDING_PAYMENT → aprobar/reject · PENDING_AVAILABILITY → reject ·
+// PENDING_PAYMENT → aprobar/reject · PENDING_AVAILABILITY → aprobar/reject
+// (el engine aprueba desde ambos: el gestor puede forzar con baja disponibilidad) ·
 // APPROVED → disapprove (dos toques) · terminales → sin acciones.
 const MIN_REASON = 10; // espejo del zod del router (reject: min 10)
 
@@ -24,9 +25,12 @@ interface EnrollmentRowProps {
   onApprove: (enrollmentId: string) => void;
   onReject: (enrollmentId: string, reason: string) => void;
   onDisapprove: (enrollmentId: string) => void;
+  /** Jugadores del equipo con rojo en la franja (badge informativo). */
+  hardCount?: number;
+  hardNames?: string[];
 }
 
-export function EnrollmentRow({ enrollment, isBusy, onApprove, onReject, onDisapprove }: EnrollmentRowProps) {
+export function EnrollmentRow({ enrollment, isBusy, onApprove, onReject, onDisapprove, hardCount = 0, hardNames = [] }: EnrollmentRowProps) {
   const { status } = enrollment;
   const [rejecting, setRejecting] = useState(false);
   const [reason, setReason] = useState("");
@@ -71,6 +75,11 @@ export function EnrollmentRow({ enrollment, isBusy, onApprove, onReject, onDisap
       </div>
 
       {/* El dato informa, la piel no (nota semántica = texto, no color de contenedor) */}
+      {hardCount > 0 && (
+        <p className="mt-2 text-xs font-semibold text-red-400" title={hardNames.join(", ")}>
+          {hardCount} en conflicto duro: deben elegir cancha
+        </p>
+      )}
       {status === "PENDING_AVAILABILITY" && enrollment.availabilityNote && (
         <p className="mt-2 text-xs text-yellow-400/90">{enrollment.availabilityNote}</p>
       )}
@@ -133,9 +142,19 @@ export function EnrollmentRow({ enrollment, isBusy, onApprove, onReject, onDisap
             </>
           )}
           {status === "PENDING_AVAILABILITY" && (
-            <Button size="sm" variant="ghost" disabled={isBusy} onClick={() => setRejecting(true)}>
-              Rechazar
-            </Button>
+            <>
+              <Button size="sm" variant="ghost" disabled={isBusy} onClick={() => setRejecting(true)}>
+                Rechazar
+              </Button>
+              <Button
+                size="sm"
+                disabled={isBusy}
+                title="Aprobar aunque la disponibilidad sea baja"
+                onClick={() => onApprove(enrollment.id)}
+              >
+                Aprobar
+              </Button>
+            </>
           )}
           {status === "APPROVED" &&
             (confirmingDisapprove ? (

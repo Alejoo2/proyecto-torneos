@@ -4,11 +4,11 @@ import { useMemo, useState } from "react";
 import { CalendarClock, Flag, Hourglass } from "lucide-react";
 import { api } from "torneos/trpc/react";
 import { Button } from "torneos/components/ui/button/button";
-import { ConfirmModal } from "torneos/components/ui/confirm-modal";
-import { SLOT_LABELS } from "torneos/domain/schedule/labels";
+import { ConfirmModal } from "torneos/components/ui/confirm-modal/confirm-modal";
+import { CourtAvailabilityGrid } from "torneos/components/ui/court-availability-grid/court-availability-grid";
 
 /**
- * W11 — E2 (H-B): acciones de partido — aplazar / reprogramar / paseo.
+ * W11 — E2 (H-B): acciones de partido — aplazar / reprogramar / ausente.
  * Primera UI que invoca postpone/reschedule/markWalkover (existían sin invocador).
  * El ownership real vive en el engine (gestor o secretario — E3): este panel solo
  * se monta cuando el template ya resolvió acceso (FORBIDDEN → EmptyState antes).
@@ -22,18 +22,21 @@ interface MatchActionsPanelProps {
     status: string;
     courtId: string | null;
     postponedReason: string | null;
-    homeTeam: { id: string; name: string };
-    awayTeam: { id: string; name: string };
+    homeTeam: { id: string; name: string } | null;
+    awayTeam: { id: string; name: string } | null;
   };
   onNotify: (title: string) => void;
+  /** Llaves del actor (dueño = todo true). Sin la llave, el botón no se pinta. */
+  can?: { postpone: boolean; reschedule: boolean; walkover: boolean };
 }
 
-export function MatchActionsPanel({ match, onNotify }: MatchActionsPanelProps) {
+export function MatchActionsPanel({ match, onNotify, can = { postpone: true, reschedule: true, walkover: true } }: MatchActionsPanelProps) {
   const utils = api.useUtils();
   const [panel, setPanel] = useState<null | "postpone" | "reschedule">(null);
   const [reason, setReason] = useState("");
-  const [rescheduleDate, setRescheduleDate] = useState("");
-  const [rescheduleSlot, setRescheduleSlot] = useState<number | null>(null);
+  // Reprogramar con la matriz de la cancha (misma piel que el detalle):
+  // verde = elegible; el resto informa (ocupada/apartada/confirmada).
+  const [selectedSlot, setSelectedSlot] = useState<{ date: string; timeSlot: number } | null>(null);
   const [walkoverOpen, setWalkoverOpen] = useState(false);
   const [walkoverTeamId, setWalkoverTeamId] = useState<string | null>(null);
 
@@ -42,6 +45,9 @@ export function MatchActionsPanel({ match, onNotify }: MatchActionsPanelProps) {
     void utils.match.getByIdPublic.invalidate({ id: match.id });
     void utils.match.listByTournament.invalidate({ tournamentId: match.tournamentId });
     void utils.tournament.getById.invalidate({ tournamentId: match.tournamentId });
+    // La matriz de la cancha refleja franjas/reservas: aplazar/resprogramar/
+    // walkover la mueven (Fase B la hizo visible con el stale).
+    if (match.courtId) void utils.court.getBubble.invalidate({ courtId: match.courtId });
   };
 
   const postponeMutation = api.match.postpone.useMutation({
@@ -55,29 +61,30 @@ export function MatchActionsPanel({ match, onNotify }: MatchActionsPanelProps) {
   });
 
   const availabilityQuery = api.court.getAvailability.useQuery(
-    { courtId: match.courtId },
-    { enabled: panel === "reschedule" && Boolean(match.courtId) },
+    { courtId: match.courtId ?? "" },
+    // Solo vive mientras el panel está abierto; el engine revalida al confirmar.
+    { enabled: panel === "reschedule" && Boolean(match.courtId), staleTime: 2 * 60_000, refetchOnWindowFocus: false },
   );
 
-  const availableByDate = useMemo(() => {
-    const map = new Map<string, number[]>();
+  const gridDays = useMemo(() => {
+    const byDate = new Map<string, { date: string; dayOfWeek: number; slots: { timeSlot: number; isFree: boolean }[] }>();
     for (const row of availabilityQuery.data ?? []) {
-      if (row.status !== "AVAILABLE") continue;
-      const iso = new Date(row.date).toISOString().slice(0, 10);
-      const slots = map.get(iso) ?? [];
-      slots.push(row.timeSlot);
-      map.set(iso, slots);
+      const iso = new Date(row.date).toISOString();
+      const entry = byDate.get(iso) ?? {
+        date: iso,
+        dayOfWeek: new Date(row.date).getUTCDay(),
+        slots: [] as { timeSlot: number; isFree: boolean }[],
+      };
+      entry.slots.push({ timeSlot: row.timeSlot, isFree: row.status === "AVAILABLE" });
+      byDate.set(iso, entry);
     }
-    return map;
+    return [...byDate.values()].sort((a, b) => (a.date < b.date ? -1 : 1));
   }, [availabilityQuery.data]);
-  const availableDates = useMemo(() => [...availableByDate.keys()].sort(), [availableByDate]);
-  const slotsForDate = rescheduleDate ? (availableByDate.get(rescheduleDate) ?? []) : [];
 
   const rescheduleMutation = api.match.reschedule.useMutation({
     onSuccess: () => {
       setPanel(null);
-      setRescheduleDate("");
-      setRescheduleSlot(null);
+      setSelectedSlot(null);
       onNotify("Partido reprogramado");
       invalidateMatch();
       if (match.courtId) void utils.court.getAvailability.invalidate({ courtId: match.courtId });
@@ -88,7 +95,7 @@ export function MatchActionsPanel({ match, onNotify }: MatchActionsPanelProps) {
   const walkoverMutation = api.match.markWalkover.useMutation({
     onSuccess: () => {
       setWalkoverTeamId(null);
-      onNotify("Paseo registrado");
+      onNotify("Ausencia registrada");
       invalidateMatch();
     },
     onError: (e) => {
@@ -100,7 +107,9 @@ export function MatchActionsPanel({ match, onNotify }: MatchActionsPanelProps) {
   const isPostponed = match.status === "POSTPONED";
   const canPostpone = match.status === "SCHEDULED" || match.status === "IN_PROGRESS";
   const walkoverTeam =
-    walkoverTeamId === match.homeTeam.id ? match.homeTeam : match.awayTeam;
+    walkoverTeamId !== null && walkoverTeamId === match.homeTeam?.id
+      ? match.homeTeam
+      : match.awayTeam;
 
   return (
     <section className="rounded-2xl border border-cypher-4/10 bg-cypher-5-1 p-4">
@@ -113,25 +122,27 @@ export function MatchActionsPanel({ match, onNotify }: MatchActionsPanelProps) {
       )}
 
       <div className="mt-3 flex flex-wrap gap-2">
-        {canPostpone && (
+        {canPostpone && can.postpone && (
           <Button size="sm" variant="secondary" onClick={() => setPanel(panel === "postpone" ? null : "postpone")}>
             <Hourglass className="size-4" /> Aplazar
           </Button>
         )}
-        {isPostponed && (
+        {isPostponed && can.reschedule && (
           <Button size="sm" variant="secondary" onClick={() => setPanel(panel === "reschedule" ? null : "reschedule")}>
             <CalendarClock className="size-4" /> Reprogramar
           </Button>
         )}
-        <Button size="sm" variant="secondary" onClick={() => setWalkoverOpen((v) => !v)}>
-          <Flag className="size-4" /> Paseo (W.O.)
-        </Button>
+        {match.homeTeam && match.awayTeam && can.walkover && (
+          <Button size="sm" variant="secondary" onClick={() => setWalkoverOpen((v) => !v)}>
+            <Flag className="size-4" /> Ausente (W.O.)
+          </Button>
+        )}
       </div>
 
       {panel === "postpone" && (
         <div className="mt-3 space-y-2">
           <label htmlFor="postpone-reason" className="text-xs font-medium text-cypher-4-2">
-                        Motivo (mínimo 10 caracteres)Motivo (requerido)
+                        Motivo (mínimo 10 caracteres)
           </label>
           <textarea
             id="postpone-reason"
@@ -159,50 +170,25 @@ export function MatchActionsPanel({ match, onNotify }: MatchActionsPanelProps) {
             </p>
           ) : availabilityQuery.isLoading ? (
             <p className="text-xs text-cypher-4-2-2">Cargando disponibilidad…</p>
-          ) : availableDates.length === 0 ? (
+          ) : gridDays.length === 0 ? (
             <p className="text-xs text-cypher-4-2-2">Sin franjas disponibles en los próximos 14 días.</p>
           ) : (
             <>
-              <div>
-                <label htmlFor="reschedule-date" className="text-xs font-medium text-cypher-4-2">Fecha</label>
-                <select
-                  id="reschedule-date"
-                  value={rescheduleDate}
-                  onChange={(e) => { setRescheduleDate(e.target.value); setRescheduleSlot(null); }}
-                  className="mt-1 w-full rounded-xl border border-cypher-5-1-1 bg-cypher-5-1-1 px-3 py-2 text-sm text-cypher-4 outline-none focus:border-cypher-4-2"
-                >
-                  <option value="">Elegir día…</option>
-                  {availableDates.map((iso) => (
-                    <option key={iso} value={iso}>{iso}</option>
-                  ))}
-                </select>
-              </div>
-              {rescheduleDate && (
-                <div>
-                  <label htmlFor="reschedule-slot" className="text-xs font-medium text-cypher-4-2">Franja</label>
-                  <select
-                    id="reschedule-slot"
-                    value={rescheduleSlot === null ? "" : String(rescheduleSlot)}
-                    onChange={(e) => setRescheduleSlot(e.target.value === "" ? null : Number(e.target.value))}
-                    className="mt-1 w-full rounded-xl border border-cypher-5-1-1 bg-cypher-5-1-1 px-3 py-2 text-sm text-cypher-4 outline-none focus:border-cypher-4-2"
-                  >
-                    <option value="">Elegir franja…</option>
-                    {slotsForDate.map((s) => (
-                      <option key={s} value={s}>{SLOT_LABELS[s]}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
+              <CourtAvailabilityGrid
+                days={gridDays}
+                selected={selectedSlot}
+                onSelectSlot={(date, timeSlot) => setSelectedSlot({ date, timeSlot })}
+              />
               <Button
                 size="sm"
-                disabled={rescheduleSlot === null || rescheduleMutation.isPending}
+                disabled={selectedSlot === null || rescheduleMutation.isPending}
                 onClick={() => {
-                  if (rescheduleSlot !== null) {
+                  if (selectedSlot !== null) {
                     // Medianoche UTC: espejo exacto de la normalización del engine (Hallazgo 6)
                     rescheduleMutation.mutate({
                       matchId: match.id,
-                      newDate: new Date(`${rescheduleDate}T00:00:00.000Z`),
-                      newTimeSlot: rescheduleSlot,
+                      newDate: new Date(selectedSlot.date),
+                      newTimeSlot: selectedSlot.timeSlot,
                     });
                   }
                 }}
@@ -217,14 +203,14 @@ export function MatchActionsPanel({ match, onNotify }: MatchActionsPanelProps) {
       {walkoverOpen && (
         <div className="mt-3 space-y-2">
           <p className="text-xs text-cypher-4-2-2">
-            ¿Qué equipo gana por paseo? El perdedor queda eliminado del bracket.
+            ¿Qué equipo se presenta? El ausente queda eliminado del bracket.
           </p>
           <div className="flex gap-2">
-            <Button size="sm" variant="secondary" onClick={() => setWalkoverTeamId(match.homeTeam.id)}>
-              {match.homeTeam.name}
+            <Button size="sm" variant="secondary" onClick={() => match.homeTeam && setWalkoverTeamId(match.homeTeam.id)}>
+              {match.homeTeam?.name}
             </Button>
-            <Button size="sm" variant="secondary" onClick={() => setWalkoverTeamId(match.awayTeam.id)}>
-              {match.awayTeam.name}
+            <Button size="sm" variant="secondary" onClick={() => match.awayTeam && setWalkoverTeamId(match.awayTeam.id)}>
+              {match.awayTeam?.name}
             </Button>
           </div>
         </div>
@@ -232,9 +218,9 @@ export function MatchActionsPanel({ match, onNotify }: MatchActionsPanelProps) {
 
       <ConfirmModal
         isOpen={!!walkoverTeamId}
-        title="Declarar paseo (W.O.)"
-        message={`"${walkoverTeam?.name}" gana el partido por paseo.\n\nEsta acción es irreversible: el partido queda terminado y el ganador avanza en el bracket.`}
-        confirmText="Declarar paseo"
+        title="Declarar ausencia (W.O.)"
+        message={`"${walkoverTeam?.name}" gana el partido por ausencia del rival.\n\nEsta acción es irreversible: el partido queda terminado y el ganador avanza en el bracket.`}
+        confirmText="Declarar ausencia"
         variant="danger"
         onCancel={() => setWalkoverTeamId(null)}
         onConfirm={() => {

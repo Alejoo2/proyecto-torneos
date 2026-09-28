@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure, permissionProcedure } from "torneos/server/api/trpc";
 import { teamEngine } from "torneos/server/core/team/team.engine";
+import { suggestedEngine } from "torneos/server/core/team/suggested.engine";
 import { TRPCError } from "@trpc/server";
 
 export const teamRouter = createTRPCRouter({
@@ -32,6 +33,24 @@ export const teamRouter = createTRPCRouter({
     .input(z.object({ invitationId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       return teamEngine.acceptInvitation(ctx.db, input.invitationId, ctx.session.user.id);
+    }),
+
+  // ─── S03 §7: matriz sugerida del capitán (amarillo) ───
+  setSuggestedSlots: permissionProcedure("team:manage")
+    .input(z.object({
+      teamId: z.string(),
+      slots: z
+        .array(z.object({ dayOfWeek: z.number().min(0).max(6), timeSlot: z.number().min(0).max(11) }))
+        .max(84),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      return suggestedEngine.setSuggestedSlots(ctx.db, input, ctx.session.user.id);
+    }),
+
+  getSuggestedSlots: protectedProcedure
+    .input(z.object({ teamId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      return suggestedEngine.listByTeam(ctx.db, input.teamId);
     }),
 
   // ==========================================

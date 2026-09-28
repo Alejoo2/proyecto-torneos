@@ -141,6 +141,22 @@ async function seedRoles() {
       update: { isActive: true },
       create: { profileId: profile.id, isActive: true },
     });
+    // QA Fase 0: el gestor también es jugador (si no, profile-view bloquea
+    // la pestaña Gestor con "Aún no eres jugador"). Matriz mínima de prueba.
+    const gestorPlayer = await prisma.player.upsert({
+      where: { profileId: profile.id },
+      update: {},
+      create: { profileId: profile.id },
+    });
+    for (const day of [2, 4, 6]) {
+      for (const slot of [7, 8, 9]) {
+        await prisma.playerAvailability.upsert({
+          where: { playerId_dayOfWeek_timeSlot: { playerId: gestorPlayer.id, dayOfWeek: day, timeSlot: slot } },
+          update: {},
+          create: { playerId: gestorPlayer.id, dayOfWeek: day, timeSlot: slot, status: "AVAILABLE" },
+        });
+      }
+    }
     db.userIdByEmail.set("gestor@gestor", user.id);
     db.managerId = manager.id;
   }
@@ -396,8 +412,8 @@ async function seedFinishedTournament() {
 
   const tournament = await ensureTournament({
     name: "Copa Test En Curso",
-    description: "Partidos jugados a la espera de carga de resultados (GRACE_PERIOD).",
-    status: "GRACE_PERIOD",
+    description: "Partidos jugados a la espera de carga de resultados (IN_PROGRESS).",
+    status: "IN_PROGRESS",
     format: "LEAGUE",
     type: "PUBLIC",
     maxTeams: 4,
@@ -536,7 +552,253 @@ async function seedFinishedTournament() {
     });
   }
   console.log("✅ Estadísticas: PlayerStats (30), TeamStats (2), Standing (2)");
-}async function main() {
+}async function seedFase1() {
+  const gestorId = db.userIdByEmail.get("gestor@gestor")!;
+
+  // 1. Delegado: test2 secretario del gestor (valida E3 en front)
+  const test2profile = await prisma.profile.findUnique({
+    where: { userId: db.userIdByEmail.get("test2@test")! },
+    select: { id: true },
+  });
+  if (test2profile && db.managerId) {
+    const delegate = await prisma.managerDelegate.upsert({
+      where: { managerId_profileId: { managerId: db.managerId, profileId: test2profile.id } },
+      update: {},
+      create: { managerId: db.managerId, profileId: test2profile.id, designatedByUserId: gestorId },
+    });
+    // Delegación v2: test2 con el pack completo (valida secretario total)
+    for (const permission of ["match:postpone", "match:reschedule", "match:walkover", "referee:assign", "match:result", "enrollment:manage"]) {
+      await prisma.managerDelegatePermission.upsert({
+        where: { delegateId_permission: { delegateId: delegate.id, permission } },
+        update: {},
+        create: { delegateId: delegate.id, permission },
+      });
+    }
+  }
+
+  const inscrip = await prisma.tournament.findFirst({ where: { name: "Copa Test Inscripciones" } });
+
+  // 2. Charlie PENDING_PAYMENT (pasa Factor 1) → Alfa + Charlie = 2 APPROVED = sorteo alcanzable
+  if (inscrip) {
+    await prisma.tournamentEnrollment.upsert({
+      where: { tournamentId_teamId: { tournamentId: inscrip.id, teamId: db.teamIdByName.get("Charlie FC")! } },
+      update: { status: "PENDING_PAYMENT" },
+      create: { tournamentId: inscrip.id, teamId: db.teamIdByName.get("Charlie FC")!, status: "PENDING_PAYMENT" },
+    });
+
+    // 5. Slots multi-franja (principal 6/9 + extras 4/9 y 6/7)
+    for (const [dow, slot] of [[4, 9], [6, 7]] as const) {
+      await prisma.tournamentSlot.upsert({
+        where: { tournamentId_dayOfWeek_timeSlot: { tournamentId: inscrip.id, dayOfWeek: dow, timeSlot: slot } },
+        update: {},
+        create: { tournamentId: inscrip.id, dayOfWeek: dow, timeSlot: slot },
+      });
+    }
+  }
+
+  // 3b. Torneo dedicado al sorteo QA (APPROVED ×2, SIN fases: closeAndDraw limpio)
+  const sorteo = await ensureTournament({
+    name: "Copa Test Sorteo",
+    description: "Sorteo alcanzable: Alfa + Charlie aprobados, sin bracket previo.",
+    status: "SCHEDULED",
+    format: "SINGLE_ELIMINATION",
+    type: "PUBLIC",
+    maxTeams: 8,
+    court: { connect: { id: db.courtIdByName.get("Cancha La Villa")! } },
+    manager: { connect: { id: db.managerId! } },
+    enrollmentDeadline: daysFromTodayUTC(5),
+    startDate: daysFromTodayUTC(7),
+    dayOfWeek: 6,
+    timeSlot: 9,
+  });
+  for (const teamName of ["Alfa FC", "Charlie FC"]) {
+    await prisma.tournamentEnrollment.upsert({
+      where: { tournamentId_teamId: { tournamentId: sorteo.id, teamId: db.teamIdByName.get(teamName)! } },
+      update: { status: "APPROVED", approvedAt: new Date(), approvedBy: db.managerId! },
+      create: { tournamentId: sorteo.id, teamId: db.teamIdByName.get(teamName)!, status: "APPROVED", approvedAt: new Date(), approvedBy: db.managerId! },
+    });
+  }
+  // S06 v3.0: 7 reservas concretas (maxTeams-1), sábados 18:00 desde HOY
+  // (la primera cae en la ventana de 7 días de getBubble: azul instantáneo).
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(daysFromTodayUTC(0).getTime() + i * 7 * 24 * 60 * 60 * 1000);
+    await prisma.tournamentSlotReservation.upsert({
+      where: {
+        tournamentId_date_timeSlot: {
+          tournamentId: sorteo.id,
+          date: dateOnly(d),
+          timeSlot: 9,
+        },
+      },
+      update: {},
+      create: {
+        tournamentId: sorteo.id,
+        courtId: db.courtIdByName.get("Cancha La Villa")!,
+        date: dateOnly(d),
+        timeSlot: 9,
+      },
+    });
+  }
+  console.log("✅ ROJO instantáneo: test1/test2 (Alfa+Charlie en Inscripciones y Sorteo, franja 6/9)");
+
+  // Reservas de publicados (simulan publish): Inscripciones 7 sábados Malcasado.
+  if (inscrip) {
+    for (let i = 0; i < 7; i++) {
+      const d = dateOnly(new Date(daysFromTodayUTC(0).getTime() + i * 7 * 24 * 60 * 60 * 1000));
+      await prisma.tournamentSlotReservation.upsert({
+        where: { tournamentId_date_timeSlot: { tournamentId: inscrip.id, date: d, timeSlot: 9 } },
+        update: {},
+        create: { tournamentId: inscrip.id, courtId: db.courtIdByName.get("Cancha Malcasado")!, date: d, timeSlot: 9 },
+      });
+    }
+  }
+  // Privada 3 jueves El Sol (dayOfWeek 4, slot 8; próximo jueves desde hoy sábado = +5).
+  const priv = await ensureTournament({
+    name: "Copa Privada Gestor",
+    description: "Solo equipos invitados.",
+    status: "SCHEDULED",
+    format: "SINGLE_ELIMINATION",
+    type: "PRIVATE",
+    maxTeams: 4,
+    court: { connect: { id: db.courtIdByName.get("Cancha El Sol")! } },
+    manager: { connect: { id: db.managerId! } },
+    enrollmentDeadline: daysFromTodayUTC(6),
+    startDate: daysFromTodayUTC(9),
+    dayOfWeek: 4,
+    timeSlot: 8,
+  });
+  await prisma.tournamentTeamInvite.upsert({
+    where: { tournamentId_teamId: { tournamentId: priv.id, teamId: db.teamIdByName.get("Delta FC")! } },
+    update: { status: "PENDING" },
+    create: { tournamentId: priv.id, teamId: db.teamIdByName.get("Delta FC")!, invitedByUserId: gestorId, status: "PENDING" },
+  });
+  // Privada 3 jueves El Sol (dayOfWeek 4, slot 8; próximo jueves desde hoy sábado = +5).
+  for (let i = 0; i < 3; i++) {
+    const d = dateOnly(new Date(daysFromTodayUTC(5).getTime() + i * 7 * 24 * 60 * 60 * 1000));
+    await prisma.tournamentSlotReservation.upsert({
+      where: { tournamentId_date_timeSlot: { tournamentId: priv.id, date: d, timeSlot: 8 } },
+      update: {},
+      create: { tournamentId: priv.id, courtId: db.courtIdByName.get("Cancha El Sol")!, date: d, timeSlot: 8 },
+    });
+  }
+
+  // 6. Árbitros extra (valida assignReferee con opciones)
+  for (const name of ["Árbitra Nury", "Árbitro Sogamoso"]) {
+    const found = await prisma.referee.findFirst({ where: { name } });
+    if (!found) await prisma.referee.create({ data: { name } });
+  }
+
+  // Invite privado a Delta: notificación al capitán aunque la bandeja ya exista
+  const privInvite = await prisma.tournamentTeamInvite.findUnique({
+    where: { tournamentId_teamId: { tournamentId: priv.id, teamId: db.teamIdByName.get("Delta FC")! } },
+  });
+  if (privInvite) {
+    const exists = await prisma.notification.findFirst({
+      where: { userId: db.userIdByEmail.get("test13@test")!, type: "TOURNAMENT_PUBLISHED", title: "Torneo privado: te invitaron" },
+    });
+    if (!exists) {
+      await prisma.notification.create({
+        data: {
+          userId: db.userIdByEmail.get("test13@test")!,
+          family: "TOURNAMENT",
+          type: "TOURNAMENT_PUBLISHED",
+          title: "Torneo privado: te invitaron",
+          body: "Copa Privada Gestor invita a Delta FC. Revísala en Invitaciones.",
+          payload: { tournamentId: priv.id, teamId: db.teamIdByName.get("Delta FC")! },
+        },
+      });
+    }
+  }
+  if ((await prisma.notification.count()) === 0) {
+    const pendingId = db.tournamentIds.pending!;
+    const someMatch = await prisma.match.findFirst({ where: { tournamentId: pendingId } });
+    const N = async (userId: string, family: "TEAM" | "TOURNAMENT" | "MATCH" | "RECRUITMENT", type: "INVITATION_RECEIVED" | "ENROLLMENT_SUBMITTED" | "ENROLLMENT_APPROVED" | "MATCH_POSTPONED" | "TOURNAMENT_PUBLISHED" | "RECRUITMENT_REQUEST_SENT", title: string, body: string, payload: Record<string, string>) =>
+      prisma.notification.create({ data: { userId, family, type, title, body, payload } });
+    await N(db.userIdByEmail.get("test13@test")!, "TEAM", "INVITATION_RECEIVED", "Te invitaron a Delta FC", "El capitán te quiere en su equipo", { teamId: db.teamIdByName.get("Delta FC")! });
+    await N(gestorId, "TOURNAMENT", "ENROLLMENT_SUBMITTED", "Nueva inscripción", "Bravo FC se inscribió a Copa Test Inscripciones", { tournamentId: inscrip?.id ?? "", teamId: db.teamIdByName.get("Bravo FC")! });
+    await N(db.userIdByEmail.get("test1@test")!, "TOURNAMENT", "ENROLLMENT_APPROVED", "Inscripción aprobada", "Alfa FC está en Copa Test Inscripciones", { tournamentId: inscrip?.id ?? "", teamId: db.teamIdByName.get("Alfa FC")! });
+    if (someMatch) {
+      await N(db.userIdByEmail.get("test1@test")!, "MATCH", "MATCH_POSTPONED", "Partido aplazado", "Tu partido cambió de fecha", { matchId: someMatch.id, tournamentId: pendingId });
+    }
+    await N(db.userIdByEmail.get("test16@test")!, "TOURNAMENT", "TOURNAMENT_PUBLISHED", "Torneo publicado", "Copa Test Inscripciones abrió inscripciones", { tournamentId: inscrip?.id ?? "" });
+    await N(db.userIdByEmail.get("test5@test")!, "RECRUITMENT", "RECRUITMENT_REQUEST_SENT", "Te buscan para un equipo", "Un capitán te envió invitación", { teamId: db.teamIdByName.get("Bravo FC")! });
+    console.log("✅ Bandeja Fase 1: 6 notificaciones (6 tipos)");
+  }
+  console.log("✅ Fase 1: delegado test2 · Charlie PENDING_PAYMENT · Sorteo Alfa+Charlie · privada+invite Delta · slots ×2 · árbitros ×2");
+}
+async function seedFlujoTournament() {
+  // Copa Test Flujo (El Sol): 4 equipos con plantillas distintas, todos
+  // AVAILABLE en 6/9, APPROVED, sin fases. Flujo: sortear → SF1/SF2 → final →
+  // FINISHED auto + morados. Reservas azules desde hoy.
+  const captainRole = await prisma.role.findUnique({ where: { name: "captain" } });
+  const defs = [
+    { name: "Norte FC", abbr: "NRT", color: "#8B5CF6", members: [1, 2, 3, 4, 5, 6, 7], captain: 3 },
+    { name: "Sur FC", abbr: "SUR", color: "#EC4899", members: [8, 9, 10, 11, 12, 18], captain: 9 },
+    { name: "Este FC", abbr: "EST", color: "#14B8A6", members: [19, 20, 21, 22, 23, 24], captain: 20 },
+    { name: "Oeste FC", abbr: "OES", color: "#F97316", members: [25, 26, 27, 28, 29, 30], captain: 25 },
+  ];
+  for (const t of defs) {
+    const team = await prisma.team.upsert({
+      where: { name: t.name },
+      update: { status: "ACTIVE" },
+      create: {
+        name: t.name, abbreviation: t.abbr, primaryColor: t.color, status: "ACTIVE",
+        description: `Equipo de flujo. Capitán: test${t.captain}@test`,
+      },
+    });
+    db.teamIdByName.set(t.name, team.id);
+    for (const i of t.members) {
+      const playerId = db.playerIdByEmail.get(`test${i}@test`)!;
+      await prisma.teamMembership.upsert({
+        where: { playerId_teamId: { playerId, teamId: team.id } },
+        update: { leftAt: null, isCaptain: i === t.captain },
+        create: { teamId: team.id, playerId, isCaptain: i === t.captain },
+      });
+    }
+    if (captainRole) {
+      const profile = await prisma.profile.findUnique({ where: { userId: db.userIdByEmail.get(`test${t.captain}@test`)! } });
+      if (profile) {
+        await prisma.roleAssignment.upsert({
+          where: { profileId_roleId: { profileId: profile.id, roleId: captainRole.id } },
+          update: {},
+          create: { profileId: profile.id, roleId: captainRole.id },
+        });
+      }
+    }
+  }
+
+  const flujo = await ensureTournament({
+    name: "Copa Test Flujo",
+    description: "Flujo completo: sorteo → semifinales → final → FINISHED auto. El Sol.",
+    status: "SCHEDULED",
+    format: "SINGLE_ELIMINATION",
+    type: "PUBLIC",
+    maxTeams: 4,
+    court: { connect: { id: db.courtIdByName.get("Cancha El Sol")! } },
+    manager: { connect: { id: db.managerId! } },
+    enrollmentDeadline: daysFromTodayUTC(5),
+    startDate: daysFromTodayUTC(7),
+    dayOfWeek: 6,
+    timeSlot: 9,
+  });
+  for (const t of defs) {
+    await prisma.tournamentEnrollment.upsert({
+      where: { tournamentId_teamId: { tournamentId: flujo.id, teamId: db.teamIdByName.get(t.name)! } },
+      update: { status: "APPROVED", approvedAt: new Date(), approvedBy: db.managerId! },
+      create: { tournamentId: flujo.id, teamId: db.teamIdByName.get(t.name)!, status: "APPROVED", approvedAt: new Date(), approvedBy: db.managerId! },
+    });
+  }
+  for (let i = 0; i < 3; i++) {
+    const d = dateOnly(new Date(daysFromTodayUTC(0).getTime() + i * 7 * 24 * 60 * 60 * 1000));
+    await prisma.tournamentSlotReservation.upsert({
+      where: { tournamentId_date_timeSlot: { tournamentId: flujo.id, date: d, timeSlot: 9 } },
+      update: {},
+      create: { tournamentId: flujo.id, courtId: db.courtIdByName.get("Cancha El Sol")!, date: d, timeSlot: 9 },
+    });
+  }
+  console.log("✅ Copa Test Flujo: 4 equipos APPROVED · 3 reservas El Sol · sin fases (lista para sortear)");
+}
+async function main() {
   console.log("🌱 Iniciando seed...\n");
   const perms = await seedPermissions();
   await seedRoles();
@@ -549,6 +811,8 @@ async function seedFinishedTournament() {
   await seedAggregatedStats();
   await seedMatchScreenScenarios();
   await seedInscriptionsTournament();
+  await seedFase1();
+  await seedFlujoTournament();
 
   const [users, matches, results, standings] = await Promise.all([
     prisma.user.count(), prisma.match.count(), prisma.matchResult.count(), prisma.tournamentStanding.count(),
@@ -615,16 +879,13 @@ async function seedInscriptionsTournament() {
     format: "SINGLE_ELIMINATION",
     type: "PUBLIC",
     maxTeams: 8,
-    court: { connect: { id: db.courtIdByName.get("Cancha Malcasado")! } }, // cancha aún sin usar
+    court: { connect: { id: db.courtIdByName.get("Cancha Malcasado")! } },
     manager: { connect: { id: db.managerId! } },
     enrollmentDeadline: daysFromTodayUTC(5),
     startDate: daysFromTodayUTC(7),
     dayOfWeek: 6,
     timeSlot: 9,
   });
-
-  const semis = await ensurePhase(tournament.id, "Semifinales", 1);
-  const finalPhase = await ensurePhase(tournament.id, "Final", 2);
 
   // Inscripciones mixtas: Alfa aprobado · Bravo con disponibilidad pendiente (prueba Reevaluar)
   await ensureEnrollment(tournament.id, db.teamIdByName.get("Alfa FC")!, adminId);
@@ -634,25 +895,11 @@ async function seedInscriptionsTournament() {
     update: { status: "PENDING_AVAILABILITY", availabilityNote: bravoNote },
     create: { tournamentId: tournament.id, teamId: db.teamIdByName.get("Bravo FC")!, status: "PENDING_AVAILABILITY", availabilityNote: bravoNote },
   });
-  // Charlie y Delta SIN inscribir → sus capitanes ven el estado B
+  // Charlie PENDING_PAYMENT + Delta sin inscribir (sus capitanes prueban CTA/reenrollment)
 
-  const already = await prisma.match.count({ where: { tournamentId: tournament.id } });
-  if (already === 0) {
-    // SF1: Alfa vs PorDefinir (con fecha) · SF2: TBD vs TBD (sin fecha → "Por agendar") · Final: TBD
-    const sfDate = futureMatchDate(7);
-    await prisma.match.create({
-      data: { tournamentId: tournament.id, phaseId: semis.id, homeTeamId: db.teamIdByName.get("Alfa FC")!, awayTeamId: null, courtId: tournament.courtId, scheduledAt: sfDate, date: dateOnly(sfDate), timeSlot: 9, status: "SCHEDULED" },
-    });
-    await prisma.match.create({
-      data: { tournamentId: tournament.id, phaseId: semis.id, homeTeamId: null, awayTeamId: null, courtId: tournament.courtId, scheduledAt: null, date: null, timeSlot: null, status: "SCHEDULED" },
-    });
-    const finalDate = futureMatchDate(14);
-    await prisma.match.create({
-      data: { tournamentId: tournament.id, phaseId: finalPhase.id, homeTeamId: null, awayTeamId: null, courtId: tournament.courtId, scheduledAt: finalDate, date: dateOnly(finalDate), timeSlot: 9, status: "SCHEDULED" },
-    });
-  }
-
-  console.log("✅ Copa Test Inscripciones: SCHEDULED · Alfa APPROVED · Bravo PENDING_AVAILABILITY · bracket 3 partidos (2 TBD)");
+  // Sin bracket previo: las fases/matches fantasma corrompían closeAndDraw
+  // y el partido (TBDs). El sorteo QA vive en Copa Test Sorteo.
+  console.log("✅ Copa Test Inscripciones: SCHEDULED · Alfa APPROVED · Bravo PENDING_AVAILABILITY · Charlie PENDING_PAYMENT · sin bracket");
 
   
 }

@@ -2,6 +2,7 @@
 import type { PrismaClient } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { notificationEngine } from "../notification/notification.engine";
+import { absenceEngine } from "torneos/server/core/tournament/absence.engine";
 
 export const enrollmentEngine = {
   async enroll(prisma: PrismaClient, input: { tournamentId: string; teamId: string }, userId: string) {
@@ -30,6 +31,18 @@ export const enrollmentEngine = {
       },
     });
     if (!tournament) throw new TRPCError({ code: "NOT_FOUND", message: "Torneo no disponible" });
+
+    // E6-cierre: PRIVATE exige invitación aceptada (el front no la ofrece sin ella,
+    // pero el engine no confía). Aplica a hold (slotHold.engine) y enroll (aquí).
+    if (tournament.type === "PRIVATE") {
+      const invite = await prisma.tournamentTeamInvite.findFirst({
+        where: { tournamentId: input.tournamentId, teamId: input.teamId, status: "ACCEPTED" },
+        select: { id: true },
+      });
+      if (!invite) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Torneo privado: tu equipo necesita invitación aceptada" });
+      }
+    }
 
     const occupiedSlots = tournament._count.enrollments + tournament._count.slotHolds;
     if (occupiedSlots >= tournament.maxTeams) {
@@ -73,7 +86,13 @@ export const enrollmentEngine = {
       },
     });
 
-    const availableCount = teamMembers.filter(tm => tm.player.availabilities.length > 0).length;
+    // S02 §8 / S06 §6: los auto-ausentes del torneo no cuentan (ni a favor).
+    const absences = await prisma.tournamentAbsence.findMany({
+      where: { tournamentId: input.tournamentId, playerId: { in: teamMembers.map((tm) => tm.playerId) } },
+      select: { playerId: true },
+    });
+    const absentSet = new Set(absences.map((a) => a.playerId));
+    const availableCount = teamMembers.filter(tm => !absentSet.has(tm.playerId) && tm.player.availabilities.length > 0).length;
     const newStatus = availableCount >= 5 ? "PENDING_PAYMENT" : "PENDING_AVAILABILITY";
     const availabilityNote = availableCount >= 5 
       ? null 
@@ -116,6 +135,34 @@ export const enrollmentEngine = {
       return upserted;
     });
 
+    // Rojo de inscripción FUERA de la tx (el detect cuesta ~45 round-trips y
+    // revienta el timeout de 5s): la inscripción queda atómica, el aviso es
+    // best-effort. Si un equipo cruza a otro torneo en la franja, se avisa a
+    // los afectados (elige cancha) sin bloquear nada.
+    try {
+      const hard = await absenceEngine.teamHardConflicts(
+        prisma, input.teamId, tournament.dayOfWeek, tournament.timeSlot,
+      );
+      for (const h of hard) {
+        const names = h.otherTournaments.map((o) => o.name).join(" vs ");
+        await notificationEngine.create(prisma, {
+          userId: h.userId,
+          family: "TOURNAMENT",
+          type: "TOURNAMENT_CONFLICT",
+          title: `Conflicto en ${tournament.name}: elige cancha`,
+          body: `Tienes ${h.otherTournaments.length} torneos en la misma franja (${names}). Márcate ausente en uno para quitar el rojo.`,
+          payload: {
+            tournamentId: input.tournamentId,
+            teamId: input.teamId,
+            dayOfWeek: tournament.dayOfWeek,
+            timeSlot: tournament.timeSlot,
+          },
+        });
+      }
+    } catch (e) {
+      console.error("Aviso de rojo post-inscripción falló (no bloqueante):", e);
+    }
+
     return enrollment;
   },
 
@@ -137,7 +184,9 @@ export const enrollmentEngine = {
     });
 
     if (!enrollment) throw new TRPCError({ code: "NOT_FOUND", message: "Inscripción no encontrada" });
-    if (enrollment.status !== "PENDING_PAYMENT") throw new TRPCError({ code: "BAD_REQUEST", message: "La inscripción no está pendiente de pago" });
+    // S06 v2.0 (no-bloqueo): se aprueba desde PENDING_PAYMENT o PENDING_AVAILABILITY.
+    // La disponibilidad informa, jamás bloquea: equipo pagado compite.
+    if (enrollment.status !== "PENDING_PAYMENT" && enrollment.status !== "PENDING_AVAILABILITY") throw new TRPCError({ code: "BAD_REQUEST", message: "La inscripción no está pendiente" });
     if (enrollment.tournament.managerId !== managerId) throw new TRPCError({ code: "FORBIDDEN", message: "No eres el gestor de este torneo" });
 
     return prisma.$transaction(async (tx) => {
@@ -270,7 +319,7 @@ export const enrollmentEngine = {
     });
     if (!membership) throw new TRPCError({ code: "FORBIDDEN", message: "Solo el capitán puede reevaluar la inscripción" });
 
-    // 2. Contar disponibles (Misma lógica que en enroll)
+    // 2. Contar disponibles (Misma lógica que en enroll + exclusión auto-ausentes)
     const teamMembers = await prisma.teamMembership.findMany({
       where: { teamId: enrollment.teamId, leftAt: null },
       include: {
@@ -288,7 +337,12 @@ export const enrollmentEngine = {
       },
     });
 
-    const availableCount = teamMembers.filter(tm => tm.player.availabilities.length > 0).length;
+    const absences = await prisma.tournamentAbsence.findMany({
+      where: { tournamentId: enrollment.tournamentId, playerId: { in: teamMembers.map((tm) => tm.playerId) } },
+      select: { playerId: true },
+    });
+    const absentSet = new Set(absences.map((a) => a.playerId));
+    const availableCount = teamMembers.filter(tm => !absentSet.has(tm.playerId) && tm.player.availabilities.length > 0).length;
 
     // 3. Si ya cumplen los 5, pasar a PENDING_PAYMENT y notificar al gestor
     if (availableCount >= 5) {

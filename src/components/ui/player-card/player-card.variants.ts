@@ -1,12 +1,12 @@
 import { cva, type VariantProps } from "class-variance-authority";
 
 export const playerCardVariants = cva(
-  "bg-gray-100 rounded-2xl p-4 flex items-center gap-4 transition-all duration-200",
+  "flex items-center gap-4 rounded-2xl border bg-cypher-5-1 p-4 transition-colors duration-200",
   {
     variants: {
       status: {
-        default: "bg-gray-100",
-        saturated: "bg-red-50 border border-red-200", // Si el jugador está saturado
+        default: "border-cypher-5-1-1/60",
+        saturated: "border-red-400/40 bg-red-400/10", // Si el jugador está saturado
       },
     },
     defaultVariants: {

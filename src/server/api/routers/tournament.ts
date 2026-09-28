@@ -8,6 +8,8 @@ import {
 import type { TournamentStatus } from "@prisma/client";
 import { tournamentEngine } from "torneos/server/core/tournament/tournament.engine";
 import { slotHoldEngine } from "torneos/server/core/tournament/slotHold.engine";
+import { absenceEngine } from "torneos/server/core/tournament/absence.engine";
+import { delegationEngine } from "torneos/server/core/delegation/delegation.engine";
 
 export const tournamentRouter = createTRPCRouter({
   // ─── Vitrina anónima (publicProcedure, solo lecturas) ───
@@ -93,6 +95,35 @@ export const tournamentRouter = createTRPCRouter({
     .input(z.object({ courtId: z.string().optional() }).optional())
     .query(async ({ ctx, input }) => {
       return tournamentEngine.listMine(ctx.db, ctx.session.user.id, input?.courtId);
+    }),
+
+  // ─── Rojo por equipo (gestor o secretario con cualquier llave) ───
+  getEnrollmentConflicts: protectedProcedure
+    .input(z.object({ tournamentId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const { tournament } = await delegationEngine.getTournamentForManagerAction(
+        ctx.db, input.tournamentId, ctx.session.user.id,
+      );
+      const enrollments = await ctx.db.tournamentEnrollment.findMany({
+        where: {
+          tournamentId: input.tournamentId,
+          status: { in: ["PENDING_AVAILABILITY", "PENDING_PAYMENT", "APPROVED"] },
+        },
+        select: { teamId: true, team: { select: { name: true } } },
+      });
+      const out: { teamId: string; teamName: string; hardCount: number; hardNames: string[] }[] = [];
+      for (const e of enrollments) {
+        const hard = await absenceEngine.teamHardConflicts(ctx.db, e.teamId, tournament.dayOfWeek, tournament.timeSlot);
+        if (hard.length > 0) {
+          out.push({
+            teamId: e.teamId,
+            teamName: e.team.name,
+            hardCount: hard.length,
+            hardNames: hard.map((h) => h.displayName ?? "Jugador"),
+          });
+        }
+      }
+      return out;
     }),
 
   // ─── Sala de Cine (Capitán) ───

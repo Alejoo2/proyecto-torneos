@@ -236,20 +236,28 @@ export const courtEngine = {
       where: { date: { lt: today } }
     });
 
-    // 2. Generar día 15 para canchas habilitadas
+    // 2. Generar día 15 para canchas habilitadas (respetando reservas:
+    //    una franja apartada nace UNAVAILABLE para que nadie la escoja).
     const enabledCourts = await prisma.court.findMany({ 
       where: { status: "ENABLED" }, 
       select: { id: true } 
     });
 
+    const dayReservations = await prisma.tournamentSlotReservation.findMany({
+      where: { date: day15 },
+      select: { courtId: true, timeSlot: true },
+    });
+    const reservedSet = new Set(dayReservations.map((r) => `${r.courtId}|${r.timeSlot}`));
+
     const newSlots = [];
     for (const court of enabledCourts) {
       for (let slot = 0; slot < 12; slot++) {
+        const reserved = reservedSet.has(`${court.id}|${slot}`);
         newSlots.push({
           courtId: court.id,
           date: day15,
           timeSlot: slot,
-          status: "AVAILABLE" as const,
+          status: reserved ? ("UNAVAILABLE" as const) : ("AVAILABLE" as const),
         });
       }
     }

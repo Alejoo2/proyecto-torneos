@@ -31,6 +31,9 @@ const zeroStats = (): ResultStats => ({
   goals: 0, blueCards: 0, yellowCards: 0, redCards: 0, fouls: 0, ownGoals: 0,
 });
 const clamp = (v: number) => Math.min(99, Math.max(0, Number.isFinite(v) ? v : 0));
+// UI-AUDIT-02: el scroll programado respeta reduced-motion del SO.
+const prefersReducedMotion = () =>
+  typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 interface ResultWizardProps {
   matchId: string;
@@ -121,7 +124,7 @@ function PlayerStatPanel({
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    ref.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    ref.current?.scrollIntoView({ block: "nearest", behavior: prefersReducedMotion() ? "auto" : "smooth" });
   }, []);
 
   const name = callUp.player.profile.displayName ?? "Jugador";
@@ -337,7 +340,7 @@ export function ResultWizard({
   // La confirmación inline vive al final del formulario: llevarla a la vista
   useEffect(() => {
     if (saveConfirmOpen) {
-      saveConfirmRef.current?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      saveConfirmRef.current?.scrollIntoView({ block: "nearest", behavior: prefersReducedMotion() ? "auto" : "smooth" });
     }
   }, [saveConfirmOpen]);
 
@@ -397,6 +400,7 @@ export function ResultWizard({
         entries.map((e) => (
           <span
             key={e.key}
+            title={e.label}
             className="max-w-[150px] truncate rounded-full bg-cypher-5-1-1 px-2 py-0.5 text-[9px] text-cypher-4-2"
           >
             {e.label}
@@ -490,9 +494,16 @@ export function ResultWizard({
               Cargar estadísticas →
             </Button>
           ) : (
-            <Button className="mt-4 w-full" size="lg" disabled={isPending} onClick={() => setConfirmScoreOpen(true)}>
-              Confirmar resultado
-            </Button>
+            <>
+              {score.home === score.away && (
+                <p className="mt-3 text-center text-xs text-cypher-4-2-2">
+                  Sin empates: se define por penales — los goles deben diferir.
+                </p>
+              )}
+              <Button className="mt-4 w-full" size="lg" disabled={isPending || score.home === score.away} onClick={() => setConfirmScoreOpen(true)}>
+                Confirmar resultado
+              </Button>
+            </>
           )}
         </>
       ) : (

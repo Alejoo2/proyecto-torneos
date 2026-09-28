@@ -1,11 +1,12 @@
-import { DAY_LABELS, SLOT_LABELS } from "torneos/domain/schedule/labels";
+import { DAY_LABELS, SLOT_GRID_HEADERS } from "torneos/domain/schedule/labels";
 import { cellVariants } from "./availability-matrix.variants";
+import { SlotGrid } from "./slot-grid";
 
 interface AvailabilityMatrixProps {
   slots: {
     dayOfWeek: number;
     timeSlot: number;
-    status: "AVAILABLE" | "UNAVAILABLE" | "CONFLICT";
+    status: "AVAILABLE" | "UNAVAILABLE" | "CONFLICT" | "SUGGESTED" | "HARD_CONFLICT";
   }[];
   onToggleSlot?: (dayOfWeek: number, timeSlot: number) => void;
 }
@@ -18,41 +19,35 @@ export function AvailabilityMatrix({ slots, onToggleSlot }: AvailabilityMatrixPr
     const found = slots.find((s) => s.dayOfWeek === day && s.timeSlot === slot);
     return found?.status ?? "UNAVAILABLE";
   };
+  // Regla amarilla: lo SUGERIDO se puede tocar (pasar a verde); el ROJO jamás.
+  const isLocked = (status: string) => status === "HARD_CONFLICT" || status === "CONFLICT";
 
   return (
     <div className="w-full overflow-x-auto pb-4">
-      <div className="min-w-[600px]">
-        <div className="grid grid-cols-[60px_repeat(7,1fr)] gap-1 mb-2">
-          <div />
-          {DISPLAY_ORDER.map((dayIndex) => (
-            <div key={dayIndex} className="text-center text-xs font-bold uppercase text-cypher-4-2-2">
-              {DAY_LABELS[dayIndex].slice(0, 3)}
-            </div>
-          ))}
-        </div>
-
-        <div className="flex flex-col gap-1">
-          {SLOT_LABELS.map((hour, slotIndex) => (
-            <div key={slotIndex} className="grid grid-cols-[60px_repeat(7,1fr)] gap-1 items-center">
-              <div className="text-right text-xs text-cypher-4-2-2 pr-2 tabular-nums">{hour}</div>
-              {DISPLAY_ORDER.map((dayIndex) => {
-                const status = getSlotStatus(dayIndex, slotIndex);
-                return (
-                  <button
-                    key={dayIndex}
-                    type="button"
-                    className={cellVariants({ status })}
-                    disabled={status === "CONFLICT"}
-                    onClick={() => onToggleSlot?.(dayIndex, slotIndex)}
-                    aria-pressed={status === "AVAILABLE"}
-                    aria-label={`${status === "AVAILABLE" ? "Quitar" : "Marcar"} disponibilidad: ${DAY_LABELS[dayIndex]}, ${hour}`}
-                  />
-                );
-              })}
-            </div>
-          ))}
-        </div>
-      </div>
+        <SlotGrid
+          columns={[...SLOT_GRID_HEADERS]}
+          rows={DISPLAY_ORDER.map((dayIndex) => ({
+            key: String(dayIndex),
+            label: DAY_LABELS[dayIndex]?.slice(0, 3) ?? "",
+            cells: Array.from({ length: 12 }, (_, slotIndex) => {
+              const status = getSlotStatus(dayIndex, slotIndex);
+              const locked = isLocked(status);
+              return (
+                <button
+                  key={slotIndex}
+                  type="button"
+                  className={cellVariants({ status })}
+                  disabled={locked}
+                  onClick={() => {
+                    if (!locked) onToggleSlot?.(dayIndex, slotIndex);
+                  }}
+                  aria-pressed={status === "AVAILABLE"}
+                  aria-label={`${status === "AVAILABLE" ? "Quitar" : "Marcar"} disponibilidad: ${DAY_LABELS[dayIndex]}, ${SLOT_GRID_HEADERS[slotIndex]}`}
+                />
+              );
+            }),
+          }))}
+        />
     </div>
   );
 }

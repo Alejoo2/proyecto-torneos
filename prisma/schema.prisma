@@ -153,6 +153,7 @@ model Player {
   matchCallUps MatchCallUp[]
   matchStats   MatchPlayerStat[]
   stats        PlayerStats?
+  absences     TournamentAbsence[]
 }
 
 model PlayerAvailability {
@@ -196,9 +197,25 @@ model ManagerDelegate {
 
   manager Manager @relation(fields: [managerId], references: [id], onDelete: Cascade)
   profile Profile @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  permissions ManagerDelegatePermission[]
 
   @@unique([managerId, profileId])
   @@index([profileId])
+}
+
+// Delegación v2: el secretario recibe un SUBSET de permisos del gestor
+// (llaves de la casa: cocina vs casa entera). Texto descriptivo en
+// src/domain/delegation/permissions.ts. Sin timers.
+model ManagerDelegatePermission {
+  id         String   @id @default(cuid())
+  delegateId String
+  permission String
+  createdAt  DateTime @default(now())
+
+  delegate ManagerDelegate @relation(fields: [delegateId], references: [id], onDelete: Cascade)
+
+  @@unique([delegateId, permission])
+  @@index([delegateId])
 }
 
 model Team {
@@ -217,6 +234,8 @@ model Team {
   invitations        TeamInvitation[]
   captaincyTransfers CaptaincyTransfer[]
   enrollments        TournamentEnrollment[]
+  suggestedSlots     TeamSuggestedSlot[]
+  absences           TournamentAbsence[]
 
   homeMatches         Match[]              @relation("HomeMatches")
   awayMatches         Match[]              @relation("AwayMatches")
@@ -302,6 +321,22 @@ enum CaptaincyTransferStatus {
   REJECTED
 }
 
+// S02 §7 / S03 §7: horario sugerido por el capitán (amarillo, solo lectura
+// para el jugador). Sin timers, sin bloqueos.
+model TeamSuggestedSlot {
+  id          String   @id @default(cuid())
+  teamId      String
+  dayOfWeek   Int
+  timeSlot    Int
+  suggestedBy String?
+  createdAt   DateTime @default(now())
+
+  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, dayOfWeek, timeSlot])
+  @@index([teamId])
+}
+
 model TeamDeletionRequest {
   id          String         @id @default(cuid())
   teamId      String         @unique
@@ -353,6 +388,7 @@ model Court {
   availability CourtAvailability[]
   tournaments  Tournament[]
   matches      Match[]
+  reservations TournamentSlotReservation[]
 }
 
 enum CourtStatus {
@@ -408,6 +444,8 @@ model Tournament {
   standings   TournamentStanding[]
   slots       TournamentSlot[]
   teamInvites TournamentTeamInvite[]
+  reservations TournamentSlotReservation[]
+  absences     TournamentAbsence[]
 
   @@index([status, enrollmentDeadline])
   @@index([courtId, status])
@@ -453,6 +491,25 @@ model TournamentEnrollment {
   @@unique([tournamentId, teamId])
   @@index([tournamentId, status])
   @@index([teamId, status])
+}
+
+// S02 §8 / S06 §6: auto-ausencia del jugador para UN torneo (resuelve su rojo).
+// Potestad exclusiva del jugador; Factor 1 la excluye. Distinta del markAbsent
+// del capitán (convocatoria puntual).
+model TournamentAbsence {
+  id           String   @id @default(cuid())
+  playerId     String
+  tournamentId String
+  teamId       String?
+  reason       String?  @db.Text
+  createdAt    DateTime @default(now())
+
+  player     Player     @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  team       Team?      @relation(fields: [teamId], references: [id], onDelete: SetNull)
+
+  @@unique([playerId, tournamentId])
+  @@index([tournamentId])
 }
 
 enum EnrollmentStatus {
@@ -504,6 +561,23 @@ model TournamentSlot {
 
   @@unique([tournamentId, dayOfWeek, timeSlot])
   @@index([tournamentId])
+}
+
+// S06 v3.0: reservas concretas (fecha+slot) apartadas al publicar:
+// maxTeams-1 franjas. Liberación = delete + notify (S11).
+model TournamentSlotReservation {
+  id           String   @id @default(cuid())
+  tournamentId String
+  courtId      String
+  date         DateTime @db.Date
+  timeSlot     Int
+  createdAt    DateTime @default(now())
+
+  tournament Tournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  court      Court      @relation(fields: [courtId], references: [id], onDelete: Restrict)
+
+  @@unique([tournamentId, date, timeSlot])
+  @@index([courtId, date, timeSlot])
 }
 
 
@@ -743,9 +817,11 @@ enum NotificationType {
   // Tournament
   TOURNAMENT_PUBLISHED
   ENROLLMENT_SUBMITTED
+  TOURNAMENT_CONFLICT
   ENROLLMENT_APPROVED
   ENROLLMENT_REJECTED
   TOURNAMENT_CLOSED_AND_DRAWN
+  TOURNAMENT_FINISHED
   // Match
   MATCH_SCHEDULED
   MATCH_POSTPONED

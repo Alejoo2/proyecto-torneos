@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { Prisma, type PrismaClient } from "@prisma/client";
+import { isDelegable, DELEGABLE_CODES } from "torneos/domain/delegation/permissions";
 
 type PrismaDb = PrismaClient | Prisma.TransactionClient;
 
@@ -48,6 +49,7 @@ export const delegationEngine = {
         profileId: true,
         createdAt: true,
         profile: { select: { displayName: true, user: { select: { email: true } } } },
+        permissions: { select: { permission: true } },
       },
     });
   },
@@ -60,7 +62,7 @@ export const delegationEngine = {
       where: { id: input.managerId },
       select: { id: true, profileId: true, isActive: true },
     });
-    if (!manager || !manager.isActive) {
+    if (!manager?.isActive) {
       throw new TRPCError({ code: "FORBIDDEN", message: "Gestor inexistente o inactivo" });
     }
     if (manager.profileId === input.profileId) {
@@ -99,6 +101,67 @@ export const delegationEngine = {
     return { ok: true };
   },
 
+  /** Delegación v2: el gestor otorga un SUBSET de permisos (llaves de la casa).
+   *  Reemplazo total del set, siempre acotado a sus propios delegados. */
+  async setPermissions(
+    db: PrismaDb,
+    input: { managerId: string; delegateId: string; permissions: string[] }
+  ) {
+    const delegate = await db.managerDelegate.findFirst({
+      where: { id: input.delegateId, managerId: input.managerId },
+      select: { id: true },
+    });
+    if (!delegate) {
+      throw new TRPCError({ code: "NOT_FOUND", message: "Delegación no encontrada" });
+    }
+    const clean = [...new Set(input.permissions)].filter((p) => isDelegable(p));
+    if (clean.length !== [...new Set(input.permissions)].length) {
+      throw new TRPCError({ code: "BAD_REQUEST", message: "Permiso no delegable" });
+    }
+    await db.managerDelegatePermission.deleteMany({ where: { delegateId: delegate.id } });
+    if (clean.length > 0) {
+      await db.managerDelegatePermission.createMany({
+        data: clean.map((permission) => ({ delegateId: delegate.id, permission })),
+        skipDuplicates: true,
+      });
+    }
+    return { ok: true, permissions: clean };
+  },
+
+  /** ¿userId actúa sobre este torneo como gestor dueño o secretario con `required`?
+   *  La casa se valida por tournament.managerId; el actor, por ownership o llave. */
+  async getTournamentForManagerAction(
+    db: PrismaDb,
+    tournamentId: string,
+    userId: string,
+    required?: string
+  ) {
+    const tournament = await db.tournament.findUnique({
+      where: { id: tournamentId },
+      include: { manager: { include: { profile: { select: { userId: true } } } } },
+    });
+    if (!tournament) throw new TRPCError({ code: "NOT_FOUND", message: "Torneo no encontrado" });
+    if (tournament.manager.profile.userId === userId) {
+      return { tournament, managerId: tournament.managerId, via: "manager" as const };
+    }
+    const delegation = await db.managerDelegate.findFirst({
+      where: { managerId: tournament.managerId, profile: { userId } },
+      select: { id: true },
+    });
+    if (!delegation) {
+      throw new TRPCError({ code: "FORBIDDEN", message: "No eres el gestor de este torneo" });
+    }
+    if (required) {
+      const grant = await db.managerDelegatePermission.findFirst({
+        where: { delegateId: delegation.id, permission: required },
+        select: { id: true },
+      });
+      if (!grant) {
+        throw new TRPCError({ code: "FORBIDDEN", message: "Tu secretaría no incluye este permiso" });
+      }
+    }
+    return { tournament, managerId: tournament.managerId, via: "delegate" as const };
+  },
   /** Superficie del secretario: sus gestores + los torneos de cada uno. */
   async listAssignmentsForProfile(db: PrismaDb, userId: string) {
     const profile = await db.profile.findUnique({
@@ -143,5 +206,24 @@ export const delegationEngine = {
       },
       tournaments: d.manager.tournaments,
     }));
+  },
+
+  /** Poderes del usuario sobre un torneo (para UI por permiso, no por rol).
+   *  Nunca lanza: sin vínculo devuelve set vacío. El dueño recibe el pack total. */
+  async myPowers(db: PrismaDb, tournamentId: string, userId: string) {
+    const tournament = await db.tournament.findUnique({
+      where: { id: tournamentId },
+      select: { managerId: true, manager: { select: { profile: { select: { userId: true } } } } },
+    });
+    if (!tournament) return { isOwner: false, permissions: [] as string[] };
+    if (tournament.manager.profile.userId === userId) {
+      return { isOwner: true, permissions: DELEGABLE_CODES };
+    }
+    const delegation = await db.managerDelegate.findFirst({
+      where: { managerId: tournament.managerId, profile: { userId } },
+      select: { id: true, permissions: { select: { permission: true } } },
+    });
+    if (!delegation) return { isOwner: false, permissions: [] as string[] };
+    return { isOwner: false, permissions: delegation.permissions.map((p) => p.permission) };
   },
 };

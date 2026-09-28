@@ -11,10 +11,10 @@ import { ConfirmModal } from "torneos/components/ui/confirm-modal/confirm-modal"
 import { EmptyState } from "torneos/components/ui/empty-state";
 import { LoadingSkeleton } from "torneos/components/ui/loading-skeleton";
 import { CourtAvailabilityGrid } from "torneos/components/ui/court-availability-grid/court-availability-grid";
-import { CreateTournamentModal } from "torneos/components/ui/tournament/create-tournament-modal";
+
 import { dayLabel, slotLabel } from "torneos/domain/schedule/labels";
 import { COURT_STATUS_LABEL, TOURNAMENT_STATUS_LABEL } from "torneos/domain/status-labels";
-import { CreateTournamentModal } from "torneos/components/ui/tournament/create-tournament-modal";
+
 
 // W5 — Detalle público de cancha (destino del CTA "Ver Detalle" del hub).
 // Jerarquía del mini-spec: CourtHero → Disponibilidad 7 días (matriz getBubble) →
@@ -43,23 +43,28 @@ export function CourtDetailTemplate({ courtId, isLoggedIn }: CourtDetailTemplate
   const [publishError, setPublishError] = useState<string | null>(null);  const [confirmingPublishId, setConfirmingPublishId] = useState<string | null>(null);
   const utils = api.useUtils();
 
-  // Read-model único del header + matriz (público, sirve a anónimos y logueados)
-  const { data: court } = api.court.getBubble.useQuery({ courtId });
+  // Read-model único del header + matriz (público, sirve a anónimos y logueados).
+  // Burbuja/matriz 7 días: 2 min fresca (aplazar/reprogramar la mueven) + sin refetch al enfocar.
+  const { data: court } = api.court.getBubble.useQuery(
+    { courtId },
+    { staleTime: 2 * 60_000, refetchOnWindowFocus: false },
+  );
 
   const { data: publicTournaments, isLoading: isLoadingPublic } = api.tournament.listByCourtPublic.useQuery(
     { courtId },
-    { enabled: !isLoggedIn },
+    { enabled: !isLoggedIn, refetchOnWindowFocus: false },
   );
 
   const { data: managerTournaments, isLoading: isLoadingManager } = api.tournament.listByCourt.useQuery(
     { courtId },
-    { enabled: isLoggedIn, retry: false },
+    { enabled: isLoggedIn, retry: false, refetchOnWindowFocus: false },
   );
 
   // Perfil de gestor SOLO con sesión (evita 401-spam para anónimos)
   const { data: myManagerProfile } = api.admin.getMyManagerProfile.useQuery(undefined, {
     enabled: isLoggedIn,
     retry: false,
+    refetchOnWindowFocus: false,
   });
 
   const tournaments = isLoggedIn ? managerTournaments : publicTournaments;
@@ -87,6 +92,8 @@ export function CourtDetailTemplate({ courtId, isLoggedIn }: CourtDetailTemplate
     },
     onSettled: () => {
       void utils.tournament.listByCourt.invalidate({ courtId });
+      // Publicar reserva franjas: la matriz las pinta azules al instante.
+      void utils.court.getBubble.invalidate({ courtId });
     },
   });
 
@@ -163,8 +170,7 @@ export function CourtDetailTemplate({ courtId, isLoggedIn }: CourtDetailTemplate
         ) : tournaments && tournaments.length > 0 ? (
           <div className="space-y-3">
             {tournaments.map((t) => {
-              const statusMeta =
-                TOURNAMENT_STATUS_LABEL[t.status] ?? { label: t.status, variant: "neutral" as const };
+              const statusLabel = TOURNAMENT_STATUS_LABEL[t.status] ?? t.status;
               const approved = "_count" in t && t._count ? t._count.enrollments : 0;
               return (
                 <div key={t.id} className="rounded-2xl border border-cypher-4/10 bg-cypher-5-1 p-4">
@@ -172,7 +178,7 @@ export function CourtDetailTemplate({ courtId, isLoggedIn }: CourtDetailTemplate
                     <Link href={`/torneos/${t.id}`} className="min-w-0 flex-1">
                       <h3 className="truncate font-semibold text-cypher-4 hover:underline">{t.name}</h3>
                     </Link>
-                    <Badge variant={statusMeta.variant} status={statusMeta.label} />
+                    <Badge variant="neutral" status={statusLabel} />
                   </div>
 
                   <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-cypher-4-2-2">

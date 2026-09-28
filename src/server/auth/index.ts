@@ -18,10 +18,14 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         if (!playerRole) return;
 
         await db.$transaction(async (tx) => {
+          // S02 v2.0 (onboarding eliminado): registro = todo en una tx.
+          // Matriz VACÍA (todo UNAVAILABLE: el usuario habilita lo suyo) +
+          // onboarded:true (sin gate para nacimientos nuevos).
           const profile = await tx.profile.create({
             data: {
               userId,
               displayName: user.name ?? "Jugador Anónimo",
+              onboarded: true,
             },
           });
 
@@ -29,7 +33,7 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             Array.from({ length: 12 }, (_, slot) => ({
               dayOfWeek: day,
               timeSlot: slot,
-              status: "AVAILABLE" as const,
+              status: "UNAVAILABLE" as const,
             }))
           ).flat();
 

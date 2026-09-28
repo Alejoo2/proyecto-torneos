@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { ChevronDown, ChevronUp, History, UserPlus } from "lucide-react";
@@ -45,16 +45,40 @@ export function ProfileView() {
   const { mutate: toggleSlot } = useToggleSlot();
   const { mutate: updateProfile } = useUpdateProfile();
 
-  const myStatsQuery = api.stats.getMyStats.useQuery(undefined, { retry: false });
-  const teamsQuery = api.team.getMyTeams.useQuery(undefined, { retry: false });
-  const historyQuery = api.stats.getMyMatchHistory.useQuery(undefined, { retry: false });
+  // S02 v2.0: matriz fusionada (verde/gris + amarillo + rojo), toggle inmediato
+  // como antes (sin espera). Lo trazado no dispara toggle (bloqueado en UI).
+  // El toggle invalida (use-profile): 10 min fresca + sin refetch al enfocar.
+  const matrixQuery = api.availability.getMatrix.useQuery(
+    undefined,
+    { retry: false, staleTime: 10 * 60_000, refetchOnWindowFocus: false },
+  );
+
+  const myStatsQuery = api.stats.getMyStats.useQuery(
+    undefined,
+    { retry: false, staleTime: 5 * 60_000, refetchOnWindowFocus: false },
+  );
+  const teamsQuery = api.team.getMyTeams.useQuery(
+    undefined,
+    { retry: false, staleTime: 5 * 60_000, refetchOnWindowFocus: false },
+  );
+  const historyQuery = api.stats.getMyMatchHistory.useQuery(
+    undefined,
+    { retry: false, staleTime: 5 * 60_000, refetchOnWindowFocus: false },
+  );
 
   // W11 — E4: casa del gestor. Pestaña condicional: manager activo O secretarías.
-  const managerQuery = api.admin.getMyManagerProfile.useQuery(undefined, { retry: false });
-  const assignmentsQuery = api.delegation.listAssignments.useQuery(undefined, { retry: false });
+  const managerQuery = api.admin.getMyManagerProfile.useQuery(
+    undefined,
+    { retry: false, refetchOnWindowFocus: false },
+  );
+  const assignmentsQuery = api.delegation.listAssignments.useQuery(
+    undefined,
+    { retry: false, refetchOnWindowFocus: false },
+  );
   const myTournamentsQuery = api.tournament.listMine.useQuery(undefined, {
     enabled: Boolean(managerQuery.data),
     retry: false,
+    refetchOnWindowFocus: false,
   });
   const showGestorTab =
     Boolean(managerQuery.data) || (assignmentsQuery.data?.length ?? 0) > 0;
@@ -118,20 +142,8 @@ export function ProfileView() {
   const extraTeams = teams.length - visibleTeams.length;
   const history = historyQuery.data ?? [];
 
-  // Mapeo probado del scaffold: columnas Lun→Dom; modelo dayOfWeek 0 = domingo
-  const allSlots = Array.from({ length: 12 }, (_, timeSlot) =>
-    Array.from({ length: 7 }, (_, dayIndex) => {
-      const dayOfWeek = dayIndex === 6 ? 0 : dayIndex + 1;
-      const found = profile.player?.availabilities.find(
-        (a) => a.dayOfWeek === dayOfWeek && a.timeSlot === timeSlot,
-      );
-      return {
-        dayOfWeek,
-        timeSlot,
-        status: found?.status ?? "UNAVAILABLE",
-      };
-    }),
-  ).flat();
+  // Matriz fusionada (S02 v2.0) directo del servidor.
+  const allSlots = matrixQuery.data ?? [];
 
   const statCards = stats
     ? [
@@ -372,12 +384,12 @@ export function ProfileView() {
         </form>
       )}
 
-      {/* TAB: DISPONIBILIDAD (matrix + hook existentes, optimistic ya vivo) */}
+      {/* TAB: DISPONIBILIDAD (matriz fusionada, toggle inmediato) */}
       {tab === "schedule" && (
         <div className="px-4 pt-6">
           <h2 className="text-sm font-semibold text-cypher-4">Mi disponibilidad</h2>
           <p className="mb-4 mt-1 text-xs text-cypher-4-2-2">
-            Toca para marcar cuándo puedes jugar. Todo lo demás queda bloqueado para convocatorias.
+            Toca para marcar cuándo puedes jugar. Amarillo y rojo los pone tu equipo y el fixture: no se tocan.
           </p>
           <div className="rounded-2xl border border-cypher-5-1-1 bg-cypher-5-1 p-3">
             <AvailabilityMatrix
@@ -385,14 +397,22 @@ export function ProfileView() {
               onToggleSlot={(dayOfWeek, timeSlot) => toggleSlot({ dayOfWeek, timeSlot })}
             />
           </div>
-          <div className="mt-4 flex items-center justify-center gap-4">
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-4">
             <span className="flex items-center gap-1.5 text-[10px] text-cypher-4-2-2">
-              <span className="size-3 rounded border border-cypher-5-1-1 bg-cypher-3" />
+              <span className="size-3 rounded border border-emerald-400 bg-emerald-500/80" />
               Disponible
             </span>
             <span className="flex items-center gap-1.5 text-[10px] text-cypher-4-2-2">
-              <span className="size-3 rounded border border-cypher-5-1-1 bg-cypher-5" />
+              <span className="size-3 rounded border border-cypher-4-2-2/40 bg-cypher-5-1-1" />
               No disponible
+            </span>
+            <span className="flex items-center gap-1.5 text-[10px] text-cypher-4-2-2">
+              <span className="size-3 rounded border border-amber-400/60 bg-amber-500/50" />
+              Sugerido (en tus no disponibles)
+            </span>
+            <span className="flex items-center gap-1.5 text-[10px] text-cypher-4-2-2">
+              <span className="size-3 rounded border border-red-400 bg-red-500/80" />
+              Conflicto duro
             </span>
           </div>
         </div>

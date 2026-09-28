@@ -5,6 +5,7 @@ import { UserMinus } from "lucide-react";
 import { api } from "torneos/trpc/react";
 import { UserSearchResult } from "torneos/components/ui/admin/user-search-result";
 import { LoadingSkeleton } from "torneos/components/ui/loading-skeleton";
+import { DELEGABLE_PERMISSIONS } from "torneos/domain/delegation/permissions";
 
 /** W11 — E3/E4: secretarios del gestor (pestaña Gestor de perfil).
  *  Gemelo de admin/manager-delegates con procedures self-service
@@ -33,12 +34,20 @@ export function DelegatesSection() {
     onSuccess: invalidate,
     onError: (e) => setFeedback(e.message),
   });
+  const permsMutation = api.delegation.setPermissions.useMutation({
+    onSuccess: invalidate,
+    onError: (e) => setFeedback(e.message),
+  });
+  const togglePerm = (delegateId: string, current: string[], code: string) => {
+    const next = current.includes(code) ? current.filter((c) => c !== code) : [...current, code];
+    permsMutation.mutate({ delegateId, permissions: next });
+  };
 
   return (
     <section className="rounded-2xl border border-cypher-4/10 bg-cypher-5-1 p-4">
       <h2 className="text-sm font-semibold text-cypher-4">Secretarios</h2>
       <p className="mt-0.5 text-xs text-cypher-4-2-2">
-        Pueden aplazar, reprogramar, declarar paseos, asignar árbitro y cargar resultados en tus torneos.
+        Pueden aplazar, reprogramar, declarar ausencias, asignar árbitro y cargar resultados en tus torneos.
       </p>
 
       <div className="mt-3">
@@ -47,16 +56,39 @@ export function DelegatesSection() {
         ) : delegates && delegates.length > 0 ? (
           <ul className="mb-3 space-y-1.5">
             {delegates.map((d) => (
-              <li key={d.id} className="flex items-center justify-between gap-2 text-sm text-cypher-4">
-                <span className="truncate">{d.profile.displayName ?? d.profile.user.email}</span>
-                <button
-                  type="button"
-                  aria-label={`Quitar a ${d.profile.displayName ?? "este secretario"}`}
-                  onClick={() => removeMutation.mutate({ delegateId: d.id })}
-                  className="rounded-lg p-1.5 text-cypher-4-2-2 transition-colors hover:bg-cypher-5/60 hover:text-cypher-4"
-                >
-                  <UserMinus className="size-4" />
-                </button>
+              <li key={d.id} className="rounded-xl bg-cypher-5-1-1 px-3 py-2">
+                <div className="flex items-center justify-between gap-2 text-sm text-cypher-4">
+                  <span className="truncate">{d.profile.displayName ?? d.profile.user.email}</span>
+                  <button
+                    type="button"
+                    aria-label={`Quitar a ${d.profile.displayName ?? "este secretario"}`}
+                    onClick={() => removeMutation.mutate({ delegateId: d.id })}
+                    className="rounded-lg p-1.5 text-cypher-4-2-2 transition-colors hover:bg-cypher-5/60 hover:text-cypher-4"
+                  >
+                    <UserMinus className="size-4" />
+                  </button>
+                </div>
+                <div className="mt-2 space-y-1.5">
+                  {DELEGABLE_PERMISSIONS.map((p) => {
+                    const granted = d.permissions.map((g) => g.permission);
+                    const on = granted.includes(p.code);
+                    return (
+                      <label key={p.code} className="flex cursor-pointer items-start gap-2" title={`${p.enables} ${p.disables}`}>
+                        <input
+                          type="checkbox"
+                          checked={on}
+                          disabled={permsMutation.isPending}
+                          onChange={() => togglePerm(d.id, granted, p.code)}
+                          className="mt-0.5 size-3.5 accent-[#CCFF00]"
+                        />
+                        <span>
+                          <span className="block text-xs font-medium text-cypher-4">{p.title}</span>
+                          <span className="block text-[10px] text-cypher-4-2-2">{on ? p.enables : p.disables}</span>
+                        </span>
+                      </label>
+                    );
+                  })}
+                </div>
               </li>
             ))}
           </ul>
@@ -75,10 +107,10 @@ export function DelegatesSection() {
           <div className="mt-2 space-y-1.5">
             {searchResults.map((profile) => (
               <UserSearchResult
-                key={profile.id}
-                name={profile.displayName ?? profile.user.email}
-                email={profile.user.email}
-                onSelect={() => addMutation.mutate({ profileId: profile.id })}
+                key={profile.profileId}
+                name={profile.displayName ?? profile.email}
+                email={profile.email}
+                onSelect={() => addMutation.mutate({ profileId: profile.profileId })}
               />
             ))}
           </div>

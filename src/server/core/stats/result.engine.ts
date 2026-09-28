@@ -3,6 +3,7 @@ import { NotificationFamily, NotificationType } from "@prisma/client";
 import { TRPCError } from "@trpc/server";
 import { statsEngine } from "./stats.engine";
 import { notificationEngine } from "../notification/notification.engine";
+import { maybeFinishTournament } from "torneos/server/core/tournament/finish.engine";
 import { getMatchForManagerAction } from "torneos/server/core/match/match.engine";
 
 interface PlayerStatInput {
@@ -27,7 +28,7 @@ export const resultEngine = {
   ) {
         return db.$transaction(async (tx) => {
       // W11 — E3/H-2: ownership (gestor o delegado) antes de CUALQUIER escritura.
-      await getMatchForManagerAction(tx, matchId, userId);
+      await getMatchForManagerAction(tx, matchId, userId, "match:result");
       const match = await tx.match.findUnique({
         where: { id: matchId },
         include: { tournament: true, phase: true }
@@ -38,10 +39,13 @@ export const resultEngine = {
         throw new TRPCError({ code: "BAD_REQUEST", message: "El partido ya tiene un resultado cargado" });
       }
 
-      // 1. Determinar ganador
+      // 1. Determinar ganador (decisión del dueño: sin empates — siempre hay penales)
       let winnerId: string | null = null;
       if (homeScore > awayScore) winnerId = match.homeTeamId;
       else if (awayScore > homeScore) winnerId = match.awayTeamId;
+      else {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Sin empates: el partido se define por penales (los goles deben diferir)" });
+      }
 
       // 2. Crear MatchResult
       await tx.matchResult.create({
@@ -51,10 +55,18 @@ export const resultEngine = {
         }
       });
 
-      // 3. Crear MatchPlayerStat (si no es walkover)
-      if (playerStats.length > 0) {
+      // 3. Crear MatchPlayerStat (si no es walkover). Dedupe defensivo:
+      // un jugador en los DOS equipos del partido (multi-equipo mismo torneo,
+      // S02 lo permite) llegaría duplicado y violaría @@unique(matchId,playerId).
+      const seenPlayers = new Set<string>();
+      const uniqueStats = playerStats.filter((ps) => {
+        if (seenPlayers.has(ps.playerId)) return false;
+        seenPlayers.add(ps.playerId);
+        return true;
+      });
+      if (uniqueStats.length > 0) {
         await tx.matchPlayerStat.createMany({
-          data: playerStats.map(ps => ({ matchId, ...ps }))
+          data: uniqueStats.map(ps => ({ matchId, ...ps }))
         });
       }
 
@@ -103,6 +115,8 @@ export const resultEngine = {
         }
       }
 
+      // 6b. FINISHED automático (S10 §6): helper compartido con walkover.
+      await maybeFinishTournament(tx, match.tournamentId);
       // 6. Recálculo Atómico de Estadísticas (Sistema 10) — D-1 v2: batch secuencial.
       // Orden jugadores → equipos → standings NO es cosmético: el fair play del equipo
       // lee los PlayerStats recién escritos (read-your-own-writes en tx). Elimina la

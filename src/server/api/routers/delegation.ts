@@ -41,6 +41,17 @@ export const delegationRouter = createTRPCRouter({
       });
     }),
 
+  // ─── Delegación v2: subset de permisos con texto descriptivo ───
+  setPermissions: managerProcedure
+    .input(z.object({ delegateId: z.string(), permissions: z.array(z.string()).max(20) }))
+    .mutation(({ ctx, input }) => {
+      return delegationEngine.setPermissions(ctx.db, {
+        managerId: ctx.manager.id,
+        delegateId: input.delegateId,
+        permissions: input.permissions,
+      });
+    }),
+
   // ─── Consola Admin (pestaña Gestores, gate existente del seed) ───
   listForManager: permissionProcedure("user:manage")
     .input(z.object({ managerId: z.string() }))
@@ -69,4 +80,11 @@ export const delegationRouter = createTRPCRouter({
   listAssignments: protectedProcedure.query(({ ctx }) => {
     return delegationEngine.listAssignmentsForProfile(ctx.db, ctx.session.user.id);
   }),
+
+  // ─── Poderes por permiso (UI sin rol nuevo) ───
+  myPowers: protectedProcedure
+    .input(z.object({ tournamentId: z.string() }))
+    .query(({ ctx, input }) => {
+      return delegationEngine.myPowers(ctx.db, input.tournamentId, ctx.session.user.id);
+    }),
 });

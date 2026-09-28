@@ -50,9 +50,11 @@ export function HubTemplate({ isLoggedIn }: HubTemplateProps) {
   const mapRef = useRef<LeafletMap | null>(null);
   const toastTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // getMap es publicProcedure: legal para anónimos y logueados por igual
+  // getMap es publicProcedure: legal para anónimos y logueados por igual.
+  // Mapa pesado del hub: 2 min fresco + sin refetch al enfocar.
   const { data: courts = [] } = api.court.getMap.useQuery(undefined, {
-    staleTime: 60_000,
+    staleTime: 2 * 60_000,
+    refetchOnWindowFocus: false,
   });
 
   const visibleCourts = useMemo(() => {
@@ -146,12 +148,22 @@ export function HubTemplate({ isLoggedIn }: HubTemplateProps) {
           público lo monta el layout (anon), no este template. */}
       {!isLoggedIn && (
         <div className="border-t border-cypher-5-1-1 bg-cypher-5 p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-          <Link
-            href="/login"
-            className="block w-full rounded-2xl bg-cypher-2 py-3.5 text-center text-sm font-semibold text-cypher-5 transition-colors hover:bg-cypher-2-1 active:bg-cypher-2/80 glow-neon"
-          >
-            Entrar
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              href="/login"
+              className="block flex-1 rounded-2xl bg-cypher-2 py-3.5 text-center text-sm font-semibold text-cypher-5 transition-colors hover:bg-cypher-2-1 active:bg-cypher-2/80 glow-neon"
+            >
+              Entrar
+            </Link>
+            {process.env.NODE_ENV !== "production" && (
+              <Link
+                href="/login-dev"
+                className="block flex-1 rounded-2xl border border-cypher-5-1-1 bg-cypher-5-1 py-3.5 text-center text-sm font-semibold text-cypher-4-2 transition-colors active:bg-cypher-5-1-1"
+              >
+                Dev
+              </Link>
+            )}
+          </div>
         </div>
       )}
     </div>

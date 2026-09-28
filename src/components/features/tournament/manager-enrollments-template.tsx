@@ -1,10 +1,11 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence } from "motion/react";
 import { Inbox, Lock } from "lucide-react";
 import { api } from "torneos/trpc/react";
 import { EnrollmentRow } from "torneos/components/features/tournament/enrollment-row";
+import { useTournamentPowers } from "torneos/components/features/tournament/use-tournament-powers";
 import {
   ManagerFilterBar,
   type EnrollmentFilter,
@@ -27,8 +28,42 @@ const MIN_TEAMS_TO_DRAW = 2; // precondición presentacional del sorteo (el engi
 const DRAW_REDIRECT_DELAY_MS = 1800;
 
 export function ManagerEnrollmentsTemplate({ tournamentId }: { tournamentId: string }) {
+  // Sorteo/cancelación: solo el dueño (no delegable). La bandeja la ve
+  // cualquiera con enrollment:manage (el backend ya lo autoriza).
+  const powers = useTournamentPowers(tournamentId);
   const router = useRouter();
   const utils = api.useUtils();
+
+  // ── Invitar equipos (solo PRIVATE, con enrollment:manage) ──
+  // Todo hook arriba de los returns tempranos (isLoading/FORBIDDEN/isError):
+  // si no, el conteo cambia entre renders y React crashea.
+  const [inviteQuery, setInviteQuery] = useState("");
+  // C2: difiere la búsqueda para no disparar 1 request por tecla.
+  const deferredInviteQuery = useDeferredValue(inviteQuery);
+  const searchTeamsQuery = api.enrollment.searchTeamsForInvite.useQuery(
+    { tournamentId, query: deferredInviteQuery },
+    { enabled: deferredInviteQuery.trim().length >= 2, retry: false, refetchOnWindowFocus: false },
+  );
+  const invitesQuery = api.enrollment.listTournamentInvites.useQuery(
+    { tournamentId },
+    // Refetch explícito tras invitar/retirar: 2 min + sin refetch al enfocar.
+    { retry: false, staleTime: 2 * 60_000, refetchOnWindowFocus: false },
+  );
+  const inviteTeamMutation = api.enrollment.inviteTeam.useMutation({
+    onSuccess: () => {
+      setInviteQuery("");
+      void invitesQuery.refetch();
+      notify("Invitación enviada");
+    },
+    onError: (e) => notify(e.message),
+  });
+  const revokeInviteMutation = api.enrollment.revokeTeamInvite.useMutation({
+    onSuccess: () => {
+      void invitesQuery.refetch();
+      notify("Invitación retirada");
+    },
+    onError: (e) => notify(e.message),
+  });
 
   const [filter, setFilter] = useState<EnrollmentFilter>("ALL");
   const [toast, setToast] = useState<{ title: string } | null>(null);
@@ -44,11 +79,29 @@ export function ManagerEnrollmentsTemplate({ tournamentId }: { tournamentId: str
   const notify = useCallback((title: string) => setToast({ title }), []);
 
   // Contexto: nombre + estado del torneo (define si siguen vivas las acciones finales)
-  const tournamentQuery = api.tournament.getById.useQuery({ tournamentId }, { retry: false });
+  const tournamentQuery = api.tournament.getById.useQuery(
+    { tournamentId },
+    { retry: false, refetchOnWindowFocus: false },
+  );
 
   // Fuente única: "ALL" en cache, filtrado 100% cliente (una sola cache key)
   const LIST_INPUT = useMemo(() => ({ tournamentId, status: "ALL" as const }), [tournamentId]);
-  const listQuery = api.enrollment.listByTournament.useQuery(LIST_INPUT, { retry: false });
+  const listQuery = api.enrollment.listByTournament.useQuery(
+    LIST_INPUT,
+    // Aprobar/rechazar invalidan: 2 min + sin refetch al enfocar.
+    { retry: false, staleTime: 2 * 60_000, refetchOnWindowFocus: false },
+  );
+  // Rojo por equipo (gestor y secretarios con llave lo ven igual).
+  // Lo editan terceros (disponibilidad de jugadores): solo sin refetch al enfocar.
+  const conflictsQuery = api.tournament.getEnrollmentConflicts.useQuery(
+    { tournamentId },
+    { retry: false, refetchOnWindowFocus: false },
+  );
+  const conflictByTeam = useMemo(() => {
+    const map = new Map<string, { hardCount: number; hardNames: string[] }>();
+    for (const c of conflictsQuery.data ?? []) map.set(c.teamId, c);
+    return map;
+  }, [conflictsQuery.data]);
 
   const enrollments = useMemo(() => listQuery.data ?? [], [listQuery.data]);
   const tournament = tournamentQuery.data;
@@ -137,6 +190,9 @@ export function ManagerEnrollmentsTemplate({ tournamentId }: { tournamentId: str
       notify("Sorteo ejecutado — torneo en curso");
       void utils.tournament.getById.invalidate({ tournamentId });
       void utils.match.listByTournament.invalidate({ tournamentId });
+      // El sorteo confirma reservas (morado) en la matriz de la cancha.
+      const drawCourtId = tournamentQuery.data?.courtId;
+      if (drawCourtId) void utils.court.getBubble.invalidate({ courtId: drawCourtId });
       window.setTimeout(() => router.push(`/torneos/${tournamentId}`), DRAW_REDIRECT_DELAY_MS);
     },
     onError: (e) => notify(e.message),
@@ -195,6 +251,9 @@ export function ManagerEnrollmentsTemplate({ tournamentId }: { tournamentId: str
     );
   }
 
+  const canInvite = powers.isOwner || powers.can("enrollment:manage");
+  const showInviteSection = tournament?.type === "PRIVATE" && canInvite;
+
   // Sortear/cancelar solo tienen sentido antes de que arranque
   const canFinalize = tournament?.status === "SCHEDULED" || tournament?.status === "GRACE_PERIOD";
 
@@ -244,6 +303,8 @@ export function ManagerEnrollmentsTemplate({ tournamentId }: { tournamentId: str
                 key={enrollment.id}
                 enrollment={enrollment}
                 isBusy={busyEnrollmentId === enrollment.id}
+                hardCount={conflictByTeam.get(enrollment.teamId)?.hardCount ?? 0}
+                hardNames={conflictByTeam.get(enrollment.teamId)?.hardNames ?? []}
                 onApprove={(id) => approveMutation.mutate({ enrollmentId: id })}
                 onReject={(id, reason) => rejectMutation.mutate({ enrollmentId: id, reason })}
                 onDisapprove={(id) => disapproveMutation.mutate({ enrollmentId: id })}
@@ -253,12 +314,70 @@ export function ManagerEnrollmentsTemplate({ tournamentId }: { tournamentId: str
         )}
       </div>
 
-      {canFinalize && (
+      {showInviteSection && (
+        <div className="mt-8 space-y-3 border-t border-cypher-5-1-1 px-5 pt-6">
+          <p className="text-xs font-medium uppercase tracking-widest text-cypher-4-2-2">
+            Invitar equipos (privado)
+          </p>
+          <input
+            type="text"
+            placeholder="Buscar equipo por nombre (mín. 2 letras)"
+            value={inviteQuery}
+            onChange={(e) => setInviteQuery(e.target.value)}
+            className="w-full rounded-xl border border-cypher-5-1-1 bg-cypher-5-1-1 px-3 py-2 text-sm text-cypher-4 outline-none placeholder:text-cypher-4-2-2 focus:border-cypher-4-2"
+          />
+          {searchTeamsQuery.data && searchTeamsQuery.data.length > 0 && (
+            <div className="space-y-1.5">
+              {searchTeamsQuery.data.map((t) => (
+                <div key={t.id} className="flex items-center justify-between gap-2 rounded-xl bg-cypher-5-1 px-3 py-2">
+                  <span className="truncate text-sm text-cypher-4">{t.name}</span>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    disabled={inviteTeamMutation.isPending}
+                    onClick={() => inviteTeamMutation.mutate({ tournamentId, teamId: t.id })}
+                  >
+                    Invitar
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+          {(invitesQuery.data ?? []).map((inv) => (
+            <div key={inv.id} className="flex items-center justify-between gap-2 rounded-xl bg-cypher-5-1 px-3 py-2">
+              <span className="min-w-0 flex-1 truncate text-sm text-cypher-4">
+                {inv.team.name} · <span className="text-cypher-4-2-2">{inv.status}</span>
+              </span>
+              {inv.status === "PENDING" && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={revokeInviteMutation.isPending}
+                  onClick={() => revokeInviteMutation.mutate({ inviteId: inv.id })}
+                >
+                  Retirar
+                </Button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {canFinalize && powers.isOwner && (
         <div className="mt-8 space-y-3 border-t border-cypher-5-1-1 px-5 pt-6">
           <Button
             className="w-full"
             size="lg"
-            disabled={!isPowerOfTwo || drawMutation.isPending}
+            // Hallazgo E2E (copa completa): el approve es optimistic — sortear con
+            // approves en vuelo dibujaba un bracket con menos equipos de los
+            // mostrados. El botón espera a que asienten todas las mutaciones.
+            disabled={
+              !isPowerOfTwo ||
+              drawMutation.isPending ||
+              approveMutation.isPending ||
+              rejectMutation.isPending ||
+              disapproveMutation.isPending
+            }
             onClick={() => setDrawModalOpen(true)}
           >
             {drawMutation.isPending

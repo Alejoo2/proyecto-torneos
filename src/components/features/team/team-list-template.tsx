@@ -32,7 +32,11 @@ export function TeamListTemplate() {
     enabled: isLoggedIn,
     retry: false,
   });
-  const pendingCount = pendingInvites?.length ?? 0;
+  const { data: pendingTeamInvites } = api.enrollment.listMyTeamInvites.useQuery(undefined, {
+    enabled: isLoggedIn,
+    retry: false,
+  });
+  const pendingCount = (pendingInvites?.length ?? 0) + (pendingTeamInvites?.length ?? 0);
 
   const openSheet = () => setSheetOpen(true);
 
